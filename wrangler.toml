@@ -1,0 +1,7 @@
+name = "zmws-data-cf"
+pages_build_output_dir = "frontend/dist"
+
+[vars]
+VITE_STATIC_DATA_BASE = "/data"
+# 改成你的服务器 HTTPS 地址后，玩家查询、反馈、访问统计、战场计算、运维接口会继续走服务器。
+# VITE_SERVER_API_BASE = "https://api.example.com"
