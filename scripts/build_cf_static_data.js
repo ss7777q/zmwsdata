@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const fs = require('fs');
 const path = require('path');
+const { DEFAULT_SETTINGS, getConfiguredMaxLevel } = require('./lib/max-level-filter');
 
 const ROOT = path.resolve(__dirname, '..');
 const OUTPUT_DIR = path.join(ROOT, 'output');
@@ -18,6 +19,8 @@ function copyJsonFiles() {
   if (!fs.existsSync(OUTPUT_DIR)) {
     throw new Error(`Missing output directory: ${OUTPUT_DIR}`);
   }
+
+  const maxLevel = getConfiguredMaxLevel();
 
   ensureDir(PUBLIC_DATA_DIR);
   const existingFiles = fs.readdirSync(PUBLIC_DATA_DIR).filter((name) => name.endsWith('.json'));
@@ -43,10 +46,12 @@ function copyJsonFiles() {
 
   const manifest = {
     generatedAt: new Date().toISOString(),
+    maxLevel,
+    defaultMaxLevel: DEFAULT_SETTINGS.data.maxLevel,
     files,
   };
   fs.writeFileSync(MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
-  console.log(`[cf-static-data] copied ${files.length} JSON files to ${PUBLIC_DATA_DIR}`);
+  console.log(`[cf-static-data] copied ${files.length} JSON files to ${PUBLIC_DATA_DIR} (maxLevel=${maxLevel})`);
 }
 
 copyJsonFiles();
