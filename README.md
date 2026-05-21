@@ -50,11 +50,11 @@ Build output directory: dist
 
 ```text
 VITE_STATIC_DATA_BASE=/data
-VITE_SERVER_API_BASE=https://你的服务器域名
+VITE_SERVER_API_BASE=https://api.zmwsrank.top
 VITE_STATIC_DATA_STREAM=false
 ```
 
-如果服务器接口暂时没有 HTTPS 域名，Pages 站点在 HTTPS 下调用 HTTP 接口会被浏览器拦截。推荐给服务器 API 配一个 HTTPS 域名，再填到 `VITE_SERVER_API_BASE`。
+服务器 API 域名使用 `https://api.zmwsrank.top`，主站域名 `https://data.zmwsrank.top` 保留给用户访问前端页面。
 
 ## 服务器继续承担的功能
 
