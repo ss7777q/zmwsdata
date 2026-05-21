@@ -1,4 +1,5 @@
-﻿const SERVER_API_BASE = (import.meta.env.VITE_SERVER_API_BASE || import.meta.env.VITE_DATA_API_BASE || '').replace(/\/$/, '');
+﻿const DEFAULT_SERVER_API_BASE = 'https://data.zmwsrank.top';
+const SERVER_API_BASE = (import.meta.env.VITE_SERVER_API_BASE || import.meta.env.VITE_DATA_API_BASE || DEFAULT_SERVER_API_BASE).replace(/\/$/, '');
 const STATIC_DATA_BASE = (import.meta.env.VITE_STATIC_DATA_BASE || '/data').replace(/\/$/, '');
 
 export function apiUrl(path: string) {

@@ -66,6 +66,12 @@ const HELP_SYSTEM = 'help';
 const NO_DATA_SYSTEMS = [OPS_SYSTEM, PLAYER_LOOKUP_SYSTEM, HELP_SYSTEM] as const;
 const KNOWN_SYSTEMS = ['role_equip', 'role_spiritual', 'role_wing', 'role_cultivate', 'pet', 'beast_stats', 'ride', 'role_fashion', 'call_god', 'boss', 'resist', 'player_lookup', 'help', 'ops'] as const;
 
+function resolveSystemFromPath(pathname: string) {
+  if (pathname === OPS_ROUTE_PATH) return OPS_SYSTEM;
+  const redirectTarget = LEGACY_ROUTE_REDIRECTS[pathname];
+  return PATH_TO_SYSTEM[redirectTarget || pathname] || DEFAULT_SYSTEM;
+}
+
 function PageFallback() {
   return (
     <div className="flex flex-col items-center justify-center py-20">
@@ -80,7 +86,7 @@ const WATERMARK_SVG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [currentSystem, setCurrentSystem] = useState(DEFAULT_SYSTEM);
+  const [currentSystem, setCurrentSystem] = useState(() => resolveSystemFromPath(location.pathname));
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [showOps, setShowOps] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
