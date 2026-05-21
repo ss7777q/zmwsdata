@@ -33,12 +33,18 @@ export function buildAdminHeaders(token?: string): Record<string, string> {
 }
 
 async function readJsonResponse<T>(response: Response) {
-  const body = await response.json().catch(() => ({}));
+  const contentType = response.headers.get('content-type') || '';
+  const body = contentType.includes('application/json')
+    ? await response.json().catch(() => ({}))
+    : null;
   if (!response.ok) {
     if (body && typeof body === 'object' && 'error' in body && typeof body.error === 'string') {
       throw new Error(body.error);
     }
     throw new Error(`Request failed: ${response.status}`);
+  }
+  if (!body) {
+    throw new Error('接口未返回 JSON，请检查服务器 API 域名配置');
   }
   return body as T;
 }

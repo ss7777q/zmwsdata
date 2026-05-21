@@ -10,6 +10,25 @@ function formatTime(value: number | null | undefined) {
   return new Date(value).toLocaleString('zh-CN');
 }
 
+function normalizeHistoryResponse(value: PlayerNameHistoryResponse): PlayerNameHistoryResponse {
+  if (!value || typeof value !== 'object') {
+    throw new Error('玩家历史接口返回格式不正确');
+  }
+
+  if (!Array.isArray(value.items)) {
+    throw new Error('玩家历史接口未返回历史名字列表');
+  }
+
+  return {
+    uid: typeof value.uid === 'string' ? value.uid : '',
+    currentName: typeof value.currentName === 'string' ? value.currentName : '',
+    currentTime: typeof value.currentTime === 'number' ? value.currentTime : null,
+    rawRecordCount: Number.isInteger(value.rawRecordCount) ? value.rawRecordCount : value.items.length,
+    distinctNameCount: Number.isInteger(value.distinctNameCount) ? value.distinctNameCount : value.items.length,
+    items: value.items,
+  };
+}
+
 export default function PlayerLookup() {
   const [uidInput, setUidInput] = useState('');
   const [history, setHistory] = useState<PlayerNameHistoryResponse | null>(null);
@@ -38,7 +57,7 @@ export default function PlayerLookup() {
 
     try {
       const result = await fetchPlayerNameHistory(nextUid, controller.signal);
-      setHistory(result);
+      setHistory(normalizeHistoryResponse(result));
     } catch (error) {
       if (controller.signal.aborted) {
         return;
