@@ -7,6 +7,7 @@ process.env.DATA_API_TEST_MODE = '1';
 const {
   __test: {
     createVisitorStatsDatabase,
+    collectVisitorHistoryFromDatabase,
     collectVisitorStatsFromDatabase,
     registerVisitorInDatabase,
     migrateJsonVisitorStats,
@@ -70,6 +71,14 @@ try {
   const laterStats = collectVisitorStatsFromDatabase(database, nextDayVisitTime + 5 * 60 * 1000);
   assert.strictEqual(laterStats.onlineVisitors, 0);
   assert.strictEqual(laterStats.totalVisits, 4);
+
+  const history = collectVisitorHistoryFromDatabase(database, 3, nextDayVisitTime + 5 * 60 * 1000);
+  assert.deepStrictEqual(history.items, [
+    { date: '2026-04-24', visitors: 0 },
+    { date: '2026-04-25', visitors: 2 },
+    { date: '2026-04-26', visitors: 1 },
+  ]);
+  assert.strictEqual(history.totalVisitors, 3);
 
   database.close();
   database = createVisitorStatsDatabase(dbPath);

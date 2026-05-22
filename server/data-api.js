@@ -38,6 +38,7 @@ const VISITOR_VISIT_SESSION_WINDOW_MS = 30 * 60 * 1000;
 const VISITOR_REGISTER_RATE_WINDOW_MS = 60 * 1000;
 const VISITOR_REGISTER_RATE_LIMIT = 120;
 const VISITOR_STORE_MAX_DAYS = 60;
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const FEEDBACK_TITLE_LIMIT = 60;
 const FEEDBACK_MESSAGE_LIMIT = 500;
 const FEEDBACK_CONTACT_LIMIT = 80;
@@ -163,6 +164,15 @@ function getTodayKey(input = Date.now()) {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+function listRecentDateKeys(days, now = Date.now()) {
+  const safeDays = Number.isInteger(days) && days > 0 ? days : 1;
+  const items = [];
+  for (let offset = safeDays - 1; offset >= 0; offset -= 1) {
+    items.push(getTodayKey(now - offset * ONE_DAY_MS));
+  }
+  return items;
 }
 
 function sanitizeVisitorId(value) {
@@ -307,13 +317,17 @@ function collectVisitorStatsFromDatabase(database, now = Date.now()) {
   };
 }
 
-function collectVisitorHistory(daysInput) {
+function collectVisitorHistory(daysInput, now = Date.now()) {
+  return collectVisitorHistoryFromDatabase(visitorStatsDb, daysInput, now);
+}
+
+function collectVisitorHistoryFromDatabase(database, daysInput, now = Date.now()) {
   const days = Number.isInteger(daysInput) && daysInput > 0
     ? Math.min(daysInput, VISITOR_STORE_MAX_DAYS)
     : 30;
-  pruneDailyVisitors(visitorStatsDb);
+  pruneDailyVisitors(database, now);
 
-  const items = visitorStatsDb.prepare(`
+  const rows = database.prepare(`
     WITH exact_daily AS (
       SELECT date, COUNT(*) AS visitors
       FROM daily_visitors
@@ -329,8 +343,13 @@ function collectVisitorHistory(daysInput) {
     ORDER BY date DESC
     LIMIT ?
   `).all(days)
-    .map((item) => ({ date: item.date, visitors: Number(item.visitors || 0) }))
-    .reverse();
+    .map((item) => ({ date: item.date, visitors: Number(item.visitors || 0) }));
+
+  const visitorsByDate = new Map(rows.map((item) => [item.date, item.visitors]));
+  const items = listRecentDateKeys(days, now).map((date) => ({
+    date,
+    visitors: visitorsByDate.get(date) || 0,
+  }));
 
   const totalVisitors = items.reduce((sum, item) => sum + item.visitors, 0);
 
@@ -1854,6 +1873,7 @@ if (process.env.DATA_API_TEST_MODE === '1') {
       createInitialVisitorStats,
       createVisitorStatsDatabase,
       collectVisitorStatsFromDatabase,
+      collectVisitorHistoryFromDatabase,
       registerVisitorInDatabase,
       migrateJsonVisitorStats,
     },

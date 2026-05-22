@@ -296,6 +296,7 @@ export async function registerVisitorStats(visitorId: string, signal?: AbortSign
 export async function fetchVisitorHistory(days = 30, signal?: AbortSignal) {
   const searchParams = new URLSearchParams({
     days: String(days),
+    t: String(Date.now()),
   });
   const response = await fetch(apiUrl(`/api/visitor-stats/history?${searchParams.toString()}`), {
     cache: 'no-store',
