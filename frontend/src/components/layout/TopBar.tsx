@@ -1,4 +1,4 @@
-import { CalendarDays, Database, Menu, Moon, Search, Sun, Users, X } from 'lucide-react';
+import { Database, Menu, Moon, Search, Sun, Users, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { VisitorStatsResponse } from '../../lib/api';
 
@@ -92,23 +92,17 @@ export default function TopBar({
 
         <div className="order-2 flex items-center gap-4 sm:gap-6 shrink-0 ml-auto lg:order-3 lg:ml-0">
           {visitorStats ? (
-            <div className="hidden md:flex items-center gap-3 rounded-full border border-amber-500/25 bg-amber-500/10 px-3 py-1.5 text-xs shadow-sm backdrop-blur-sm">
-              <CalendarDays className="h-4 w-4 text-amber-500" />
-              <span className="text-amber-700 dark:text-amber-300">本日访问</span>
-              <span className="text-sm font-semibold tabular-nums text-textMain">{visitorStats.todayVisitors}</span>
-            </div>
-          ) : null}
-
-          {visitorStats ? (
-            <div className="hidden xl:flex items-center gap-3 rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs text-textSub shadow-sm backdrop-blur-sm">
+            <div className="hidden md:flex items-center gap-3 rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs text-textSub shadow-sm backdrop-blur-sm">
               <span className="inline-flex items-center gap-1.5">
                 <Users className="h-3.5 w-3.5 text-cta" />
                 <span>在线 {visitorStats.onlineVisitors}</span>
               </span>
               <span className="text-border">/</span>
-              <span>总访客 {visitorStats.totalVisitors}</span>
+              <span>本日 {visitorStats.todayVisitors}</span>
               <span className="text-border">/</span>
-              <span>总访问 {visitorStats.totalVisits}</span>
+              <span>总独立访客 {visitorStats.totalVisitors}</span>
+              <span className="text-border">/</span>
+              <span>总访问次数 {visitorStats.totalVisits}</span>
             </div>
           ) : null}
 
