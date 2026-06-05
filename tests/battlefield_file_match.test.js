@@ -24,8 +24,10 @@ const mounts = [
   '201301',
   '201401',
   '201501',
+  '201602',
+  '201801',
 ];
-const demonKings = ['213010', '213020', '213030', '213040', '213160', '213180', '213200', '213220', '213300', '213340'];
+const demonKings = ['213010', '213020', '213030', '213040', '213160', '213180', '213200', '213220', '213300', '213340', '213390'];
 
 function writeJson(fileName, rows) {
   fs.writeFileSync(path.join(tempDataApiDir, fileName), JSON.stringify(rows, null, 2), 'utf8');

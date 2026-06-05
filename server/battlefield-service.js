@@ -31,6 +31,8 @@ const MOUNTS = [
   { name: '谛听', baseId: '201301' },
   { name: '烈焰天马', baseId: '201401' },
   { name: '混沌', baseId: '201501' },
+  { name: '金毛犼', baseId: '201602'},
+  { name: '青狮', baseId: '201801'}
 ];
 
 const DEMON_KINGS = [
@@ -48,7 +50,7 @@ const DEMON_KINGS = [
 ];
 
 const SPECIALS = {
-  nuBa: { name: '女魃', baseId: '21312' },
+  nuBa: { name: '中立', baseId: '21312' },
   crystal: { name: '水晶' },
 };
 
