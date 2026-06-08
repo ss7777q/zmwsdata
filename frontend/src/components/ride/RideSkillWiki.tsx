@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import SkillCard, { type SkillCardData } from '../wiki/SkillCard';
+import SkillCard, { type SkillBaselineData, type SkillCardData } from '../wiki/SkillCard';
 
 const SkillCardView = SkillCard as any;
 
@@ -23,6 +23,23 @@ interface RideWikiVariant {
 interface RideWikiPayload {
   rideGroup: { key: string; name: string; note?: string };
   variants: RideWikiVariant[];
+}
+
+interface RideSkillBaselineEntry extends SkillBaselineData {
+  file: string;
+  rideId: number | null;
+  slot: string | null;
+  skillId: number;
+}
+
+interface RideSkillBaselinePayload {
+  skills?: RideSkillBaselineEntry[];
+}
+
+interface RideMenuEntry {
+  groupKey: string;
+  rideId: number;
+  rideName: string;
 }
 
 const GROUPS = [
@@ -65,56 +82,53 @@ function collectCardLevels(card: SkillCardData | undefined, levelSet: Set<number
 
 export default function RideSkillWiki({ dataSources }: Props) {
   const availableGroups = useMemo(() => GROUPS.filter((g) => dataSources[g.key]?.data), [dataSources]);
+  const baselineBySkill = useMemo(() => {
+    const payload = dataSources.ride_skill_baseline?.data as RideSkillBaselinePayload | undefined;
+    const map = new Map<string, RideSkillBaselineEntry>();
+    for (const skill of payload?.skills || []) {
+      if (!skill.file || skill.rideId == null || !skill.slot || typeof skill.skillId !== 'number') continue;
+      map.set(`${skill.file}|${skill.rideId}|${skill.slot}|${skill.skillId}`, skill);
+    }
+    return map;
+  }, [dataSources]);
+  const rideEntries = useMemo<RideMenuEntry[]>(() => {
+    const entries: RideMenuEntry[] = [];
+    for (const group of availableGroups) {
+      const payload = dataSources[group.key]?.data as RideWikiPayload | undefined;
+      if (!payload?.variants?.length) continue;
+      for (const variant of payload.variants) {
+        entries.push({
+          groupKey: group.key,
+          rideId: variant.ride.id,
+          rideName: variant.ride.name,
+        });
+      }
+    }
+    return entries;
+  }, [availableGroups, dataSources]);
   const [activeGroupKey, setActiveGroupKey] = useState(GROUPS[0].key);
   const [activeRideId, setActiveRideId] = useState<number | null>(null);
   const [picked, setPicked] = useState<number[] | null>(null);
 
   useEffect(() => {
-    if (!availableGroups.length) return;
-    if (!availableGroups.some((g) => g.key === activeGroupKey)) {
-      setActiveGroupKey(availableGroups[0].key);
-      setActiveRideId(null);
+    if (!rideEntries.length) return;
+    if (!rideEntries.some((entry) => entry.groupKey === activeGroupKey && entry.rideId === activeRideId)) {
+      const firstEntry = rideEntries[0];
+      setActiveGroupKey(firstEntry.groupKey);
+      setActiveRideId(firstEntry.rideId);
       setPicked(null);
     }
-  }, [activeGroupKey, availableGroups]);
+  }, [activeGroupKey, activeRideId, rideEntries]);
 
   const payload: RideWikiPayload | null = useMemo(() => {
     const src = dataSources[activeGroupKey];
     return src?.data ?? null;
   }, [activeGroupKey, dataSources]);
 
-  const filteredVariants = useMemo(() => {
-    if (!payload?.variants?.length) return [];
-    const variantsByGroup = new Map<number, RideWikiVariant[]>();
-    for (const variant of payload.variants) {
-      const groupKey = variant.ride.idGroup ?? variant.ride.id;
-      const bucket = variantsByGroup.get(groupKey) ?? [];
-      bucket.push(variant);
-      variantsByGroup.set(groupKey, bucket);
-    }
-
-    return Array.from(variantsByGroup.values()).flatMap((variants) => {
-      const ranked = variants.filter((variant) => variant.ride.rank != null);
-      const rankSource = ranked.length ? ranked : variants;
-      const maxRank = Math.max(...rankSource.map((variant) => variant.ride.rank ?? Number.NEGATIVE_INFINITY));
-      const highestRanked = rankSource.filter((variant) => (variant.ride.rank ?? Number.NEGATIVE_INFINITY) === maxRank);
-      const maxSlotCount = Math.max(...highestRanked.map((variant) => variant.slots.length));
-      return highestRanked.filter((variant) => variant.slots.length === maxSlotCount);
-    });
-  }, [payload]);
-
-  useEffect(() => {
-    if (!filteredVariants.length) return;
-    if (!filteredVariants.some((variant) => variant.ride.id === activeRideId)) {
-      setActiveRideId(filteredVariants[0].ride.id);
-      setPicked(null);
-    }
-  }, [activeRideId, filteredVariants]);
-
   const activeVariant = useMemo(() => {
-    if (!filteredVariants.length) return null;
-    return filteredVariants.find((v) => v.ride.id === activeRideId) || filteredVariants[0];
-  }, [activeRideId, filteredVariants]);
+    if (!payload?.variants?.length) return null;
+    return payload.variants.find((v) => v.ride.id === activeRideId) || payload.variants[0];
+  }, [activeRideId, payload]);
 
   const availableLevels = useMemo(() => {
     const levelSet = new Set<number>();
@@ -133,21 +147,21 @@ export default function RideSkillWiki({ dataSources }: Props) {
 
   const cards = useMemo(() => {
     if (!activeVariant?.slots) return [];
-    return activeVariant.slots.map((slot) => ({
-      card: slot.base,
-      slotLabel: slot.slotLabel,
-      badge: slot.slotKind === 'sp' ? '无双' : slot.slotKind === 'passive' ? '被动' : undefined,
-    }));
-  }, [activeVariant]);
+    const sourceFile = `${activeGroupKey}.json`;
+    return activeVariant.slots.map((slot) => {
+      const baselineKey = `${sourceFile}|${activeVariant.ride.id}|${slot.slot}|${slot.base.skillId}`;
+      const baseline = baselineBySkill.get(baselineKey) ?? null;
+      return {
+        card: { ...slot.base, skillBaseline: baseline },
+        slotLabel: slot.slotLabel,
+        badge: slot.slotKind === 'sp' ? '无双' : slot.slotKind === 'passive' ? '被动' : slot.slotKind === 'attack' ? '普攻' : undefined,
+      };
+    });
+  }, [activeGroupKey, activeVariant, baselineBySkill]);
 
-  const switchGroup = (key: string) => {
-    setActiveGroupKey(key);
-    setActiveRideId(null);
-    setPicked(null);
-  };
-
-  const switchRide = (id: number) => {
-    setActiveRideId(id);
+  const switchRideEntry = (entry: RideMenuEntry) => {
+    setActiveGroupKey(entry.groupKey);
+    setActiveRideId(entry.rideId);
     setPicked(null);
   };
 
@@ -170,27 +184,14 @@ export default function RideSkillWiki({ dataSources }: Props) {
     <div className="space-y-5">
       <div className="flex flex-col gap-4 rounded-[24px] border border-border bg-card px-5 py-4">
         <div className="flex flex-wrap gap-2">
-          {availableGroups.map((g) => (
+          {rideEntries.map((entry) => (
             <button
-              key={g.key}
-              onClick={() => switchGroup(g.key)}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${activeGroupKey === g.key ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-surface text-textSub hover:text-textMain'
+              key={`${entry.groupKey}-${entry.rideId}`}
+              onClick={() => switchRideEntry(entry)}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${activeGroupKey === entry.groupKey && activeVariant.ride.id === entry.rideId ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-surface text-textSub hover:text-textMain'
                 }`}
             >
-              {g.name}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex flex-wrap gap-2 border-t border-border pt-3">
-          {filteredVariants.map((v) => (
-            <button
-              key={v.ride.id}
-              onClick={() => switchRide(v.ride.id)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${activeVariant.ride.id === v.ride.id ? 'bg-primary text-white' : 'bg-surface text-textSub hover:text-textMain'
-                }`}
-            >
-              {v.ride.name}
+              {entry.rideName}
             </button>
           ))}
         </div>

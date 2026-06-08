@@ -30,6 +30,7 @@ const MODULES = [
   { key: 'boss',      file: 'boss.js',           label: 'BOSS 属性' },
   { key: 'pet',       file: 'pet.js',            label: '宠物系统' },
   { key: 'ride',      file: 'ride.js',           label: '坐骑系统' },
+  { key: 'ride_skill_baseline', file: 'ride_skill_baseline.js', label: '坐骑技能 Wiki → 基准值 X' },
   { key: 'beast',     file: 'beast_stats.js',    label: '万兽统计' },
 ];
 
