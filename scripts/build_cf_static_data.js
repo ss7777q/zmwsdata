@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const fs = require('fs');
 const path = require('path');
-const { DEFAULT_SETTINGS, getConfiguredMaxLevel } = require('./lib/max-level-filter');
+const { DEFAULT_SETTINGS, applyOutputMaxLevel, getConfiguredMaxLevel } = require('./lib/max-level-filter');
 
 const ROOT = path.resolve(__dirname, '..');
 const OUTPUT_DIR = path.join(ROOT, 'output');
@@ -35,10 +35,20 @@ function copyJsonFiles() {
     .map((fileName) => {
       const sourcePath = path.join(OUTPUT_DIR, fileName);
       const targetPath = path.join(PUBLIC_DATA_DIR, fileName);
-      fs.copyFileSync(sourcePath, targetPath);
-      const stat = fs.statSync(sourcePath);
+      const outputName = fileName.slice(0, -5);
+      const sourceContent = JSON.parse(fs.readFileSync(sourcePath, 'utf8'));
+      const filteredContent = applyOutputMaxLevel(outputName, sourceContent, maxLevel);
+      const contentWithMeta = {
+        ...filteredContent,
+        _meta: {
+          ...(filteredContent._meta || {}),
+          maxLevel,
+        },
+      };
+      fs.writeFileSync(targetPath, `${JSON.stringify(contentWithMeta)}\n`, 'utf8');
+      const stat = fs.statSync(targetPath);
       return {
-        name: fileName.slice(0, -5),
+        name: outputName,
         size: stat.size,
         mtimeMs: Math.floor(stat.mtimeMs),
       };
