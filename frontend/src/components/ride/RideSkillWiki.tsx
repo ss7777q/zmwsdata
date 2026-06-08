@@ -80,6 +80,25 @@ function collectCardLevels(card: SkillCardData | undefined, levelSet: Set<number
   }
 }
 
+function pickHighestRideVariants(variants: RideWikiVariant[]) {
+  const byGroup = new Map<number, RideWikiVariant>();
+  for (const variant of variants) {
+    const groupKey = variant.ride.idGroup ?? variant.ride.id;
+    const current = byGroup.get(groupKey);
+    if (!current) {
+      byGroup.set(groupKey, variant);
+      continue;
+    }
+
+    const rank = variant.ride.rank ?? Number.NEGATIVE_INFINITY;
+    const currentRank = current.ride.rank ?? Number.NEGATIVE_INFINITY;
+    if (rank > currentRank || (rank === currentRank && variant.slots.length > current.slots.length)) {
+      byGroup.set(groupKey, variant);
+    }
+  }
+  return [...byGroup.values()];
+}
+
 export default function RideSkillWiki({ dataSources }: Props) {
   const availableGroups = useMemo(() => GROUPS.filter((g) => dataSources[g.key]?.data), [dataSources]);
   const baselineBySkill = useMemo(() => {
@@ -96,7 +115,7 @@ export default function RideSkillWiki({ dataSources }: Props) {
     for (const group of availableGroups) {
       const payload = dataSources[group.key]?.data as RideWikiPayload | undefined;
       if (!payload?.variants?.length) continue;
-      for (const variant of payload.variants) {
+      for (const variant of pickHighestRideVariants(payload.variants)) {
         entries.push({
           groupKey: group.key,
           rideId: variant.ride.id,
