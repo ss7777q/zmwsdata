@@ -149,10 +149,10 @@ function cleanBuffName(name: string) {
   return name.replace(/等级\d+$/, '').replace(/[·\-_—]+$/, '').trim();
 }
 
-/** buff 持续时间:帧->秒,-1 表示永久 */
+/** buff 持续时间:帧->秒;无可靠时间时前端不展示持续时间 */
 function buffDuration(time: number | null) {
   if (time == null) return null;
-  if (time < 0) return '永久';
+  if (time < 0) return null;
   return `${(time / 30).toFixed(time % 30 === 0 ? 0 : 1)}s`;
 }
 
