@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { clsx } from 'clsx';
-import { BookOpen, Star, Shield } from 'lucide-react';
+import { BookOpen, Star, Shield, ScrollText } from 'lucide-react';
 import PetSkill from '../components/pet/PetSkill';
 import PetStar from '../components/pet/PetStar';
 import PetEquip from '../components/pet/PetEquip';
+import PetSkillWiki from '../components/pet/PetSkillWiki';
 
 interface PetProps {
     dataSources: Record<string, any>;
@@ -11,7 +12,7 @@ interface PetProps {
 }
 
 export default function RolePet({ dataSources }: PetProps) {
-    const [subTab, setSubTab] = useState<'skill' | 'star' | 'equip'>('skill');
+    const [subTab, setSubTab] = useState<'skill' | 'wiki' | 'star' | 'equip'>('skill');
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500 pb-20">
@@ -19,6 +20,7 @@ export default function RolePet({ dataSources }: PetProps) {
             <div className="flex gap-2 p-1 bg-surface border border-border rounded-xl w-max max-w-[calc(100vw-2rem)] overflow-x-auto custom-scrollbar relative z-10">
                 {[
                     { id: 'skill', label: '技能与潜能', icon: BookOpen },
+                    { id: 'wiki', label: '技能 Wiki', icon: ScrollText },
                     { id: 'star', label: '升星与进阶', icon: Star },
                     { id: 'equip', label: '宠物装备', icon: Shield },
                 ].map(tab => (
@@ -48,6 +50,7 @@ export default function RolePet({ dataSources }: PetProps) {
             {/* Content Area */}
             <div className="mt-8">
                 {subTab === 'skill' && <PetSkill dataSources={dataSources} />}
+                {subTab === 'wiki' && <PetSkillWiki dataSources={dataSources} />}
                 {subTab === 'star' && <PetStar dataSources={dataSources} />}
                 {subTab === 'equip' && <PetEquip dataSources={dataSources} />}
             </div>

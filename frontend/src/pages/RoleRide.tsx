@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { clsx } from 'clsx';
-import { Compass, BookOpen, Star, Shield } from 'lucide-react';
+import { Compass, BookOpen, Star, Shield, ScrollText } from 'lucide-react';
 import RideStar from '../components/ride/RideStar';
 import RideSkill from '../components/ride/RideSkill';
+import RideSkillWiki from '../components/ride/RideSkillWiki';
 import RideEquipMake from '../components/ride/RideEquipMake';
 import RideEquipUpgrade from '../components/ride/RideEquipUpgrade';
 
@@ -12,7 +13,7 @@ interface RideProps {
 }
 
 export default function RoleRide({ dataSources }: RideProps) {
-    const [subTab, setSubTab] = useState<'star' | 'skill' | 'make' | 'upgrade'>('star');
+    const [subTab, setSubTab] = useState<'star' | 'skill' | 'wiki' | 'make' | 'upgrade'>('star');
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500 pb-20">
@@ -21,6 +22,7 @@ export default function RoleRide({ dataSources }: RideProps) {
                 {[
                     { id: 'star', label: '图鉴及升星进阶', icon: Star },
                     { id: 'skill', label: '技能升级', icon: BookOpen },
+                    { id: 'wiki', label: '技能 Wiki', icon: ScrollText },
                     { id: 'make', label: '装备打造/重铸', icon: Compass },
                     { id: 'upgrade', label: '装备升级', icon: Shield },
                 ].map(tab => (
@@ -51,6 +53,7 @@ export default function RoleRide({ dataSources }: RideProps) {
             <div className="mt-8">
                 {subTab === 'star' && <RideStar dataSources={dataSources} />}
                 {subTab === 'skill' && <RideSkill dataSources={dataSources} />}
+                {subTab === 'wiki' && <RideSkillWiki dataSources={dataSources} />}
                 {subTab === 'make' && <RideEquipMake dataSources={dataSources} />}
                 {subTab === 'upgrade' && <RideEquipUpgrade dataSources={dataSources} />}
             </div>
