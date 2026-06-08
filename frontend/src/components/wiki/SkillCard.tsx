@@ -8,7 +8,7 @@ export interface BuffValue {
 export interface BuffInfo {
   name: string;
   bindLabel: string;
-  time: number | null;
+  time: number | string | null;
   value: BuffValue | null;
   /** 覆盖机制产出的成文描述;存在时前端直接显示它,不再机械拼 per/val */
   displayText?: string | null;
@@ -150,9 +150,9 @@ function cleanBuffName(name: string) {
 }
 
 /** buff 持续时间:帧->秒;无可靠时间时前端不展示持续时间 */
-function buffDuration(time: number | null) {
-  if (time == null) return null;
-  if (time < 0) return null;
+function buffDuration(time: number | string | null) {
+  if (typeof time !== 'number') return null;
+  if (time <= 0) return null;
   return `${(time / 30).toFixed(time % 30 === 0 ? 0 : 1)}s`;
 }
 
