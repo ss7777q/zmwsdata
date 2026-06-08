@@ -25,6 +25,7 @@ export interface BossEntry {
   creatorId?: string | null;
   screen?: number | null;
   source?: string;
+  sourceField?: string;
   error?: string;
   calcFormula?: BossFormula;
 }

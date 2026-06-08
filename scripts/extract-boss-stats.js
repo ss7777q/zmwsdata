@@ -480,7 +480,10 @@ class MapParser {
       }
 
       const screenKey = String(creatorCfg.id ?? creatorKey);
-      const monsterIds = normalizeIds(creatorCfg.mIds);
+      // Some maps keep the actual boss candidates in RandomIds while mIds is only a spawn template.
+      const randomIds = normalizeIds(creatorCfg.RandomIds);
+      const sourceField = randomIds.length > 0 ? 'RandomIds' : 'mIds';
+      const monsterIds = randomIds.length > 0 ? randomIds : normalizeIds(creatorCfg.mIds);
       for (const monsterId of monsterIds) {
         results.push({
           id: monsterId,
@@ -488,6 +491,7 @@ class MapParser {
           creator: creatorCfg,
           screen: pointToScreen.get(screenKey) ?? null,
           source: 'map',
+          sourceField,
         });
       }
     }
@@ -1107,6 +1111,7 @@ function buildIllusionStageReport(stage, context) {
       calcResult.creatorId = bossEntry.creatorKey;
       calcResult.screen = bossEntry.screen;
       calcResult.source = bossEntry.source;
+      calcResult.sourceField = bossEntry.sourceField;
 
       stageReport.bossData.push(calcResult);
     } catch (error) {
@@ -1115,6 +1120,7 @@ function buildIllusionStageReport(stage, context) {
         bossId: bossEntry.id,
         creatorId: bossEntry.creatorKey,
         source: bossEntry.source,
+        sourceField: bossEntry.sourceField,
         error: error.message,
       });
       stageReport.status = 'partial_error';
@@ -1166,6 +1172,7 @@ function buildStarHavocStageReport(stage, context) {
       calcResult.creatorId = bossEntry.creatorKey;
       calcResult.screen = bossEntry.screen;
       calcResult.source = bossEntry.source;
+      calcResult.sourceField = bossEntry.sourceField;
       stageReport.bossData.push(calcResult);
     } catch (error) {
       stageReport.bossData.push({
@@ -1173,6 +1180,7 @@ function buildStarHavocStageReport(stage, context) {
         bossId: bossEntry.id,
         creatorId: bossEntry.creatorKey,
         source: bossEntry.source,
+        sourceField: bossEntry.sourceField,
         error: error.message,
       });
       stageReport.status = 'partial_error';
@@ -1422,6 +1430,7 @@ function extractBossStats(options = {}) {
         calcResult.creatorId = bossEntry.creatorKey;
         calcResult.screen = bossEntry.screen;
         calcResult.source = bossEntry.source;
+        calcResult.sourceField = bossEntry.sourceField;
 
         if (stageType === 23) {
           calcResult.mode = stage.subType === 230002 ? 'speed' : 'normal';
@@ -1441,6 +1450,7 @@ function extractBossStats(options = {}) {
           id: bossEntry.id,
           creatorId: bossEntry.creatorKey,
           source: bossEntry.source,
+          sourceField: bossEntry.sourceField,
           error: error.message,
         });
         stageReport.status = 'partial_error';
