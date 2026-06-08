@@ -47,6 +47,7 @@ function matchesSystemFilter(name: string, systemFilter?: string) {
   if (systemFilter === 'role_wing') {
     return name.startsWith('role_wing') || name.startsWith('role_feather');
   }
+  if (systemFilter === 'role_wiki') return name.startsWith('role_wiki');
   if (systemFilter === 'role_equip') {
     return name.startsWith('role_equip') && name !== 'role_equip_baptism';
   }

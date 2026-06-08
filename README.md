@@ -7,7 +7,7 @@
 - Cloudflare Pages 托管 `frontend/dist`。
 - 展示用 JSON 从 `output/` 复制到 `frontend/public/data/`，由 Pages 静态托管和 CF CDN 缓存。
 - 玩家查询、反馈、访问统计、神魔战场计算、运维接口继续请求你的服务器后端。
-- 已删除的技能 Wiki 模块不包含在 CF 前端、静态数据和构建产物里。
+- 角色技能 Wiki 以测试性功能接入 CF 前端，静态 JSON 一并从 `output/role_wiki_*.json` 复制到 Pages 产物。
 
 ## 本地构建
 

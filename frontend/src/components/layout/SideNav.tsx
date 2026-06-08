@@ -9,6 +9,7 @@ interface SideNavProps {
 }
 
 const menuItems = [
+  { id: 'role_wiki', label: '角色技能', icon: Flame },
   { id: 'role_equip', label: '角色装备', icon: User },
   { id: 'role_spiritual', label: '灵宝系统', icon: Zap },
   { id: 'role_fashion', label: '角色时装', icon: Star },
