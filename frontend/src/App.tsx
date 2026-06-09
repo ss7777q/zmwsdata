@@ -4,10 +4,10 @@ import SideNav from './components/layout/SideNav';
 import TopBar from './components/layout/TopBar';
 import SearchResults from './components/ui/SearchResults';
 import { useGameData } from './hooks/useGameData';
-import { useVisitorStats } from './hooks/useVisitorStats';
 import { searchDataSources } from './lib/search';
 import { apiUrl } from './lib/api';
 
+const RoleWiki = lazy(() => import('./pages/RoleWiki'));
 const RoleEquip = lazy(() => import('./pages/RoleEquip'));
 const RoleSpiritual = lazy(() => import('./pages/RoleSpiritual'));
 const RoleWing = lazy(() => import('./pages/RoleWing'));
@@ -22,7 +22,6 @@ const PlayerLookup = lazy(() => import('./pages/PlayerLookup'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter'));
 const OpsDashboard = lazy(() => import('./pages/OpsDashboard'));
 const BeastStats = lazy(() => import('./pages/BeastStats'));
-const RoleWiki = lazy(() => import('./pages/RoleWiki'));
 
 const SYSTEM_META: Record<string, { title: string; description: string }> = {
   role_wiki: { title: '角色技能', description: '查看角色各技能的伤害、段数、释放时间与等级成长。' },
@@ -70,12 +69,6 @@ const HELP_SYSTEM = 'help';
 const NO_DATA_SYSTEMS = [OPS_SYSTEM, PLAYER_LOOKUP_SYSTEM, HELP_SYSTEM] as const;
 const KNOWN_SYSTEMS = ['role_wiki', 'role_equip', 'role_spiritual', 'role_wing', 'role_cultivate', 'pet', 'beast_stats', 'ride', 'role_fashion', 'call_god', 'boss', 'resist', 'player_lookup', 'help', 'ops'] as const;
 
-function resolveSystemFromPath(pathname: string) {
-  if (pathname === OPS_ROUTE_PATH) return OPS_SYSTEM;
-  const redirectTarget = LEGACY_ROUTE_REDIRECTS[pathname];
-  return PATH_TO_SYSTEM[redirectTarget || pathname] || DEFAULT_SYSTEM;
-}
-
 function PageFallback() {
   return (
     <div className="flex flex-col items-center justify-center py-20">
@@ -90,7 +83,7 @@ const WATERMARK_SVG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [currentSystem, setCurrentSystem] = useState(() => resolveSystemFromPath(location.pathname));
+  const [currentSystem, setCurrentSystem] = useState(DEFAULT_SYSTEM);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [showOps, setShowOps] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -99,7 +92,6 @@ function App() {
   const supportsGlobalSearch = ['role_equip', 'role_fashion', 'boss'].includes(activeSystem);
   const shouldShowSearchBar = shouldLoadGameData && supportsGlobalSearch;
   const { dataSources, loading } = useGameData(activeSystem, shouldLoadGameData);
-  const visitorStats = useVisitorStats();
   const isBossSystem = activeSystem === 'boss';
   const isSearching = shouldLoadGameData && searchQuery.trim().length > 0 && !isBossSystem;
 
@@ -226,14 +218,13 @@ function App() {
           searchValue={searchQuery}
           searchDisabled={!supportsGlobalSearch}
           onSearchChange={setSearchQuery}
-          visitorStats={visitorStats}
         />
 
         <div className="border-b border-amber-300/60 bg-amber-50 px-4 py-2 text-sm leading-relaxed text-amber-900 lg:px-8 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100">
           <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-x-2 gap-y-1">
             <span className="font-semibold">技能数值为测试性功能</span>
             <span className="text-amber-700/70 dark:text-amber-200/60">|</span>
-            <span>当前仍有大量未调整内容，仅供临时核对。网站建议/反馈QQ群：681321644。</span>
+            <span>当前仍有大量未调整内容，仅供参考。网站建议/反馈QQ群：681321644。</span>
           </div>
         </div>
 

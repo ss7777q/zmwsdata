@@ -59,6 +59,12 @@ const GROUPS = [
   { key: 'pet_wiki_huadiehubing', name: '神霄花仙/玄蝶仙子/千年冰狐', type: '仙兽' },
 ] as const satisfies ReadonlyArray<{ key: string; name: string; type: PetGroupType }>;
 
+const PET_TYPE_OVERRIDES: Record<string, Record<number, PetGroupType>> = {
+  pet_wiki_huadiehubing: {
+    190000073: '灵兽',
+  },
+};
+
 const TYPE_ORDER: PetGroupType[] = ['神兽', '灵兽', '仙兽'];
 
 const TYPE_BADGE_CLASS: Record<PetGroupType, string> = {
@@ -94,6 +100,10 @@ function collectCardLevels(card: SkillCardData | undefined, levelSet: Set<number
   }
 }
 
+function petEntryType(group: (typeof GROUPS)[number], petId: number): PetGroupType {
+  return PET_TYPE_OVERRIDES[group.key]?.[petId] ?? group.type;
+}
+
 export default function PetSkillWiki({ dataSources }: Props) {
   const availableGroups = useMemo(() => GROUPS.filter((g) => dataSources[g.key]?.data), [dataSources]);
   const baselineBySkill = useMemo(() => {
@@ -105,18 +115,15 @@ export default function PetSkillWiki({ dataSources }: Props) {
     }
     return map;
   }, [dataSources]);
-  const availableTypes = useMemo(
-    () => TYPE_ORDER.filter((type) => availableGroups.some((group) => group.type === type)),
-    [availableGroups]
-  );
   const petEntriesByType = useMemo<Record<PetGroupType, PetMenuEntry[]>>(() => {
     const buckets: Record<PetGroupType, PetMenuEntry[]> = { 神兽: [], 灵兽: [], 仙兽: [] };
     for (const group of availableGroups) {
       const payload = dataSources[group.key]?.data as PetWikiPayload | undefined;
       if (!payload?.variants?.length) continue;
       for (const variant of payload.variants) {
-        buckets[group.type].push({
-          type: group.type,
+        const type = petEntryType(group, variant.pet.id);
+        buckets[type].push({
+          type,
           groupKey: group.key,
           petId: variant.pet.id,
           petName: variant.pet.name,
@@ -125,6 +132,10 @@ export default function PetSkillWiki({ dataSources }: Props) {
     }
     return buckets;
   }, [availableGroups, dataSources]);
+  const availableTypes = useMemo(
+    () => TYPE_ORDER.filter((type) => petEntriesByType[type].length > 0),
+    [petEntriesByType]
+  );
   const [activeType, setActiveType] = useState<PetGroupType>('神兽');
   const [activeGroupKey, setActiveGroupKey] = useState<string>(GROUPS[0].key);
   const [activePetId, setActivePetId] = useState<number | null>(null);

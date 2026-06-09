@@ -1,6 +1,12 @@
 /**
- * 坐骑技能基准值 X 自动反推。
- * 只消费 output/ride_wiki_*.json,不读取攻略图片或倍率文本。
+ * 坐骑技能基准值 X 自动反推
+ *
+ * 原理:
+ *   - 攻略口径: 技能总固伤 = 基准固伤 * 固伤倍率 = 基准固伤 * CD * 修正比
+ *   - 常规输出技能修正比约为 100%, 因此同等级 totalVal / cd 的最大主簇可作为该等级坐骑 X
+ *
+ * 本模块只消费已经完成伤害段合并的 ride_wiki_*.json,不读取攻略图片或倍率文本。
+ * 缺 CD、缺固伤、0/1 占位伤害不进入样本;样本不足时只写 warning,不构造假基准值。
  */
 const fs = require("fs");
 const path = require("path");
@@ -71,11 +77,15 @@ function collectSamples(warnings) {
         if (!ACTIVE_SLOT_KINDS.has(base.slotKind || slot.slotKind)) continue;
 
         const cd = header.cd;
-        if (typeof cd !== "number" || !Number.isFinite(cd) || cd <= 0) continue;
+        if (typeof cd !== "number" || !Number.isFinite(cd) || cd <= 0) {
+          continue;
+        }
 
         for (const levelRow of base.levels || []) {
           const totalVal = levelRow.totalVal;
-          if (typeof totalVal !== "number" || !Number.isFinite(totalVal) || totalVal <= 1) continue;
+          if (typeof totalVal !== "number" || !Number.isFinite(totalVal) || totalVal <= 1) {
+            continue;
+          }
 
           samples.push({
             file,
@@ -160,7 +170,10 @@ function inferBaselines(samples, warnings) {
     }
 
     const clusterShare = main.sampleCount / levelSamples.length;
-    if (main.sampleCount < BASELINE_MIN_CLUSTER_SAMPLE_COUNT || clusterShare < BASELINE_MIN_CLUSTER_SHARE) {
+    if (
+      main.sampleCount < BASELINE_MIN_CLUSTER_SAMPLE_COUNT ||
+      clusterShare < BASELINE_MIN_CLUSTER_SHARE
+    ) {
       pushWarning(warnings, "LOW_BASELINE_CONFIDENCE", `技能等级 ${level} 主簇样本不足或占比偏低`, {
         level,
         sampleCount: levelSamples.length,
@@ -236,15 +249,20 @@ function summarizeSkills(samples, baselines) {
     const multiplierMax = Math.max(...multipliers);
     const multiplierMedian = median(multipliers);
     const multiplierRange = multiplierMax - multiplierMin;
-    const multiplierRelativeRange = multiplierMedian ? multiplierRange / Math.abs(multiplierMedian) : null;
+    const multiplierRelativeRange = multiplierMedian
+      ? multiplierRange / Math.abs(multiplierMedian)
+      : null;
     const correctionMin = Math.min(...corrections);
     const correctionMax = Math.max(...corrections);
     const correctionMedian = median(corrections);
     const correctionRange = correctionMax - correctionMin;
-    const correctionRelativeRange = correctionMedian ? correctionRange / Math.abs(correctionMedian) : null;
-    const fixedMultiplierMode = multiplierRelativeRange != null && multiplierRelativeRange > FIXED_MULTIPLIER_STATIC_RELATIVE_RANGE_LIMIT
-      ? "growth"
-      : "static";
+    const correctionRelativeRange = correctionMedian
+      ? correctionRange / Math.abs(correctionMedian)
+      : null;
+    const fixedMultiplierMode = multiplierRelativeRange != null &&
+      multiplierRelativeRange > FIXED_MULTIPLIER_STATIC_RELATIVE_RANGE_LIMIT
+        ? "growth"
+        : "static";
 
     return {
       ...skill,

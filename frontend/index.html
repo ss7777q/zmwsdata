@@ -10,45 +10,6 @@
 
 <body>
   <div id="root"></div>
-  <script>
-    (function () {
-      function supportsCss(conditionText, property, value) {
-        try {
-          if (!window.CSS || typeof window.CSS.supports !== 'function') return false;
-          return property ? window.CSS.supports(property, value) : window.CSS.supports(conditionText);
-        } catch (error) {
-          return false;
-        }
-      }
-
-      var supportsRequiredCss =
-        supportsCss('selector(:where(*))') &&
-        supportsCss('', 'color', 'oklch(50% 0.1 120)') &&
-        supportsCss('', 'width', 'min(100px, 50vw)') &&
-        supportsCss('', '--zmws-css-var-check', '1');
-
-      var supportsRequiredRuntime =
-        typeof window.Promise === 'function' &&
-        typeof window.fetch === 'function';
-
-      if (supportsRequiredCss && supportsRequiredRuntime) return;
-
-      document.documentElement.setAttribute('data-zmws-legacy-browser', 'true');
-
-      var root = document.getElementById('root');
-      if (!root) return;
-
-      root.innerHTML =
-        '<main style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f1f5f9;color:#0f172a;font-family:Arial,Microsoft YaHei,sans-serif;padding:24px;box-sizing:border-box;">' +
-          '<section style="width:100%;max-width:560px;background:#fff;border:1px solid #dbe3ef;border-radius:8px;box-shadow:0 12px 32px rgba(15,23,42,.12);padding:28px;box-sizing:border-box;">' +
-            '<p style="margin:0 0 10px;font-size:14px;line-height:1.6;color:#475569;">浏览器兼容性提示</p>' +
-            '<h1 style="margin:0 0 14px;font-size:24px;line-height:1.25;font-weight:700;color:#0f172a;">当前浏览器可能无法正常渲染页面</h1>' +
-            '<p style="margin:0 0 14px;font-size:15px;line-height:1.8;color:#334155;">检测到当前浏览器缺少本站需要的 CSS 或运行时能力，继续访问可能出现页面错位、样式缺失或功能异常。</p>' +
-            '<p style="margin:0;font-size:15px;line-height:1.8;color:#334155;">请更新浏览器，或切换到最新版 Chrome、Edge、Firefox、Safari、360 极速模式，以获得最佳体验。</p>' +
-          '</section>' +
-        '</main>';
-    }());
-  </script>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 

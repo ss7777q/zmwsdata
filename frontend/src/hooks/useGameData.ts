@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { apiUrl, dataFileUrl, dataManifestUrl, staticDataStreamEnabled } from '../lib/api';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { apiUrl, dataFileUrl, dataManifestUrl, staticDataEnabled } from '../lib/api';
 
 export interface MetaData {
   name?: string;
@@ -57,14 +57,15 @@ function matchesSystemFilter(name: string, systemFilter?: string) {
 export function useGameData(systemFilter?: string, enabled = true) {
   const [allSources, setAllSources] = useState<Record<string, GameDataFile>>({});
   const [loading, setLoading] = useState(true);
+  const useStaticData = staticDataEnabled();
 
   const loadFile = useCallback(async (name: string) => {
-    const response = await fetch(dataFileUrl(name));
+    const response = await fetch(useStaticData ? dataFileUrl(name) : apiUrl(`/api/data/${encodeURIComponent(name)}`));
     if (!response.ok) {
       throw new Error(`Load ${name}.json failed: ${response.status}`);
     }
     return response.json() as Promise<GameDataFile>;
-  }, []);
+  }, [useStaticData]);
 
   const refreshOne = useCallback(async (name: string) => {
     try {
@@ -78,9 +79,9 @@ export function useGameData(systemFilter?: string, enabled = true) {
   }, [loadFile]);
 
   const refreshAll = useCallback(async (activeSystemFilter?: string) => {
-    const response = await fetch(dataManifestUrl());
+    const response = await fetch(useStaticData ? dataManifestUrl() : apiUrl('/api/files'));
     if (!response.ok) {
-      throw new Error(`Load data manifest failed: ${response.status}`);
+      throw new Error(useStaticData ? `Load data manifest failed: ${response.status}` : `Load /api/files failed: ${response.status}`);
     }
     const { files } = (await response.json()) as FileListResponse;
     const targetFiles = files.filter((file) => matchesSystemFilter(file.name, activeSystemFilter));
@@ -94,7 +95,7 @@ export function useGameData(systemFilter?: string, enabled = true) {
       ...previous,
       ...Object.fromEntries(entries),
     }));
-  }, [loadFile]);
+  }, [loadFile, useStaticData]);
 
   useEffect(() => {
     let disposed = false;
@@ -120,7 +121,7 @@ export function useGameData(systemFilter?: string, enabled = true) {
 
     void init();
 
-    if (staticDataStreamEnabled() && typeof window !== 'undefined' && 'EventSource' in window) {
+    if (!useStaticData && typeof window !== 'undefined' && 'EventSource' in window) {
       stream = new EventSource(apiUrl('/api/stream'));
       stream.addEventListener('file-changed', (event) => {
         try {
@@ -151,7 +152,7 @@ export function useGameData(systemFilter?: string, enabled = true) {
       disposed = true;
       stream?.close();
     };
-  }, [enabled, refreshAll, refreshOne, systemFilter]);
+  }, [enabled, refreshAll, refreshOne, systemFilter, useStaticData]);
 
   const filteredSources = useMemo(() => {
     return Object.fromEntries(

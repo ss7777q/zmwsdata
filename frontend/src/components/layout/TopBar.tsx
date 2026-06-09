@@ -1,4 +1,4 @@
-import { Database, Menu, Moon, Search, Sun, Users, X } from 'lucide-react';
+import { Database, Menu, Moon, Search, Sun, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { VisitorStatsResponse } from '../../lib/api';
 
@@ -92,17 +92,14 @@ export default function TopBar({
 
         <div className="order-2 flex items-center gap-4 sm:gap-6 shrink-0 ml-auto lg:order-3 lg:ml-0">
           {visitorStats ? (
-            <div className="hidden md:flex items-center gap-3 rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs text-textSub shadow-sm backdrop-blur-sm">
-              <span className="inline-flex items-center gap-1.5">
-                <Users className="h-3.5 w-3.5 text-cta" />
-                <span>在线 {visitorStats.onlineVisitors}</span>
-              </span>
+            <div className="hidden xl:flex items-center gap-2 rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs text-textSub shadow-sm backdrop-blur-sm">
+              <span>在线 {visitorStats.onlineVisitors}</span>
               <span className="text-border">/</span>
-              <span>本日 {visitorStats.todayVisitors}</span>
+              <span>今日 {visitorStats.todayVisitors}</span>
               <span className="text-border">/</span>
-              <span>总独立访客 {visitorStats.totalVisitors}</span>
+              <span>总计 {visitorStats.totalVisitors}</span>
               <span className="text-border">/</span>
-              <span>总访问次数 {visitorStats.totalVisits}</span>
+              <span>人次 {visitorStats.totalVisits}</span>
             </div>
           ) : null}
 

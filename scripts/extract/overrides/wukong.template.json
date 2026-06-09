@@ -1,0 +1,296 @@
+{
+  "_version": 1,
+  "_hint": "把要自定义的项写进 displayText。未写的项用引擎默认。占位符: {value.0.0|pct} {time|sec} 自由数学 {= value.0.0 * -100 }。_ 前缀键仅供参考,可删。",
+  "buffs": {
+    "1000701": {
+      "_raw": {
+        "name": "灼烧",
+        "text": "每秒造成灼烧伤害,持续5秒",
+        "value": [
+          [
+            -0.136,
+            -9,
+            0,
+            0
+          ]
+        ],
+        "time": 150,
+        "interval": 30,
+        "attribute": 4,
+        "type": 1,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0.0": "-0.136",
+        "value.0.0|pct": "13.6%",
+        "value.0.0|abs": "0.136",
+        "value.0.1": "-9",
+        "value.0.1|pct": "900%",
+        "value.0.1|abs": "9",
+        "value.0.2": "0",
+        "value.0.2|pct": "0%",
+        "value.0.2|abs": "0",
+        "value.0.3": "0",
+        "value.0.3|pct": "0%",
+        "value.0.3|abs": "0",
+        "time|sec": "5s",
+        "time|frame": "150帧",
+        "interval|sec": "1s"
+      },
+      "_engineDisplayText": "-13.6% + -9",
+      "_usedBySkills": [
+        1001171
+      ],
+      "displayText": ""
+    },
+    "8000401": {
+      "_raw": {
+        "name": "闪避强化等级1",
+        "text": "烈焰闪闪避提升",
+        "value": [
+          0,
+          20160
+        ],
+        "time": -1,
+        "interval": 0,
+        "attribute": 0,
+        "type": 8,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0",
+        "value.0|pct": "0%",
+        "value.0|abs": "0",
+        "value.1": "20160",
+        "value.1|pct": "2016000%",
+        "value.1|abs": "20160",
+        "time|sec": "-0.033333s",
+        "time|frame": "-1帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "20160",
+      "_usedBySkills": [
+        1001150,
+        1001154,
+        1001153,
+        1001155
+      ],
+      "displayText": ""
+    },
+    "14002201": {
+      "_raw": {
+        "name": "减伤",
+        "text": "承受伤害时减少30%",
+        "value": [
+          -0.3,
+          0
+        ],
+        "time": 450,
+        "interval": 0,
+        "attribute": 0,
+        "type": 14,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "-0.3",
+        "value.0|pct": "30%",
+        "value.0|abs": "0.3",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "15s",
+        "time|frame": "450帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-30.0%",
+      "_usedBySkills": [
+        1001190,
+        1001192,
+        1001193
+      ],
+      "displayText": ""
+    },
+    "17000401": {
+      "_raw": {
+        "name": "额外伤害",
+        "text": "造成30%额外伤害",
+        "value": [
+          0.3,
+          0
+        ],
+        "time": 450,
+        "interval": 0,
+        "attribute": 0,
+        "type": 17,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0.3",
+        "value.0|pct": "30%",
+        "value.0|abs": "0.3",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "15s",
+        "time|frame": "450帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "30.0%",
+      "_usedBySkills": [
+        1001190,
+        1001192,
+        1001193
+      ],
+      "displayText": ""
+    },
+    "32000601": {
+      "_raw": {
+        "name": "吸血",
+        "text": "增加0.5%生命偷取",
+        "value": [
+          0.005,
+          0
+        ],
+        "time": 450,
+        "interval": 0,
+        "attribute": 0,
+        "type": 32,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0.005",
+        "value.0|pct": "0.5%",
+        "value.0|abs": "0.005",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "15s",
+        "time|frame": "450帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "0.5%",
+      "_usedBySkills": [
+        1001193
+      ],
+      "displayText": ""
+    },
+    "40000301": {
+      "_raw": {
+        "name": "免疫状态",
+        "text": "免疫所有状态",
+        "value": null,
+        "time": -1,
+        "interval": 0,
+        "attribute": 0,
+        "type": 40,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "time|sec": "-0.033333s",
+        "time|frame": "-1帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": null,
+      "_usedBySkills": [
+        1001190,
+        1001192,
+        1001193
+      ],
+      "displayText": ""
+    },
+    "60004401": {
+      "_raw": {
+        "name": "空影",
+        "text": "增加最终闪避率",
+        "value": [
+          0.15,
+          0
+        ],
+        "time": 9,
+        "interval": 0,
+        "attribute": 0,
+        "type": 60,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0.15",
+        "value.0|pct": "15%",
+        "value.0|abs": "0.15",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "0.3s",
+        "time|frame": "9帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "15.0%",
+      "_usedBySkills": [
+        1001155
+      ],
+      "displayText": ""
+    },
+    "61000201": {
+      "_raw": {
+        "name": "暴击强化",
+        "text": "增加10%暴击率",
+        "value": [
+          0.1,
+          0
+        ],
+        "time": 450,
+        "interval": 0,
+        "attribute": 0,
+        "type": 61,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0.1",
+        "value.0|pct": "10%",
+        "value.0|abs": "0.1",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "15s",
+        "time|frame": "450帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "10.0%",
+      "_usedBySkills": [
+        1001192
+      ],
+      "displayText": ""
+    },
+    "119000101": {
+      "_raw": {
+        "name": "分身火魔斩保护分修正",
+        "text": "时停效果不造成保护分（防止硬直悬空）",
+        "value": [
+          -1,
+          0
+        ],
+        "time": 8,
+        "interval": 0,
+        "attribute": 0,
+        "type": 119,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "-1",
+        "value.0|pct": "100%",
+        "value.0|abs": "1",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "0.266667s",
+        "time|frame": "8帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-100.0%",
+      "_usedBySkills": [
+        1001182
+      ],
+      "displayText": ""
+    }
+  },
+  "skills": {}
+}

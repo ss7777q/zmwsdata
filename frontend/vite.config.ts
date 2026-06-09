@@ -20,7 +20,6 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5250,
     proxy: {
       '/api': {
         target: apiTarget,

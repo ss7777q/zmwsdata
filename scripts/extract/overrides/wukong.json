@@ -1,0 +1,89 @@
+{
+  "_version": 1,
+  "_hint": "手动覆盖文件。键=baseBuffId(或 skillId:baseBuffId 精确到单技能)。只写要改的项,未写的回退引擎默认。占位符: {value.0.0|pct} {time|sec};自由数学 {= value.0.0 * -100 }。完整可选值见 wukong.template.json(用 --emit-template 重新生成)。",
+  "metrics": [
+    {
+      "key": "dodgeRate",
+      "label": "闪避率",
+      "scope": "level",
+      "skill": 1001150,
+      "conv": {
+        "type": "dodge",
+        "buff": "8000401",
+        "valuePath": "value.1"
+      },
+      "format": "pct",
+      "fixed": 1
+    },
+    {
+      "key": "dodgeRate",
+      "label": "闪避率",
+      "scope": "level",
+      "skill": 1001154,
+      "conv": {
+        "type": "dodge",
+        "buff": "8000401",
+        "valuePath": "value.1"
+      },
+      "format": "pct",
+      "fixed": 1
+    },
+    {
+      "key": "dodgeRate",
+      "label": "闪避率",
+      "scope": "level",
+      "skill": 1001153,
+      "conv": {
+        "type": "dodge",
+        "buff": "8000401",
+        "valuePath": "value.1"
+      },
+      "format": "pct",
+      "fixed": 1
+    },
+    {
+      "key": "dodgeRate",
+      "label": "闪避率",
+      "scope": "level",
+      "skill": 1001155,
+      "conv": {
+        "type": "dodge",
+        "buff": "8000401",
+        "valuePath": "value.1"
+      },
+      "format": "pct",
+      "fixed": 1
+    }
+  ],
+  "buffs": {
+    "1000701": {
+      "displayText": "每秒造成 {value.0.0|pct}*atk + {value.0.1|abs} 固伤，持续 {time|sec}"
+    }
+  },
+  "skills": {
+    "1001154": {
+      "header.note": "攻略：烈焰闪基础伤害1.7*atk，并追加分身出场技下劈0.17*atk；卡片按1.87总系数展示。"
+    },
+    "1001161": {
+      "header.note": "攻略：若当前生命值不低于 25%，可燃烧自身血量来使升龙斩获得 20% 的伤害增幅；基础面板属性仍按照常规升龙斩的 4 段总系数 2.8 进行展示。"
+    },
+    "1001162": {
+      "header.note": "攻略：升龙斩基础4段总系数2.8，追加分身空中四连击，额外伤害为本体15%；卡片按3.22总系数展示。"
+    },
+    "1001171": {
+      "header.note": "攻略：若当前生命值不低于 25%，可燃烧生命并使命中目标陷入灼烧状态；基础直伤仍按照常规烈焰风暴 5 段总系数 3.4 进行展示。"
+    },
+    "1001172": {
+      "header.note": "攻略：烈焰风暴基础5段总系数3.4，追加分身落地伤害0.51*atk，约为本体15%；卡片按3.91总系数展示。"
+    },
+    "1001181": {
+      "header.note": "攻略：每下降5%血量，火魔斩伤害提高1.5%，最高22.5%；若目标带有烈焰风暴灼烧，嗜血狂暴吸血效果提高50%。"
+    },
+    "1001182": {
+      "header.note": "攻略：火魔斩·幻灭基础为七斩与落地强攻，总系数 4.781；吸收分身能够额外造成震颤伤害。"
+    },
+    "1002250": {
+      "header.note": "攻略：向前撞击，共造成 4 段物理伤害，总系数 3.2。"
+    }
+  }
+}
