@@ -1,0 +1,685 @@
+{
+  "_version": 1,
+  "buffs": {
+    "10001301": {
+      "_raw": {
+        "name": "韧性强化",
+        "text": "增加韧性等级1",
+        "value": [
+          0,
+          759
+        ],
+        "time": 10,
+        "interval": 0,
+        "attribute": 0,
+        "type": 10,
+        "maxPiles": 6
+      },
+      "_computed": {
+        "value.0": "0",
+        "value.0|pct": "0%",
+        "value.0|abs": "0",
+        "value.1": "759",
+        "value.1|pct": "75900%",
+        "value.1|abs": "759",
+        "time|sec": "0.333333s",
+        "time|frame": "10帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "759",
+      "_usedBySkills": [
+        5001030,
+        5001031,
+        5001035
+      ],
+      "displayText": ""
+    },
+    "10001401": {
+      "_raw": {
+        "name": "韧性强化",
+        "text": "增加韧性等级1",
+        "value": [
+          0,
+          759
+        ],
+        "time": 10,
+        "interval": 0,
+        "attribute": 0,
+        "type": 10,
+        "maxPiles": 6
+      },
+      "_computed": {
+        "value.0": "0",
+        "value.0|pct": "0%",
+        "value.0|abs": "0",
+        "value.1": "759",
+        "value.1|pct": "75900%",
+        "value.1|abs": "759",
+        "time|sec": "0.333333s",
+        "time|frame": "10帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "759",
+      "_usedBySkills": [
+        5001035
+      ],
+      "displayText": ""
+    },
+    "10001501": {
+      "_raw": {
+        "name": "韧性弱化等级1",
+        "text": "降低韧性",
+        "value": [
+          0,
+          -124
+        ],
+        "time": 120,
+        "interval": 0,
+        "attribute": 0,
+        "type": 10,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0",
+        "value.0|pct": "0%",
+        "value.0|abs": "0",
+        "value.1": "-124",
+        "value.1|pct": "12400%",
+        "value.1|abs": "124",
+        "time|sec": "4s",
+        "time|frame": "120帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-124",
+      "_usedBySkills": [
+        5001031
+      ],
+      "displayText": ""
+    },
+    "12000801": {
+      "_raw": {
+        "name": "守护强化等级1",
+        "text": "增加守护等级1",
+        "value": [
+          0,
+          4048
+        ],
+        "time": 60,
+        "interval": 0,
+        "attribute": 0,
+        "type": 12,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0",
+        "value.0|pct": "0%",
+        "value.0|abs": "0",
+        "value.1": "4048",
+        "value.1|pct": "404800%",
+        "value.1|abs": "4048",
+        "time|sec": "2s",
+        "time|frame": "60帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "4048",
+      "_usedBySkills": [
+        5001030,
+        5001031,
+        5001035
+      ],
+      "displayText": ""
+    },
+    "12000901": {
+      "_raw": {
+        "name": "守护强化等级1",
+        "text": "增加守护等级1",
+        "value": [
+          0,
+          4048
+        ],
+        "time": 60,
+        "interval": 0,
+        "attribute": 0,
+        "type": 12,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0",
+        "value.0|pct": "0%",
+        "value.0|abs": "0",
+        "value.1": "4048",
+        "value.1|pct": "404800%",
+        "value.1|abs": "4048",
+        "time|sec": "2s",
+        "time|frame": "60帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "4048",
+      "_usedBySkills": [
+        5001035
+      ],
+      "displayText": ""
+    },
+    "14002201": {
+      "_raw": {
+        "name": "减伤",
+        "text": "承受伤害时减少30%",
+        "value": [
+          -0.3,
+          0
+        ],
+        "time": 450,
+        "interval": 0,
+        "attribute": 0,
+        "type": 14,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "-0.3",
+        "value.0|pct": "30%",
+        "value.0|abs": "0.3",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "15s",
+        "time|frame": "450帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-30.0%",
+      "_usedBySkills": [
+        5001070,
+        5001071,
+        5001075
+      ],
+      "displayText": ""
+    },
+    "16003001": {
+      "_raw": {
+        "name": "剑神无我",
+        "text": "回复法力",
+        "value": {
+          "param": [
+            0,
+            0,
+            0.0369
+          ]
+        },
+        "time": 15,
+        "interval": 0,
+        "attribute": 0,
+        "type": 16,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "time|sec": "0.5s",
+        "time|frame": "15帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": null,
+      "_usedBySkills": [
+        5001071
+      ],
+      "displayText": ""
+    },
+    "17000401": {
+      "_raw": {
+        "name": "额外伤害",
+        "text": "造成30%额外伤害",
+        "value": [
+          0.3,
+          0
+        ],
+        "time": 450,
+        "interval": 0,
+        "attribute": 0,
+        "type": 17,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0.3",
+        "value.0|pct": "30%",
+        "value.0|abs": "0.3",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "15s",
+        "time|frame": "450帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "30.0%",
+      "_usedBySkills": [
+        5001070,
+        5001071,
+        5001075
+      ],
+      "displayText": ""
+    },
+    "32000901": {
+      "_raw": {
+        "name": "吸血等级1",
+        "text": "增加生命偷取",
+        "value": {
+          "per": 0.003,
+          "val": 0,
+          "max": 14
+        },
+        "time": 150,
+        "interval": 0,
+        "attribute": 0,
+        "type": 195,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "time|sec": "5s",
+        "time|frame": "150帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "0.3%",
+      "_usedBySkills": [
+        5001230
+      ],
+      "displayText": ""
+    },
+    "33000401": {
+      "_raw": {
+        "name": "吸蓝等级1",
+        "text": "增加法力偷取",
+        "value": {
+          "per": 0.0015,
+          "val": 0,
+          "max": 7
+        },
+        "time": 150,
+        "interval": 0,
+        "attribute": 0,
+        "type": 196,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "time|sec": "5s",
+        "time|frame": "150帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "0.1%",
+      "_usedBySkills": [
+        5001230
+      ],
+      "displayText": ""
+    },
+    "40000301": {
+      "_raw": {
+        "name": "免疫状态",
+        "text": "免疫所有状态",
+        "value": null,
+        "time": -1,
+        "interval": 0,
+        "attribute": 0,
+        "type": 40,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "time|sec": "-0.033333s",
+        "time|frame": "-1帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": null,
+      "_usedBySkills": [
+        5001070,
+        5001071,
+        5001075
+      ],
+      "displayText": ""
+    },
+    "41001301": {
+      "_raw": {
+        "name": "免疫减益",
+        "text": "免疫减益状态",
+        "value": null,
+        "time": -1,
+        "interval": 0,
+        "attribute": 0,
+        "type": 41,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "time|sec": "-0.033333s",
+        "time|frame": "-1帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": null,
+      "_usedBySkills": [
+        5001030,
+        5001031,
+        5001035
+      ],
+      "displayText": ""
+    },
+    "100001201": {
+      "_raw": {
+        "name": "敖雪修正",
+        "text": "释放技能4，前11帧不受控制",
+        "value": null,
+        "time": 11,
+        "interval": 0,
+        "attribute": 0,
+        "type": 100,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "time|sec": "0.366667s",
+        "time|frame": "11帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": null,
+      "_usedBySkills": [
+        5001060,
+        5001061,
+        5001068
+      ],
+      "displayText": ""
+    },
+    "102000401": {
+      "_raw": {
+        "name": "恐惧",
+        "text": "远离目标，持续1秒",
+        "value": null,
+        "time": 30,
+        "interval": 0,
+        "attribute": 0,
+        "type": 102,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "time|sec": "1s",
+        "time|frame": "30帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": null,
+      "_usedBySkills": [
+        5001068
+      ],
+      "displayText": ""
+    },
+    "110000501": {
+      "_raw": {
+        "name": "技能冷却",
+        "text": "技能冷却减少100%",
+        "value": [
+          -1,
+          0
+        ],
+        "time": 150,
+        "interval": 0,
+        "attribute": 0,
+        "type": 110,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "-1",
+        "value.0|pct": "100%",
+        "value.0|abs": "1",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "5s",
+        "time|frame": "150帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-100.0%",
+      "_usedBySkills": [
+        5001068
+      ],
+      "displayText": ""
+    },
+    "112000501": {
+      "_raw": {
+        "name": "充能冻结",
+        "text": "龙女-充能冻结-环剑阵期间",
+        "value": [
+          -1,
+          0
+        ],
+        "time": -1,
+        "interval": 0,
+        "attribute": 0,
+        "type": 112,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "-1",
+        "value.0|pct": "100%",
+        "value.0|abs": "1",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "-0.033333s",
+        "time|frame": "-1帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-100.0%",
+      "_usedBySkills": [
+        5001035
+      ],
+      "displayText": ""
+    },
+    "189000201": {
+      "_raw": {
+        "name": "剑气回复",
+        "text": "回复2枚剑气",
+        "value": {
+          "addType": 1,
+          "flag": "sword",
+          "val": 2
+        },
+        "time": 25,
+        "interval": 0,
+        "attribute": 0,
+        "type": 189,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "time|sec": "0.833333s",
+        "time|frame": "25帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "2",
+      "_usedBySkills": [
+        5001071
+      ],
+      "displayText": ""
+    },
+    "193000101": {
+      "_raw": {
+        "name": "1万剑归宗-增加子弹范围",
+        "text": "消耗1层剑气",
+        "value": [
+          0.05,
+          0
+        ],
+        "time": 45,
+        "interval": 0,
+        "attribute": 0,
+        "type": 193,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0.05",
+        "value.0|pct": "5%",
+        "value.0|abs": "0.05",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "1.5s",
+        "time|frame": "45帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "5.0%",
+      "_usedBySkills": [
+        5001060,
+        5001061
+      ],
+      "displayText": ""
+    },
+    "193000102": {
+      "_raw": {
+        "name": "2万剑归宗-增加子弹范围",
+        "text": "消耗2层剑气",
+        "value": [
+          0.1,
+          0
+        ],
+        "time": 45,
+        "interval": 0,
+        "attribute": 0,
+        "type": 193,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0.1",
+        "value.0|pct": "10%",
+        "value.0|abs": "0.1",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "1.5s",
+        "time|frame": "45帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "10.0%",
+      "_usedBySkills": [
+        5001060,
+        5001061
+      ],
+      "displayText": ""
+    },
+    "193000103": {
+      "_raw": {
+        "name": "3万剑归宗-增加子弹范围",
+        "text": "消耗3层剑气",
+        "value": [
+          0.15,
+          0
+        ],
+        "time": 45,
+        "interval": 0,
+        "attribute": 0,
+        "type": 193,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0.15",
+        "value.0|pct": "15%",
+        "value.0|abs": "0.15",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "1.5s",
+        "time|frame": "45帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "15.0%",
+      "_usedBySkills": [
+        5001060,
+        5001061
+      ],
+      "displayText": ""
+    },
+    "193000104": {
+      "_raw": {
+        "name": "4万剑归宗-增加子弹范围",
+        "text": "消耗4层剑气",
+        "value": [
+          0.2,
+          0
+        ],
+        "time": 45,
+        "interval": 0,
+        "attribute": 0,
+        "type": 193,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0.2",
+        "value.0|pct": "20%",
+        "value.0|abs": "0.2",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "1.5s",
+        "time|frame": "45帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "20.0%",
+      "_usedBySkills": [
+        5001060,
+        5001061
+      ],
+      "displayText": ""
+    },
+    "193000105": {
+      "_raw": {
+        "name": "5万剑归宗-增加子弹范围",
+        "text": "消耗5层剑气",
+        "value": [
+          0.25,
+          0
+        ],
+        "time": 45,
+        "interval": 0,
+        "attribute": 0,
+        "type": 193,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0.25",
+        "value.0|pct": "25%",
+        "value.0|abs": "0.25",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "1.5s",
+        "time|frame": "45帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "25.0%",
+      "_usedBySkills": [
+        5001060,
+        5001061
+      ],
+      "displayText": ""
+    },
+    "193000106": {
+      "_raw": {
+        "name": "6万剑归宗-增加子弹范围",
+        "text": "消耗6层剑气",
+        "value": [
+          0.3,
+          0
+        ],
+        "time": 45,
+        "interval": 0,
+        "attribute": 0,
+        "type": 193,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0.3",
+        "value.0|pct": "30%",
+        "value.0|abs": "0.3",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "1.5s",
+        "time|frame": "45帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "30.0%",
+      "_usedBySkills": [
+        5001060,
+        5001061
+      ],
+      "displayText": ""
+    }
+  },
+  "skills": {}
+}

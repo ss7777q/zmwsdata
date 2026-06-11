@@ -877,6 +877,13 @@ function applyMaxLevel(value, maxLevel) {
     return undefined;
   }
 
+  if (Array.isArray(next.levels) && next.levels.length > 0 && typeof next.maxLevel === 'number') {
+    const lastLevel = next.levels[next.levels.length - 1]?.level;
+    if (typeof lastLevel === 'number' && Number.isFinite(lastLevel)) {
+      next.maxLevel = lastLevel;
+    }
+  }
+
   if (
     typeof next.levelStart === 'number' &&
     Number.isFinite(next.levelStart) &&

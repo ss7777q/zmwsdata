@@ -188,8 +188,8 @@ export default function HelpCenter() {
   const remainingMessage = MESSAGE_LIMIT - message.length;
   const canSubmit = title.trim().length >= 4 && message.trim().length >= 10 && !submitting;
   const visitorTrendItems = visitorHistory?.items ?? [];
-  const visitorTrendWindowTotal = visitorHistory?.totalVisitors ?? 0;
-  const visitorTrendDailyPeak = visitorHistory?.maxVisitors ?? 0;
+  const visitorTrendTotal = visitorHistory?.totalVisitors ?? 0;
+  const visitorTrendPeak = visitorHistory?.maxVisitors ?? 0;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -350,11 +350,11 @@ export default function HelpCenter() {
                   <TrendingUp className="h-4 w-4 text-cta" />
                   访问趋势
                 </div>
-                <p className="mt-1 text-xs leading-5 text-textSub">最近 {VISITOR_HISTORY_DAYS} 天每日独立访客变化</p>
+                <p className="mt-1 text-xs leading-5 text-textSub">最近 {VISITOR_HISTORY_DAYS} 天每日访客变化</p>
               </div>
               <div className="flex gap-2 text-xs">
-                <span className="rounded-full border border-border bg-card px-3 py-1 text-textSub">近 {VISITOR_HISTORY_DAYS} 天累计 {visitorTrendWindowTotal}</span>
-                <span className="rounded-full border border-border bg-card px-3 py-1 text-textSub">近 {VISITOR_HISTORY_DAYS} 天单日峰值 {visitorTrendDailyPeak}</span>
+                <span className="rounded-full border border-border bg-card px-3 py-1 text-textSub">累计 {visitorTrendTotal}</span>
+                <span className="rounded-full border border-border bg-card px-3 py-1 text-textSub">峰值 {visitorTrendPeak}</span>
               </div>
             </div>
 
@@ -386,7 +386,7 @@ export default function HelpCenter() {
                       stroke="rgba(148, 163, 184, 0.35)"
                     />
                     <Tooltip
-                      formatter={(value) => [`${Number(value ?? 0)} 人`, '当天独立访客']}
+                      formatter={(value) => [`${Number(value ?? 0)} 人`, '当天访客']}
                       labelFormatter={(label) => `日期 ${String(label ?? '')}`}
                       contentStyle={{
                         borderRadius: '16px',

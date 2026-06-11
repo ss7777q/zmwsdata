@@ -1,0 +1,290 @@
+{
+  "_version": 1,
+  "buffs": {
+    "6002501": {
+      "_raw": {
+        "name": "破月流星 - 破甲等级1",
+        "text": "减少防御",
+        "value": [
+          0,
+          -2
+        ],
+        "time": 240,
+        "interval": 0,
+        "attribute": 0,
+        "type": 6,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0",
+        "value.0|pct": "0%",
+        "value.0|abs": "0",
+        "value.1": "-2",
+        "value.1|pct": "200%",
+        "value.1|abs": "2",
+        "time|sec": "8s",
+        "time|frame": "240帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-2",
+      "_usedBySkills": [
+        4001230
+      ],
+      "displayText": ""
+    },
+    "8001601": {
+      "_raw": {
+        "name": "闪避强化",
+        "text": "闪避提升",
+        "value": [
+          0,
+          20160
+        ],
+        "time": 14,
+        "interval": 0,
+        "attribute": 0,
+        "type": 8,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0",
+        "value.0|pct": "0%",
+        "value.0|abs": "0",
+        "value.1": "20160",
+        "value.1|pct": "2016000%",
+        "value.1|abs": "20160",
+        "time|sec": "0.466667s",
+        "time|frame": "14帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "20160",
+      "_usedBySkills": [
+        4001034
+      ],
+      "displayText": ""
+    },
+    "14002201": {
+      "_raw": {
+        "name": "减伤",
+        "text": "承受伤害时减少30%",
+        "value": [
+          -0.3,
+          0
+        ],
+        "time": 450,
+        "interval": 0,
+        "attribute": 0,
+        "type": 14,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "-0.3",
+        "value.0|pct": "30%",
+        "value.0|abs": "0.3",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "15s",
+        "time|frame": "450帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-30.0%",
+      "_usedBySkills": [
+        4001070,
+        4001071,
+        4001072
+      ],
+      "displayText": ""
+    },
+    "17000401": {
+      "_raw": {
+        "name": "额外伤害",
+        "text": "造成30%额外伤害",
+        "value": [
+          0.3,
+          0
+        ],
+        "time": 450,
+        "interval": 0,
+        "attribute": 0,
+        "type": 17,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0.3",
+        "value.0|pct": "30%",
+        "value.0|abs": "0.3",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "15s",
+        "time|frame": "450帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "30.0%",
+      "_usedBySkills": [
+        4001070,
+        4001071,
+        4001072
+      ],
+      "displayText": ""
+    },
+    "26001001": {
+      "_raw": {
+        "name": "缠绕",
+        "text": "不可移动，持续3秒",
+        "value": null,
+        "time": 90,
+        "interval": 0,
+        "attribute": 5,
+        "type": 26,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "time|sec": "3s",
+        "time|frame": "90帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": null,
+      "_usedBySkills": [
+        4001250
+      ],
+      "displayText": ""
+    },
+    "40000301": {
+      "_raw": {
+        "name": "免疫状态",
+        "text": "免疫所有状态",
+        "value": null,
+        "time": -1,
+        "interval": 0,
+        "attribute": 0,
+        "type": 40,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "time|sec": "-0.033333s",
+        "time|frame": "-1帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": null,
+      "_usedBySkills": [
+        4001070,
+        4001071,
+        4001072
+      ],
+      "displayText": ""
+    },
+    "61000501": {
+      "_raw": {
+        "name": "暴击强化",
+        "text": "增加10%暴击率",
+        "value": [
+          0.1,
+          0
+        ],
+        "time": 450,
+        "interval": 0,
+        "attribute": 0,
+        "type": 61,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0.1",
+        "value.0|pct": "10%",
+        "value.0|abs": "0.1",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "15s",
+        "time|frame": "450帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "10.0%",
+      "_usedBySkills": [
+        4001072
+      ],
+      "displayText": ""
+    },
+    "142000701": {
+      "_raw": {
+        "name": "毒爆受击特效",
+        "text": "毒爆受击特效",
+        "value": null,
+        "time": 15,
+        "interval": 0,
+        "attribute": 0,
+        "type": 142,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "time|sec": "0.5s",
+        "time|frame": "15帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": null,
+      "_usedBySkills": [
+        4001054
+      ],
+      "displayText": ""
+    },
+    "153000101": {
+      "_raw": {
+        "name": "绿叶",
+        "text": "标记并减速",
+        "value": {
+          "max": 0.7,
+          "min": 0.175,
+          "hitRate": 0.35
+        },
+        "time": 150,
+        "interval": 0,
+        "attribute": 0,
+        "type": 153,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "time|sec": "5s",
+        "time|frame": "150帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": null,
+      "_usedBySkills": [
+        4001057
+      ],
+      "displayText": ""
+    },
+    "201000101": {
+      "_raw": {
+        "name": "追猎标记",
+        "text": "追猎标记",
+        "value": [
+          0,
+          -10
+        ],
+        "time": 120,
+        "interval": 0,
+        "attribute": 0,
+        "type": 201,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0",
+        "value.0|pct": "0%",
+        "value.0|abs": "0",
+        "value.1": "-10",
+        "value.1|pct": "1000%",
+        "value.1|abs": "10",
+        "time|sec": "4s",
+        "time|frame": "120帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-10",
+      "_usedBySkills": [
+        4001037
+      ],
+      "displayText": ""
+    }
+  },
+  "skills": {}
+}

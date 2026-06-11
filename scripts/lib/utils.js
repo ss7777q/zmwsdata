@@ -4,7 +4,6 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { applyOutputMaxLevel, getConfiguredMaxLevel } = require('./max-level-filter');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const DATA_DIR = path.join(ROOT, 'dataApi');
@@ -105,17 +104,14 @@ function parseCost(cost) {
 /** 写出提取结果到 output/<name>.json */
 function saveOutput(name, data, meta = {}) {
   if (!fs.existsSync(OUTPUT_DIR)) fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-  const maxLevel = getConfiguredMaxLevel();
   const out = {
-    _meta: { name, extractedAt: new Date().toISOString(), maxLevel, ...meta },
+    _meta: { name, extractedAt: new Date().toISOString(), ...meta },
     data
   };
-  const filteredOut = applyOutputMaxLevel(name, out, maxLevel);
   const fp = path.join(OUTPUT_DIR, name + '.json');
-  fs.writeFileSync(fp, JSON.stringify(filteredOut), 'utf-8');
-  const filteredData = filteredOut.data;
-  const cnt = Array.isArray(filteredData) ? filteredData.length + '条' : Object.keys(filteredData).length + '组';
-  console.log(`  ✅ ${name}.json → ${cnt} (maxLevel=${maxLevel})`);
+  fs.writeFileSync(fp, JSON.stringify(out), 'utf-8');
+  const cnt = Array.isArray(data) ? data.length + '条' : Object.keys(data).length + '组';
+  console.log(`  ✅ ${name}.json → ${cnt}`);
 }
 
 // ─── 去重辅助 ────────────────────────────────────────
@@ -149,6 +145,5 @@ module.exports = {
   ROOT, DATA_DIR, OUTPUT_DIR,
   findTableFile, loadTable, isInactiveDataApiRow,
   getItems, itemName, itemInfo,
-  parseCost, saveOutput, dedupByLevelTier,
-  applyOutputMaxLevel, getConfiguredMaxLevel
+  parseCost, saveOutput, dedupByLevelTier
 };

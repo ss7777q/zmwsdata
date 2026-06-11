@@ -1,0 +1,611 @@
+{
+  "_version": 1,
+  "buffs": {
+    "1045901": {
+      "_raw": {
+        "name": "凝聚甘露等级1",
+        "text": "每秒恢复目标生命值",
+        "value": [
+          [
+            0,
+            4,
+            0,
+            0
+          ]
+        ],
+        "time": 15,
+        "interval": 0,
+        "attribute": 3,
+        "type": 1,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0.0": "0",
+        "value.0.0|pct": "0%",
+        "value.0.0|abs": "0",
+        "value.0.1": "4",
+        "value.0.1|pct": "400%",
+        "value.0.1|abs": "4",
+        "value.0.2": "0",
+        "value.0.2|pct": "0%",
+        "value.0.2|abs": "0",
+        "value.0.3": "0",
+        "value.0.3|pct": "0%",
+        "value.0.3|abs": "0",
+        "time|sec": "0.5s",
+        "time|frame": "15帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "4",
+      "_usedBySkills": [
+        7174011
+      ],
+      "displayText": ""
+    },
+    "1046001": {
+      "_raw": {
+        "name": "凝聚甘露等级1",
+        "text": "每秒恢复目标生命值",
+        "value": [
+          [
+            0,
+            5,
+            0,
+            0
+          ]
+        ],
+        "time": 15,
+        "interval": 0,
+        "attribute": 3,
+        "type": 1,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0.0": "0",
+        "value.0.0|pct": "0%",
+        "value.0.0|abs": "0",
+        "value.0.1": "5",
+        "value.0.1|pct": "500%",
+        "value.0.1|abs": "5",
+        "value.0.2": "0",
+        "value.0.2|pct": "0%",
+        "value.0.2|abs": "0",
+        "value.0.3": "0",
+        "value.0.3|pct": "0%",
+        "value.0.3|abs": "0",
+        "time|sec": "0.5s",
+        "time|frame": "15帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "5",
+      "_usedBySkills": [
+        7175011
+      ],
+      "displayText": ""
+    },
+    "4045801": {
+      "_raw": {
+        "name": "逆风",
+        "text": "减少移速",
+        "value": [
+          -0.15,
+          0
+        ],
+        "time": 60,
+        "interval": 0,
+        "attribute": 0,
+        "type": 4,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "-0.15",
+        "value.0|pct": "15%",
+        "value.0|abs": "0.15",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "2s",
+        "time|frame": "60帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-15.0%",
+      "_usedBySkills": [
+        7172010
+      ],
+      "displayText": ""
+    },
+    "4045901": {
+      "_raw": {
+        "name": "移速弱化",
+        "text": "减少移速",
+        "value": [
+          -0.1,
+          0
+        ],
+        "time": 10,
+        "interval": 0,
+        "attribute": 0,
+        "type": 4,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "-0.1",
+        "value.0|pct": "10%",
+        "value.0|abs": "0.1",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "0.333333s",
+        "time|frame": "10帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-10.0%",
+      "_usedBySkills": [
+        7176011
+      ],
+      "displayText": ""
+    },
+    "5008601": {
+      "_raw": {
+        "name": "逆风·伤害弱化",
+        "text": "造成伤害下降",
+        "value": [
+          -0.09,
+          0
+        ],
+        "time": 60,
+        "interval": 0,
+        "attribute": 0,
+        "type": 17,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "-0.09",
+        "value.0|pct": "9%",
+        "value.0|abs": "0.09",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "2s",
+        "time|frame": "60帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-9.0%",
+      "_usedBySkills": [
+        7172010
+      ],
+      "displayText": ""
+    },
+    "6009701": {
+      "_raw": {
+        "name": "防御弱化等级1",
+        "text": "减少防御",
+        "value": [
+          0,
+          -3
+        ],
+        "time": 10,
+        "interval": 0,
+        "attribute": 3,
+        "type": 6,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0",
+        "value.0|pct": "0%",
+        "value.0|abs": "0",
+        "value.1": "-3",
+        "value.1|pct": "300%",
+        "value.1|abs": "3",
+        "time|sec": "0.333333s",
+        "time|frame": "10帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-3",
+      "_usedBySkills": [
+        7176011
+      ],
+      "displayText": ""
+    },
+    "13005001": {
+      "_raw": {
+        "name": "叶灵护盾等级1",
+        "text": "可抵挡部分伤害的护盾",
+        "value": [
+          0,
+          41,
+          0,
+          0
+        ],
+        "time": 150,
+        "interval": 0,
+        "attribute": 0,
+        "type": 13,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0",
+        "value.0|pct": "0%",
+        "value.0|abs": "0",
+        "value.1": "41",
+        "value.1|pct": "4100%",
+        "value.1|abs": "41",
+        "value.2": "0",
+        "value.2|pct": "0%",
+        "value.2|abs": "0",
+        "value.3": "0",
+        "value.3|pct": "0%",
+        "value.3|abs": "0",
+        "time|sec": "5s",
+        "time|frame": "150帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "41",
+      "_usedBySkills": [
+        7001030
+      ],
+      "displayText": ""
+    },
+    "13005101": {
+      "_raw": {
+        "name": "叶灵护盾等级1",
+        "text": "可抵挡部分伤害护盾，根据伤势提高护盾抵挡比例",
+        "value": [
+          0,
+          45,
+          0,
+          0
+        ],
+        "time": 150,
+        "interval": 0,
+        "attribute": 0,
+        "type": 13,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0",
+        "value.0|pct": "0%",
+        "value.0|abs": "0",
+        "value.1": "45",
+        "value.1|pct": "4500%",
+        "value.1|abs": "45",
+        "value.2": "0",
+        "value.2|pct": "0%",
+        "value.2|abs": "0",
+        "value.3": "0",
+        "value.3|pct": "0%",
+        "value.3|abs": "0",
+        "time|sec": "5s",
+        "time|frame": "150帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "45",
+      "_usedBySkills": [
+        7001031
+      ],
+      "displayText": ""
+    },
+    "13005201": {
+      "_raw": {
+        "name": "叶灵护盾",
+        "text": "可抵挡75%伤害护盾，当叶灵消失时护盾炸裂",
+        "value": [
+          0,
+          41,
+          0,
+          0
+        ],
+        "time": 150,
+        "interval": 0,
+        "attribute": 0,
+        "type": 13,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0",
+        "value.0|pct": "0%",
+        "value.0|abs": "0",
+        "value.1": "41",
+        "value.1|pct": "4100%",
+        "value.1|abs": "41",
+        "value.2": "0",
+        "value.2|pct": "0%",
+        "value.2|abs": "0",
+        "value.3": "0",
+        "value.3|pct": "0%",
+        "value.3|abs": "0",
+        "time|sec": "5s",
+        "time|frame": "150帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "41",
+      "_usedBySkills": [
+        7001036
+      ],
+      "displayText": ""
+    },
+    "13005301": {
+      "_raw": {
+        "name": "水之护盾",
+        "text": "可抵挡伤害，护盾期间霸体，结束盾量转化生命值",
+        "value": [
+          0,
+          41,
+          0,
+          0
+        ],
+        "time": 150,
+        "interval": 0,
+        "attribute": 0,
+        "type": 13,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0",
+        "value.0|pct": "0%",
+        "value.0|abs": "0",
+        "value.1": "41",
+        "value.1|pct": "4100%",
+        "value.1|abs": "41",
+        "value.2": "0",
+        "value.2|pct": "0%",
+        "value.2|abs": "0",
+        "value.3": "0",
+        "value.3|pct": "0%",
+        "value.3|abs": "0",
+        "time|sec": "5s",
+        "time|frame": "150帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "41",
+      "_usedBySkills": [
+        7001351,
+        7001451
+      ],
+      "displayText": ""
+    },
+    "14002201": {
+      "_raw": {
+        "name": "减伤",
+        "text": "承受伤害时减少30%",
+        "value": [
+          -0.3,
+          0
+        ],
+        "time": 450,
+        "interval": 0,
+        "attribute": 0,
+        "type": 14,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "-0.3",
+        "value.0|pct": "30%",
+        "value.0|abs": "0.3",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "15s",
+        "time|frame": "450帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-30.0%",
+      "_usedBySkills": [
+        7001076
+      ],
+      "displayText": ""
+    },
+    "14009901": {
+      "_raw": {
+        "name": "减伤",
+        "text": "减伤",
+        "value": [
+          -0.5,
+          0
+        ],
+        "time": 30,
+        "interval": 0,
+        "attribute": 0,
+        "type": 14,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "-0.5",
+        "value.0|pct": "50%",
+        "value.0|abs": "0.5",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "1s",
+        "time|frame": "30帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-50.0%",
+      "_usedBySkills": [
+        7177000,
+        7178000,
+        7179000
+      ],
+      "displayText": ""
+    },
+    "14010201": {
+      "_raw": {
+        "name": "减伤",
+        "text": "承受伤害时减少25%",
+        "value": [
+          -0.25,
+          0
+        ],
+        "time": 450,
+        "interval": 0,
+        "attribute": 0,
+        "type": 14,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "-0.25",
+        "value.0|pct": "25%",
+        "value.0|abs": "0.25",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "15s",
+        "time|frame": "450帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-25.0%",
+      "_usedBySkills": [
+        7001070,
+        7001071
+      ],
+      "displayText": ""
+    },
+    "14010301": {
+      "_raw": {
+        "name": "减伤",
+        "text": "承受伤害时减少",
+        "value": [
+          -0.5,
+          0
+        ],
+        "time": -1,
+        "interval": 0,
+        "attribute": 0,
+        "type": 14,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "-0.5",
+        "value.0|pct": "50%",
+        "value.0|abs": "0.5",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "-0.033333s",
+        "time|frame": "-1帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-50.0%",
+      "_usedBySkills": [
+        7176011
+      ],
+      "displayText": ""
+    },
+    "17003001": {
+      "_raw": {
+        "name": "额外伤害",
+        "text": "造成额外伤害",
+        "value": [
+          0.4,
+          0
+        ],
+        "time": 450,
+        "interval": 0,
+        "attribute": 0,
+        "type": 17,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0.4",
+        "value.0|pct": "40%",
+        "value.0|abs": "0.4",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "15s",
+        "time|frame": "450帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "40.0%",
+      "_usedBySkills": [
+        7001076
+      ],
+      "displayText": ""
+    },
+    "41001001": {
+      "_raw": {
+        "name": "免疫减益",
+        "text": "免疫减益状态",
+        "value": null,
+        "time": -1,
+        "interval": 0,
+        "attribute": 0,
+        "type": 41,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "time|sec": "-0.033333s",
+        "time|frame": "-1帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": null,
+      "_usedBySkills": [
+        7177000,
+        7178000,
+        7179000
+      ],
+      "displayText": ""
+    },
+    "136020301": {
+      "_raw": {
+        "name": "给予弱控标记",
+        "text": null,
+        "value": [
+          0,
+          0
+        ],
+        "time": 6,
+        "interval": 0,
+        "attribute": 0,
+        "type": 136,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0",
+        "value.0|pct": "0%",
+        "value.0|abs": "0",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "0.2s",
+        "time|frame": "6帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": null,
+      "_usedBySkills": [
+        7001331,
+        7001431
+      ],
+      "displayText": ""
+    },
+    "139000001": {
+      "_raw": {
+        "name": "驱散",
+        "text": "驱散禁足",
+        "value": {
+          "debuffs": [
+            13
+          ]
+        },
+        "time": 30,
+        "interval": 0,
+        "attribute": 0,
+        "type": 139,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "time|sec": "1s",
+        "time|frame": "30帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": null,
+      "_usedBySkills": [
+        7177000,
+        7178000,
+        7179000
+      ],
+      "displayText": ""
+    }
+  },
+  "skills": {}
+}

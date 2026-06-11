@@ -24,11 +24,14 @@ function runScript(scriptRelativePath, args = []) {
 }
 
 async function main() {
-  console.log('[pipeline] sync dataApi from upstream');
-  await runScript('scripts/sync_data_api.js');
-
   console.log('[pipeline] sync map resources from upstream');
   await runScript('scripts/sync_maps.js');
+
+  console.log('[pipeline] sync battle config from upstream');
+  await runScript('scripts/sync_battle_config.js');
+
+  console.log('[pipeline] sync dataApi from upstream');
+  await runScript('scripts/sync_data_api.js');
 
   console.log('[pipeline] extract resource summaries into output');
   await runScript('scripts/extract_all.js');

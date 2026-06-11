@@ -1,0 +1,410 @@
+{
+  "_version": 1,
+  "buffs": {
+    "1006601": {
+      "_raw": {
+        "name": "重生",
+        "text": "每秒回复0.66%最大生命",
+        "value": [
+          [
+            0,
+            0,
+            0,
+            0.0066
+          ]
+        ],
+        "time": 450,
+        "interval": 30,
+        "attribute": 0,
+        "type": 1,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0.0": "0",
+        "value.0.0|pct": "0%",
+        "value.0.0|abs": "0",
+        "value.0.1": "0",
+        "value.0.1|pct": "0%",
+        "value.0.1|abs": "0",
+        "value.0.2": "0",
+        "value.0.2|pct": "0%",
+        "value.0.2|abs": "0",
+        "value.0.3": "0.0066",
+        "value.0.3|pct": "0.66%",
+        "value.0.3|abs": "0.0066",
+        "time|sec": "15s",
+        "time|frame": "450帧",
+        "interval|sec": "1s"
+      },
+      "_engineDisplayText": null,
+      "_usedBySkills": [
+        3001073
+      ],
+      "displayText": ""
+    },
+    "2001301": {
+      "_raw": {
+        "name": "无敌",
+        "text": "身体虚无不受任何攻击，持续1秒",
+        "value": null,
+        "time": 30,
+        "interval": 0,
+        "attribute": 0,
+        "type": 2,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "time|sec": "1s",
+        "time|frame": "30帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": null,
+      "_usedBySkills": [
+        3001062
+      ],
+      "displayText": ""
+    },
+    "3002401": {
+      "_raw": {
+        "name": "晕眩",
+        "text": "无法移动、攻击和使用技能3秒",
+        "value": null,
+        "time": 90,
+        "interval": 0,
+        "attribute": 0,
+        "type": 3,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "time|sec": "3s",
+        "time|frame": "90帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": null,
+      "_usedBySkills": [
+        3001062
+      ],
+      "displayText": ""
+    },
+    "4001501": {
+      "_raw": {
+        "name": "移速弱化",
+        "text": "减少50%移速",
+        "value": [
+          -0.5,
+          0
+        ],
+        "time": -1,
+        "interval": 0,
+        "attribute": 0,
+        "type": 4,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "-0.5",
+        "value.0|pct": "50%",
+        "value.0|abs": "0.5",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "-0.033333s",
+        "time|frame": "-1帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-50.0%",
+      "_usedBySkills": [
+        3001060,
+        3001067
+      ],
+      "displayText": ""
+    },
+    "4001801": {
+      "_raw": {
+        "name": "移速强化",
+        "text": "增加50%移速",
+        "value": [
+          0.5,
+          0
+        ],
+        "time": 45,
+        "interval": 0,
+        "attribute": 0,
+        "type": 4,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0.5",
+        "value.0|pct": "50%",
+        "value.0|abs": "0.5",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "1.5s",
+        "time|frame": "45帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "50.0%",
+      "_usedBySkills": [
+        3001260
+      ],
+      "displayText": ""
+    },
+    "13001001": {
+      "_raw": {
+        "name": "护盾",
+        "text": "最大生命护盾,持续5秒",
+        "value": [
+          0,
+          24,
+          0,
+          0
+        ],
+        "time": 150,
+        "interval": 0,
+        "attribute": 0,
+        "type": 13,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0",
+        "value.0|pct": "0%",
+        "value.0|abs": "0",
+        "value.1": "24",
+        "value.1|pct": "2400%",
+        "value.1|abs": "24",
+        "value.2": "0",
+        "value.2|pct": "0%",
+        "value.2|abs": "0",
+        "value.3": "0",
+        "value.3|pct": "0%",
+        "value.3|abs": "0",
+        "time|sec": "5s",
+        "time|frame": "150帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "24",
+      "_usedBySkills": [
+        3001032
+      ],
+      "displayText": ""
+    },
+    "14002201": {
+      "_raw": {
+        "name": "减伤",
+        "text": "承受伤害时减少30%",
+        "value": [
+          -0.3,
+          0
+        ],
+        "time": 450,
+        "interval": 0,
+        "attribute": 0,
+        "type": 14,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "-0.3",
+        "value.0|pct": "30%",
+        "value.0|abs": "0.3",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "15s",
+        "time|frame": "450帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-30.0%",
+      "_usedBySkills": [
+        3001070,
+        3001072,
+        3001073
+      ],
+      "displayText": ""
+    },
+    "14002901": {
+      "_raw": {
+        "name": "减伤",
+        "text": "减伤25%",
+        "value": [
+          -0.25,
+          0
+        ],
+        "time": 15,
+        "interval": 0,
+        "attribute": 0,
+        "type": 14,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "-0.25",
+        "value.0|pct": "25%",
+        "value.0|abs": "0.25",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "0.5s",
+        "time|frame": "15帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-25.0%",
+      "_usedBySkills": [
+        3001062
+      ],
+      "displayText": ""
+    },
+    "14003001": {
+      "_raw": {
+        "name": "减伤",
+        "text": "减伤99%",
+        "value": [
+          -0.99,
+          0
+        ],
+        "time": 15,
+        "interval": 0,
+        "attribute": 0,
+        "type": 14,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "-0.99",
+        "value.0|pct": "99%",
+        "value.0|abs": "0.99",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "0.5s",
+        "time|frame": "15帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-99.0%",
+      "_usedBySkills": [
+        3001062
+      ],
+      "displayText": ""
+    },
+    "17000401": {
+      "_raw": {
+        "name": "额外伤害",
+        "text": "造成30%额外伤害",
+        "value": [
+          0.3,
+          0
+        ],
+        "time": 450,
+        "interval": 0,
+        "attribute": 0,
+        "type": 17,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0.3",
+        "value.0|pct": "30%",
+        "value.0|abs": "0.3",
+        "value.1": "0",
+        "value.1|pct": "0%",
+        "value.1|abs": "0",
+        "time|sec": "15s",
+        "time|frame": "450帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "30.0%",
+      "_usedBySkills": [
+        3001070,
+        3001072,
+        3001073
+      ],
+      "displayText": ""
+    },
+    "71000101": {
+      "_raw": {
+        "name": "透劲·易伤",
+        "text": "额外承受伤害（等级1）",
+        "value": [
+          0,
+          -2
+        ],
+        "time": 150,
+        "interval": 0,
+        "attribute": 0,
+        "type": 71,
+        "maxPiles": 3
+      },
+      "_computed": {
+        "value.0": "0",
+        "value.0|pct": "0%",
+        "value.0|abs": "0",
+        "value.1": "-2",
+        "value.1|pct": "200%",
+        "value.1|abs": "2",
+        "time|sec": "5s",
+        "time|frame": "150帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "-2",
+      "_usedBySkills": [
+        3001042
+      ],
+      "displayText": ""
+    },
+    "130000101": {
+      "_raw": {
+        "name": "天蓬护体",
+        "text": "保护区域内的友军免受一定量的伤害",
+        "value": [
+          0,
+          98
+        ],
+        "time": 150,
+        "interval": 0,
+        "attribute": 0,
+        "type": 130,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "value.0": "0",
+        "value.0|pct": "0%",
+        "value.0|abs": "0",
+        "value.1": "98",
+        "value.1|pct": "9800%",
+        "value.1|abs": "98",
+        "time|sec": "5s",
+        "time|frame": "150帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": "98",
+      "_usedBySkills": [
+        3001230
+      ],
+      "displayText": ""
+    },
+    "139000301": {
+      "_raw": {
+        "name": "驱散控制",
+        "text": "驱散控制",
+        "value": {
+          "debuffs": [
+            2,
+            4
+          ]
+        },
+        "time": 30,
+        "interval": 0,
+        "attribute": 0,
+        "type": 139,
+        "maxPiles": 0
+      },
+      "_computed": {
+        "time|sec": "1s",
+        "time|frame": "30帧",
+        "interval|sec": "0s"
+      },
+      "_engineDisplayText": null,
+      "_usedBySkills": [
+        3001260
+      ],
+      "displayText": ""
+    }
+  },
+  "skills": {}
+}

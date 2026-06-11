@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { clsx } from 'clsx';
 import { Line, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from 'recharts';
-import { dataFileUrl, type BeastDetailResponse, type BeastLineupAnalysisResponse, type BeastLineupCatalogItem, type BeastLineupDataset, type BeastPlayerAnalysisResponse } from '../lib/api';
+import { apiUrl, type BeastDetailResponse, type BeastLineupAnalysisResponse, type BeastLineupCatalogItem, type BeastLineupDataset, type BeastPlayerAnalysisResponse } from '../lib/api';
 
 type BeastTab = 'detail' | 'lineup' | 'players';
 type DetailNameMode = 'species_then_winner' | 'nickname_then_current';
@@ -51,7 +51,7 @@ function formatSeasonLabel(season: number) {
 }
 
 async function fetchDataFile<T>(name: string): Promise<T> {
-  const response = await fetch(dataFileUrl(name), { cache: 'no-store' });
+  const response = await fetch(apiUrl(`/api/data/${name}`), { cache: 'no-store' });
   if (!response.ok) {
     throw new Error(`加载 ${name} 失败: ${response.status}`);
   }

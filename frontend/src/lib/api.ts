@@ -1,25 +1,20 @@
-﻿const DEFAULT_SERVER_API_BASE = 'https://api.zmwsrank.top';
-const SERVER_API_BASE = (import.meta.env.VITE_SERVER_API_BASE || import.meta.env.VITE_DATA_API_BASE || DEFAULT_SERVER_API_BASE).replace(/\/$/, '');
-const STATIC_DATA_BASE = (import.meta.env.VITE_STATIC_DATA_BASE || '/data').replace(/\/$/, '');
+﻿const API_BASE = (import.meta.env.VITE_DATA_API_BASE || '').replace(/\/$/, '');
+const STATIC_DATA_BASE = (import.meta.env.VITE_STATIC_DATA_BASE || '').replace(/\/$/, '');
 
 export function apiUrl(path: string) {
-  return SERVER_API_BASE ? `${SERVER_API_BASE}${path}` : path;
+  return API_BASE ? `${API_BASE}${path}` : path;
 }
 
-export function staticDataUrl(path: string) {
-  return `${STATIC_DATA_BASE}${path}`;
+export function staticDataEnabled() {
+  return Boolean(STATIC_DATA_BASE);
 }
 
 export function dataManifestUrl() {
-  return staticDataUrl('/manifest.json');
+  return `${STATIC_DATA_BASE}/manifest.json`;
 }
 
 export function dataFileUrl(name: string) {
-  return staticDataUrl(`/${encodeURIComponent(name)}.json`);
-}
-
-export function staticDataStreamEnabled() {
-  return ['1', 'true', 'on', 'yes'].includes(String(import.meta.env.VITE_STATIC_DATA_STREAM || '').toLowerCase());
+  return `${STATIC_DATA_BASE}/${encodeURIComponent(name)}.json`;
 }
 
 export function buildAdminHeaders(token?: string): Record<string, string> {
@@ -33,18 +28,12 @@ export function buildAdminHeaders(token?: string): Record<string, string> {
 }
 
 async function readJsonResponse<T>(response: Response) {
-  const contentType = response.headers.get('content-type') || '';
-  const body = contentType.includes('application/json')
-    ? await response.json().catch(() => ({}))
-    : null;
+  const body = await response.json().catch(() => ({}));
   if (!response.ok) {
     if (body && typeof body === 'object' && 'error' in body && typeof body.error === 'string') {
       throw new Error(body.error);
     }
     throw new Error(`Request failed: ${response.status}`);
-  }
-  if (!body) {
-    throw new Error('接口未返回 JSON，请检查服务器 API 域名配置');
   }
   return body as T;
 }
@@ -296,7 +285,6 @@ export async function registerVisitorStats(visitorId: string, signal?: AbortSign
 export async function fetchVisitorHistory(days = 30, signal?: AbortSignal) {
   const searchParams = new URLSearchParams({
     days: String(days),
-    t: String(Date.now()),
   });
   const response = await fetch(apiUrl(`/api/visitor-stats/history?${searchParams.toString()}`), {
     cache: 'no-store',
