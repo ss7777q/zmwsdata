@@ -1,4 +1,5 @@
-﻿const API_BASE = (import.meta.env.VITE_DATA_API_BASE || '').replace(/\/$/, '');
+﻿const DEFAULT_SERVER_API_BASE = 'https://api.zmwsrank.top';
+const API_BASE = (import.meta.env.VITE_SERVER_API_BASE || import.meta.env.VITE_DATA_API_BASE || DEFAULT_SERVER_API_BASE).replace(/\/$/, '');
 const STATIC_DATA_BASE = (import.meta.env.VITE_STATIC_DATA_BASE || '').replace(/\/$/, '');
 
 export function apiUrl(path: string) {
@@ -285,6 +286,7 @@ export async function registerVisitorStats(visitorId: string, signal?: AbortSign
 export async function fetchVisitorHistory(days = 30, signal?: AbortSignal) {
   const searchParams = new URLSearchParams({
     days: String(days),
+    t: String(Date.now()),
   });
   const response = await fetch(apiUrl(`/api/visitor-stats/history?${searchParams.toString()}`), {
     cache: 'no-store',
