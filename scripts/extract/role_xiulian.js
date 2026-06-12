@@ -3,6 +3,7 @@
  * 提取叶子: 修心(经脉), 修心(六维), 丹气气力, 丹元升级, 炼体(仙魄), 外丹(心脉+丹魂)
  */
 const u = require('../lib/utils');
+const extractDanyuanEffect = require('./role_danyuan_effect');
 
 // ━━━ 修心(经脉) ━━━ meridians.*.json ━━━━━━━━━━━━━━━━
 function extractMeridians() {
@@ -124,6 +125,8 @@ function extractDanyuan() {
     costType: '按品质汇总 levelUpNeed/provideExp/upQualityCost',
     dedup: '忽略丹元种类(type前缀)与阵营(group), 仅保留品质曲线(type%10)'
   });
+
+  extractDanyuanEffect(raw);
 }
 
 // ━━━ 炼体(仙魄) ━━━ xianpo.*.json ━━━━━━━━━━━━━━━━━━━
