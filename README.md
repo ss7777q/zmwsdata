@@ -6,7 +6,8 @@
 
 - Cloudflare Pages 托管 `frontend/dist`。
 - 展示用 JSON 从 `output/` 复制到 `frontend/public/data/`，由 Pages 静态托管和 CF CDN 缓存。
-- 玩家查询、反馈、访问统计、神魔战场计算、运维接口继续请求你的服务器后端。
+- 访问统计由 Cloudflare Pages Functions + D1 承担，接口路径保持 `/api/visitor-stats*` 不变。
+- 玩家查询、反馈、神魔战场计算、运维接口继续请求你的服务器后端。
 - 角色技能 Wiki 以测试性功能接入 CF 前端，静态 JSON 一并从 `output/role_wiki_*.json` 复制到 Pages 产物。
 
 ## 本地构建
@@ -51,10 +52,44 @@ Build output directory: dist
 ```text
 VITE_STATIC_DATA_BASE=/data
 VITE_SERVER_API_BASE=https://api.zmwsrank.top
+VITE_VISITOR_API_BASE=
 VITE_STATIC_DATA_STREAM=false
 ```
 
 服务器 API 域名使用 `https://api.zmwsrank.top`，主站域名 `https://data.zmwsrank.top` 保留给用户访问前端页面。
+`VITE_VISITOR_API_BASE` 留空时，访问统计会走同源 Pages Function；只有临时切回旧服务器时才填写服务器地址。
+
+## 访问统计 D1
+
+Pages Functions 需要绑定一个 D1 数据库，绑定名固定为：
+
+```text
+VISITOR_STATS_DB
+```
+
+初始化 D1：
+
+```bash
+cd /mnt/d/zmws/Server/deployable-app-cf
+npx wrangler d1 create zmws-visitor-stats
+npx wrangler d1 execute zmws-visitor-stats --file schema/visitor_stats_d1.sql --remote
+```
+
+把现有服务器访问记录迁过去：
+
+```bash
+cd /mnt/d/zmws/Server/deployable-app-cf
+node scripts/export_visitor_stats_d1.js ../deployable-app/file/runtime/visitor-stats.db temp/visitor_stats_seed.sql
+npx wrangler d1 execute zmws-visitor-stats --file temp/visitor_stats_seed.sql --remote
+```
+
+Cloudflare Pages 项目里把 D1 绑定到 `VISITOR_STATS_DB` 后，以下接口会直接由 CF 承载：
+
+```text
+/api/visitor-stats
+/api/visitor-stats/history
+/api/visitor-stats/register
+```
 
 ## 服务器继续承担的功能
 
@@ -64,7 +99,6 @@ VITE_STATIC_DATA_STREAM=false
 /api/health
 /api/player-name/*
 /api/feedback
-/api/visitor-stats/*
 /api/battlefield*
 /api/admin/*
 ```

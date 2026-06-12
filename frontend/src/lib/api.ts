@@ -1,8 +1,14 @@
-﻿const API_BASE = (import.meta.env.VITE_DATA_API_BASE || '').replace(/\/$/, '');
+﻿const DEFAULT_SERVER_API_BASE = 'https://api.zmwsrank.top';
+const API_BASE = (import.meta.env.VITE_SERVER_API_BASE || import.meta.env.VITE_DATA_API_BASE || DEFAULT_SERVER_API_BASE).replace(/\/$/, '');
+const VISITOR_API_BASE = (import.meta.env.VITE_VISITOR_API_BASE || '').replace(/\/$/, '');
 const STATIC_DATA_BASE = (import.meta.env.VITE_STATIC_DATA_BASE || '').replace(/\/$/, '');
 
 export function apiUrl(path: string) {
   return API_BASE ? `${API_BASE}${path}` : path;
+}
+
+function visitorApiUrl(path: string) {
+  return VISITOR_API_BASE ? `${VISITOR_API_BASE}${path}` : path;
 }
 
 export function staticDataEnabled() {
@@ -263,7 +269,7 @@ export async function submitFeedback(input: FeedbackSubmissionInput, signal?: Ab
 }
 
 export async function fetchVisitorStats(signal?: AbortSignal) {
-  const response = await fetch(apiUrl('/api/visitor-stats'), {
+  const response = await fetch(visitorApiUrl('/api/visitor-stats'), {
     cache: 'no-store',
     signal,
   });
@@ -271,7 +277,7 @@ export async function fetchVisitorStats(signal?: AbortSignal) {
 }
 
 export async function registerVisitorStats(visitorId: string, signal?: AbortSignal) {
-  const response = await fetch(apiUrl('/api/visitor-stats/register'), {
+  const response = await fetch(visitorApiUrl('/api/visitor-stats/register'), {
     method: 'POST',
     headers: {
       'X-Visitor-Id': visitorId,
@@ -286,7 +292,7 @@ export async function fetchVisitorHistory(days = 30, signal?: AbortSignal) {
   const searchParams = new URLSearchParams({
     days: String(days),
   });
-  const response = await fetch(apiUrl(`/api/visitor-stats/history?${searchParams.toString()}`), {
+  const response = await fetch(visitorApiUrl(`/api/visitor-stats/history?${searchParams.toString()}`), {
     cache: 'no-store',
     signal,
   });

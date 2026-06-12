@@ -4,6 +4,7 @@ import SideNav from './components/layout/SideNav';
 import TopBar from './components/layout/TopBar';
 import SearchResults from './components/ui/SearchResults';
 import { useGameData } from './hooks/useGameData';
+import { useVisitorStats } from './hooks/useVisitorStats';
 import { searchDataSources } from './lib/search';
 import { apiUrl } from './lib/api';
 
@@ -92,6 +93,7 @@ function App() {
   const supportsGlobalSearch = ['role_equip', 'role_fashion', 'boss'].includes(activeSystem);
   const shouldShowSearchBar = shouldLoadGameData && supportsGlobalSearch;
   const { dataSources, loading } = useGameData(activeSystem, shouldLoadGameData);
+  const visitorStats = useVisitorStats();
   const isBossSystem = activeSystem === 'boss';
   const isSearching = shouldLoadGameData && searchQuery.trim().length > 0 && !isBossSystem;
 
@@ -218,6 +220,7 @@ function App() {
           searchValue={searchQuery}
           searchDisabled={!supportsGlobalSearch}
           onSearchChange={setSearchQuery}
+          visitorStats={visitorStats}
         />
 
         <div className="border-b border-amber-300/60 bg-amber-50 px-4 py-2 text-sm leading-relaxed text-amber-900 lg:px-8 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100">

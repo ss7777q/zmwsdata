@@ -3,5 +3,9 @@ pages_build_output_dir = "frontend/dist"
 
 [vars]
 VITE_STATIC_DATA_BASE = "/data"
-# 服务器 API 地址。玩家查询、反馈、访问统计、战场计算、运维接口会继续走服务器。
+# 服务器 API 地址。玩家查询、反馈、战场计算、运维接口会继续走服务器。
 VITE_SERVER_API_BASE = "https://api.zmwsrank.top"
+# 访问统计默认走同源 Pages Functions。临时切回旧服务器时再填写这个值。
+VITE_VISITOR_API_BASE = ""
+
+# D1 绑定名固定为 VISITOR_STATS_DB。database_id 使用 wrangler d1 create 的真实输出在 Cloudflare Pages 中配置。
