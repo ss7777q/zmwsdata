@@ -87,6 +87,23 @@ function App() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [showOps, setShowOps] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleToggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('sidebar_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  };
   const activeSystem = !showOps && currentSystem === OPS_SYSTEM ? DEFAULT_SYSTEM : currentSystem;
   const shouldLoadGameData = !NO_DATA_SYSTEMS.includes(activeSystem as typeof NO_DATA_SYSTEMS[number]);
   const supportsGlobalSearch = ['role_equip', 'role_fashion', 'boss'].includes(activeSystem);
@@ -191,10 +208,12 @@ function App() {
         />
       )}
 
-      <div className={`fixed lg:sticky top-0 h-screen z-50 transform transition-transform duration-300 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} shrink-0 w-64`}>
+      <div className={`fixed lg:sticky top-0 h-screen z-50 transform transition-transform duration-300 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} shrink-0 w-64 ${isSidebarCollapsed ? 'lg:w-20' : 'lg:w-64'}`}>
         <SideNav
           currentSystem={activeSystem}
           showOps={showOps}
+          isSidebarCollapsed={isSidebarCollapsed}
+          onToggleCollapse={handleToggleSidebar}
           onSelectSystem={(system) => {
             if (system === OPS_SYSTEM && !showOps) {
               return;
@@ -222,9 +241,9 @@ function App() {
 
         <div className="border-b border-amber-300/60 bg-amber-50 px-4 py-2 text-sm leading-relaxed text-amber-900 lg:px-8 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100">
           <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="font-semibold">技能数值为测试性功能</span>
+            <span className="font-semibold">数值效果为测试性功能，甚至可能存在错误</span>
             <span className="text-amber-700/70 dark:text-amber-200/60">|</span>
-            <span>当前仍有大量未调整内容，仅供参考。网站建议/反馈QQ群：681321644。</span>
+            <span>当前仍有大量未完成调整内容，仅供参考。如遇问题或有任何建言，欢迎加入交流反馈QQ群：681321644。</span>
           </div>
         </div>
 

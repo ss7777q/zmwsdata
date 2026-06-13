@@ -1,6 +1,5 @@
 import React from 'react';
 import CostBadge from '../ui/CostBadge';
-import { Sparkles, ShieldCheck, Sword, Heart, Droplets } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface Props {
@@ -10,23 +9,23 @@ interface Props {
 export default function FashionBall({ dataSources }: Props) {
     const ballData = dataSources['role_fashion_ball']?.data || [];
 
-    // Attribute mapper to icons/labels
+    // Attribute mapper to labels & colors
     const getAttrMeta = (key: string) => {
-        const map: Record<string, { label: string, icon: any, color: string }> = {
-            atk: { label: '攻击', icon: Sword, color: 'text-red-700 dark:text-red-500' },
-            hp: { label: '生命', icon: Heart, color: 'text-emerald-800 dark:text-green-500' },
-            mp: { label: '魔法', icon: Droplets, color: 'text-blue-700 dark:text-blue-500' },
-            def: { label: '防御', icon: ShieldCheck, color: 'text-orange-700 dark:text-orange-500' },
-            healMp: { label: '回魔', icon: Droplets, color: 'text-cyan-700 dark:text-cyan-500' },
-            healHp: { label: '回血', icon: Heart, color: 'text-emerald-800 dark:text-emerald-500' },
-            hitVal: { label: '命中', icon: Sparkles, color: 'text-yellow-700 dark:text-yellow-500' },
-            dodge: { label: '闪避', icon: Sparkles, color: 'text-purple-700 dark:text-purple-500' },
-            crit: { label: '暴击', icon: Sword, color: 'text-rose-700 dark:text-rose-500' },
-            tenacity: { label: '韧性', icon: ShieldCheck, color: 'text-slate-700 dark:text-slate-400' },
-            lucky: { label: '幸运', icon: Sparkles, color: 'text-amber-700 dark:text-amber-500' },
-            guardian: { label: '守护', icon: ShieldCheck, color: 'text-indigo-700 dark:text-indigo-500' }
+        const map: Record<string, { label: string, color: string }> = {
+            atk: { label: '攻击', color: 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20' },
+            hp: { label: '生命', color: 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20' },
+            mp: { label: '魔法', color: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20' },
+            def: { label: '防御', color: 'bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20' },
+            healMp: { label: '回魔', color: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/20' },
+            healHp: { label: '回血', color: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20' },
+            hitVal: { label: '命中', color: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-500 border-yellow-500/20' },
+            dodge: { label: '闪避', color: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20' },
+            crit: { label: '暴击', color: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20' },
+            tenacity: { label: '韧性', color: 'bg-slate-500/10 text-slate-700 dark:text-slate-400 border-slate-500/20' },
+            lucky: { label: '幸运', color: 'bg-amber-500/10 text-amber-700 dark:text-amber-500 border-amber-500/20' },
+            guardian: { label: '守护', color: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/20' }
         };
-        return map[key] || { label: key, icon: Sparkles, color: 'text-textSub' };
+        return map[key] || { label: key, color: 'bg-slate-500/[0.04] text-textSub border-border/50' };
     };
 
     const processedData = React.useMemo(() => {
@@ -51,23 +50,15 @@ export default function FashionBall({ dataSources }: Props) {
     }, [ballData]);
 
     if (!ballData.length) {
-        return <div className="text-center text-textSub p-10">等待时装宝珠数据...</div>;
+        return <div className="text-center text-textSub p-10 font-mono text-xs">等待时装宝珠数据...</div>;
     }
 
     return (
         <div className="space-y-6">
-            <div className="card p-6 border border-border/50 bg-gradient-to-br from-surface to-background relative overflow-hidden">
-                {/* Background Decoration */}
-                <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none">
-                    <Sparkles className="w-64 h-64 text-primary" />
-                </div>
-
+            <div className="card p-6 border border-border/60 bg-card relative overflow-hidden shadow-sm">
                 <div className="flex items-center gap-3 mb-6 relative z-10">
-                    <div className="p-2 rounded bg-primary/20 text-primary">
-                        <Sparkles className="w-6 h-6" />
-                    </div>
                     <div>
-                        <h2 className="text-xl font-bold text-textMain">时装宝珠系统</h2>
+                        <h2 className="text-lg font-bold text-textMain uppercase tracking-wider">时装宝珠系统</h2>
                     </div>
                 </div>
 
@@ -76,9 +67,9 @@ export default function FashionBall({ dataSources }: Props) {
                     style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 480px), 1fr))' }}
                 >
                     {processedData.map((rankGroup: any) => (
-                        <div key={rankGroup.rank} className="border border-border/40 rounded-xl bg-background relative flex flex-col shadow-sm">
+                        <div key={rankGroup.rank} className="border border-border/60 rounded-xl bg-slate-500/[0.01] dark:bg-white/[0.01] relative flex flex-col shadow-sm">
                             <div className="px-5 py-3 bg-surface/95 backdrop-blur-md border-b border-border/40 flex justify-between items-center sticky top-0 z-20 rounded-t-xl">
-                                <h3 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
+                                <h3 className="text-sm font-bold text-purple-600 dark:text-purple-400">
                                     【{rankGroup.rank}阶】 时装宝珠
                                 </h3>
                             </div>
@@ -90,20 +81,22 @@ export default function FashionBall({ dataSources }: Props) {
 
                                     return (
                                         <div key={lvl.id} className={clsx(
-                                            "flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg border transition-colors",
-                                            isCapstone ? "bg-primary/5 hover:bg-primary/10 border-primary/20" : "bg-white dark:bg-black/20 border-border/40 hover:border-border shadow-sm"
+                                            "flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-xl border transition-colors",
+                                            isCapstone
+                                                ? "bg-purple-500/5 hover:bg-purple-500/10 border-purple-500/20"
+                                                : "bg-card border-border/40 hover:border-border shadow-sm"
                                         )}>
                                             {/* Level Badge */}
                                             <div className="flex items-center gap-2 shrink-0 flex-wrap">
                                                 <div className={clsx(
-                                                    "font-mono font-bold text-sm px-2 py-1 rounded",
-                                                    isCapstone ? "bg-primary text-white shadow-sm shadow-primary/30" : "bg-surface text-textMain border border-border"
+                                                    "font-mono font-bold text-xs px-2 py-1 rounded-md",
+                                                    isCapstone ? "bg-purple-500 text-white shadow-sm shadow-purple-500/20" : "bg-surface text-textMain border border-border"
                                                 )}>
                                                     Lv.{lvl.level}
                                                 </div>
-                                                {isCapstone && <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded border border-primary/30 sm:hidden">本阶满级</span>}
+                                                {isCapstone && <span className="text-[9px] bg-purple-500/20 text-purple-600 dark:text-purple-300 px-1.5 py-0.5 rounded font-bold sm:hidden">本阶满级</span>}
                                                 {lvl.upLevelLimits && (
-                                                    <span className="text-[11px] font-mono text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 whitespace-nowrap">
+                                                    <span className="text-[10px] font-mono text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 whitespace-nowrap">
                                                         突破要求角色 {lvl.upLevelLimits} 级
                                                     </span>
                                                 )}
@@ -112,20 +105,18 @@ export default function FashionBall({ dataSources }: Props) {
                                             {/* Attributes */}
                                             <div className="flex-1 flex flex-wrap items-center gap-2">
                                                 {attrs.length === 0 ? (
-                                                    <span className="text-textSub/50 italic text-xs">基础激活，无新增属性</span>
+                                                    <span className="text-textSub/50 italic text-[10px]">基础激活，无新增属性</span>
                                                 ) : attrs.length > 3 ? (
-                                                    <span className="text-xs text-orange-700 dark:text-orange-500 font-bold bg-orange-500/10 dark:bg-orange-500/20 px-2 flex items-center gap-1.5 py-1 rounded border border-orange-500/20 dark:border-orange-500/30">
-                                                        <Sparkles className="w-3 h-3 text-orange-500" /> 全属性 +{Math.round(Number(attrs[0][1]) * 100)}%
+                                                    <span className="text-[10px] text-purple-700 dark:text-purple-400 font-bold bg-purple-500/10 dark:bg-purple-500/20 px-2.5 py-1 rounded border border-purple-500/20 dark:border-purple-500/30">
+                                                        全属性 +{Math.round(Number(attrs[0][1]) * 100)}%
                                                     </span>
                                                 ) : (
                                                     attrs.map(([k, v]) => {
                                                         const meta = getAttrMeta(k);
-                                                        const Icon = meta.icon;
                                                         return (
-                                                            <div key={k} className="flex items-center gap-1.5 bg-surface px-2 py-1 rounded border border-border/50">
-                                                                <Icon className={clsx("w-3 h-3", meta.color)} />
-                                                                <span className="text-xs text-textMain">{meta.label}</span>
-                                                                <span className="text-xs text-emerald-800 dark:text-green-500 font-mono font-bold">+{Math.round(Number(v) * 100)}%</span>
+                                                            <div key={k} className={clsx("flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[10px] font-medium", meta.color)}>
+                                                                <span>{meta.label}</span>
+                                                                <span className="font-mono font-bold">+{Math.round(Number(v) * 100)}%</span>
                                                             </div>
                                                         )
                                                     })
@@ -144,11 +135,11 @@ export default function FashionBall({ dataSources }: Props) {
                                                         />
                                                     </div>
                                                 ) : (
-                                                    <span className="text-textSub/50 text-xs hidden sm:block">-</span>
+                                                    <span className="text-textSub/50 text-[10px] hidden sm:block">-</span>
                                                 )}
 
                                                 {(lvl.totalExp > 0 || lvl.totalYuanbao > 0) && (
-                                                    <div className="text-[10px] flex gap-2 font-mono bg-black/5 dark:bg-white/5 px-2 py-1 rounded">
+                                                    <div className="text-[9px] flex gap-1.5 font-mono bg-black/5 dark:bg-white/5 px-2 py-1 rounded">
                                                         {lvl.totalExp > 0 && <span className="text-emerald-800 dark:text-green-500">累计经验: {lvl.totalExp.toLocaleString()}</span>}
                                                         {lvl.totalExp > 0 && lvl.totalYuanbao > 0 && <span className="text-border">|</span>}
                                                         {lvl.totalYuanbao > 0 && <span className="text-amber-600 dark:text-yellow-600">累计元宝: {lvl.totalYuanbao.toLocaleString()}</span>}

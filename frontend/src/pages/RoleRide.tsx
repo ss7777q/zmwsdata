@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { clsx } from 'clsx';
-import { Compass, BookOpen, Star, Shield, ScrollText } from 'lucide-react';
 import RideStar from '../components/ride/RideStar';
 import RideSkill from '../components/ride/RideSkill';
 import RideSkillWiki from '../components/ride/RideSkillWiki';
@@ -18,32 +17,24 @@ export default function RoleRide({ dataSources }: RideProps) {
     return (
         <div className="space-y-6 animate-in fade-in duration-500 pb-20">
             {/* Header Tabs Navigation */}
-            <div className="flex gap-2 p-1 bg-surface border border-border rounded-xl w-max max-w-[calc(100vw-2rem)] overflow-x-auto custom-scrollbar relative z-10">
+            <div className="flex gap-2 p-1 bg-surface border border-border rounded-xl w-max max-w-[calc(100vw-2rem)] overflow-x-auto custom-scrollbar relative z-10 shadow-sm">
                 {[
-                    { id: 'star', label: '图鉴及升星进阶', icon: Star },
-                    { id: 'skill', label: '技能升级', icon: BookOpen },
-                    { id: 'wiki', label: '技能 Wiki', icon: ScrollText },
-                    { id: 'make', label: '装备打造/重铸', icon: Compass },
-                    { id: 'upgrade', label: '装备升级', icon: Shield },
+                    { id: 'star', label: '图鉴及升星进阶' },
+                    { id: 'skill', label: '技能升级' },
+                    { id: 'wiki', label: '技能 Wiki' },
+                    { id: 'make', label: '装备打造/重铸' },
+                    { id: 'upgrade', label: '装备升级' },
                 ].map(tab => (
                     <button
                         key={tab.id}
                         onClick={() => setSubTab(tab.id as any)}
                         className={clsx(
-                            "px-5 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 flex items-center gap-2 relative overflow-hidden group",
+                            "px-6 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center relative overflow-hidden group border active:scale-95 cursor-pointer",
                             subTab === tab.id
-                                ? "text-white shadow-lg shadow-primary/20 bg-primary/20 border border-primary/50"
-                                : "text-textSub hover:text-textMain hover:bg-white/5 border border-transparent"
+                                ? "bg-purple-500/10 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-300/50 dark:border-purple-500/30 shadow-[0_2px_10px_rgba(168,85,247,0.08)]"
+                                : "text-textSub hover:text-textMain hover:bg-slate-200/60 dark:hover:bg-white/5 border-transparent"
                         )}
                     >
-                        {/* 选中态高光特效 */}
-                        {subTab === tab.id && (
-                            <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/20 to-primary/0 translate-x-[-100%] animate-[shimmer_2s_infinite]" />
-                        )}
-                        <tab.icon className={clsx(
-                            "w-4 h-4 transition-transform duration-300",
-                            subTab === tab.id ? "scale-110 text-cta" : "group-hover:scale-110"
-                        )} />
                         {tab.label}
                     </button>
                 ))}

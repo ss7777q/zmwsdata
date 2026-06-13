@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { AlertTriangle, ArrowRight, Clock, Layers, Sparkles, Zap } from 'lucide-react';
+import { AlertTriangle, ArrowRight } from 'lucide-react';
 
 export interface BuffValue {
   per: number | null;
@@ -28,6 +28,10 @@ export interface SkillMetric {
   label: string;
   value: number | null;
   display: string | number | null;
+}
+export interface SkillMechanic {
+  label: string;
+  value: string;
 }
 export interface SkillBaselineLevel {
   level: number;
@@ -77,10 +81,50 @@ export interface SkillLevel {
   roleLevel: number | null;
   consumeMp: number | null;
   segmentVals: { val: number; maxHit: number }[];
-  totalPer: number;
-  totalVal: number;
+  totalPer: number | null;
+  totalVal: number | null;
   growthBuffs: BuffInfo[];
   metrics?: SkillMetric[];
+  passive?: PassiveLevelInfo;
+}
+export interface PassiveMetric {
+  label: string;
+  value: string | number | boolean | null;
+  raw?: unknown;
+}
+export interface PassiveBeskillInfo {
+  id: number;
+  source: string;
+  name: string;
+  label: string | null;
+  type: number | null;
+  attribute: unknown;
+  otherData: unknown;
+  text: string | null;
+  desc: string | null;
+  effects?: PassiveMetric[];
+}
+export interface PassiveCost {
+  itemId: number;
+  name: string;
+  count: number | string | Record<string, number> | null;
+}
+export interface PassiveLevelInfo {
+  id: number;
+  group: number;
+  passiveName: string;
+  text: string | null;
+  unlockType: number | null;
+  number: unknown;
+  rankCost: PassiveCost[] | null;
+  inherit: number | null;
+  label: number | null;
+  stageType: unknown;
+  stageTypeNo: unknown;
+  closeRankUp: unknown;
+  directBeskills: PassiveBeskillInfo[];
+  makeUpBeskills: PassiveBeskillInfo[];
+  initializeBeskills: PassiveBeskillInfo[];
 }
 export interface SkillWarning {
   code: string;
@@ -107,6 +151,7 @@ export interface SkillCardData {
     cfgResolveSource: string | null;
     fixedBuffs: FixedBuff[];
     metrics?: SkillMetric[];
+    mechanics?: SkillMechanic[];
     chainViz?: SkillChainViz | null;
     note?: string | null;
   };
@@ -115,6 +160,7 @@ export interface SkillCardData {
   warnings: SkillWarning[];
   skillBaseline?: SkillBaselineData | null;
   identicalToBase?: boolean;
+  passiveKind?: boolean;
   error?: string;
 }
 
@@ -366,11 +412,10 @@ function BuffRow({ buff }: { buff: BuffInfo }) {
     return (
       <div className="flex flex-col gap-1 rounded-lg bg-card px-2.5 py-2">
         <div className="flex items-center gap-1.5">
-          <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
-          <span className="text-xs font-semibold text-textMain">{cleanBuffName(buff.name)}</span>
           <span className="shrink-0 rounded bg-surface px-1 text-[10px] text-textSub">{buff.bindLabel}</span>
+          <span className="text-xs font-semibold text-textMain">{cleanBuffName(buff.name)}</span>
         </div>
-        <div className="text-xs text-cta leading-relaxed pl-[20px] break-words">
+        <div className="text-xs text-cta leading-relaxed pl-[4px] break-words">
           {buff.displayText}
         </div>
       </div>
@@ -380,13 +425,66 @@ function BuffRow({ buff }: { buff: BuffInfo }) {
   return (
     <div className="flex items-center justify-between gap-2 rounded-lg bg-card px-2.5 py-1.5">
       <div className="flex min-w-0 items-center gap-1.5">
-        <Sparkles className="h-3 w-3 shrink-0 text-primary" />
-        <span className="truncate text-xs text-textMain">{cleanBuffName(buff.name)}</span>
         <span className="shrink-0 rounded bg-surface px-1 text-[10px] text-textSub">{buff.bindLabel}</span>
+        <span className="truncate text-xs text-textMain">{cleanBuffName(buff.name)}</span>
       </div>
       <div className="flex shrink-0 items-center gap-1.5 font-mono text-[11px]">
         {valTxt && <span className="text-cta">{valTxt}</span>}
         {dur && <span className="text-textSub">{dur}</span>}
+      </div>
+    </div>
+  );
+}
+
+function valueToText(value: unknown) {
+  if (value == null) return '—';
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
+  return JSON.stringify(value);
+}
+
+function costText(cost: PassiveCost[] | null) {
+  if (!cost?.length) return '—';
+  return cost.map((item) => `${item.name}×${valueToText(item.count)}`).join(' / ');
+}
+
+function PassiveLevelBlock({ level }: { level: SkillLevel }) {
+  const passive = level.passive;
+  if (!passive) return null;
+  const allBeskills = [
+    ...passive.directBeskills,
+    ...passive.initializeBeskills,
+    ...passive.makeUpBeskills,
+  ];
+  const effectRows = allBeskills.flatMap((be) => be.effects || []);
+  const uniqueEffects = effectRows.filter((effect, index) => {
+    const key = `${effect.label}::${valueToText(effect.value)}`;
+    return effectRows.findIndex((item) => `${item.label}::${valueToText(item.value)}` === key) === index;
+  });
+
+  return (
+    <div className="rounded-lg bg-surface px-3 py-3 border-l-2 border-purple-500/40">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded bg-card px-2 py-0.5 font-mono text-[11px] font-semibold text-primary">Lv.{level.level}</span>
+        {level.roleLevel != null && <span className="rounded bg-card px-2 py-0.5 text-[11px] text-textSub">角色等级 {level.roleLevel}</span>}
+        <span className="rounded bg-card px-2 py-0.5 text-[11px] text-textSub">升级消耗 {costText(passive.rankCost)}</span>
+      </div>
+      {passive.text && <div className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-textMain">{passive.text}</div>}
+      <div className="mt-3 grid gap-1.5">
+        {uniqueEffects.map((effect, index) => (
+          <div key={`${effect.label}-${index}`} className="rounded-md border border-border bg-card px-3 py-2">
+            <div className="flex items-start gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="text-[11px] font-semibold text-textSub">{effect.label}</div>
+                <div className="mt-1 break-words text-xs leading-relaxed text-textMain">{valueToText(effect.value)}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+        {!uniqueEffects.length && (
+          <div className="rounded-md border border-border bg-card px-3 py-2 text-xs text-textSub">
+            当前等级没有可展示的额外数值。
+          </div>
+        )}
       </div>
     </div>
   );
@@ -574,31 +672,31 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
   const headerMetrics = card.header.metrics ?? [];
   const officialDescription = card.desIntro?.trim();
   const showDamageSummary = (card.header.segCount ?? 0) !== 0 || (card.header.totalPer ?? 0) !== 0;
+  const passiveRows = rows.filter((row) => row.passive);
+  const isPassiveCard = Boolean(card.passiveKind || passiveRows.length);
 
   return (
     <div className="flex flex-col rounded-[20px] border border-border bg-card shadow-sm overflow-hidden">
       {/* 卡头 */}
-      <div className="flex items-center gap-3 border-b border-border bg-surface px-5 py-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <Zap className="h-5 w-5" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="truncate text-base font-semibold text-textMain">{card.name}</span>
-            {badge && (
-              <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">{badge}</span>
-            )}
+      <div className="border-b border-border bg-slate-500/[0.02] dark:bg-white/[0.01] px-5 py-3.5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="truncate text-base font-bold text-textMain">{card.name}</span>
+              {badge && (
+                <span className="shrink-0 rounded bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{badge}</span>
+              )}
+            </div>
+            <div className="text-[10px] text-textSub/85 mt-0.5 font-medium tracking-wide uppercase">{slotLabel}</div>
           </div>
-          <div className="text-xs text-textSub">{slotLabel}</div>
         </div>
       </div>
 
       {/* 表头区:不随等级变 */}
-      <div className="grid grid-cols-2 gap-px bg-border/40 text-sm">
-        {showDamageSummary && <Stat icon={<Layers className="h-3.5 w-3.5" />} label="段数" value={`${card.header.segCount} 段`} />}
+      {!isPassiveCard && <div className="grid grid-cols-2 gap-px bg-border/40 text-sm">
+        {showDamageSummary && <Stat label="段数" value={`${card.header.segCount} 段`} />}
         {showDamageSummary && <Stat label="总系数" value={`×${fmt(card.header.totalPer)}`} accent />}
         <Stat
-          icon={<Clock className="h-3.5 w-3.5" />}
           label="释放用时"
           value={card.header.releaseSeconds != null ? `${card.header.releaseSeconds.toFixed(3)}s` : '—'}
           hint={card.header.releaseTimeSource === 'sourceDefault30' ? '源码默认30帧' : undefined}
@@ -620,7 +718,7 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
         )}
         {cols.staticVal && <Stat label="总固伤" value={fmt(lastRow?.totalVal)} />}
         {cols.staticMp && <Stat label="耗蓝" value={fmt(lastRow?.consumeMp)} />}
-      </div>
+      </div>}
 
       {/* 段明细 */}
       {segGroups.length > 0 && (
@@ -654,6 +752,18 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
         </div>
       )}
 
+      {card.header.mechanics && card.header.mechanics.length > 0 && (
+        <div className="space-y-2 border-t border-border px-5 py-3">
+          <div className="text-[11px] text-textSub">机制说明</div>
+          {card.header.mechanics.map((item, index) => (
+            <div key={`${item.label}-${index}`} className="rounded-lg bg-surface px-3 py-2">
+              <div className="mb-1 text-[11px] font-semibold text-textSub">{item.label}</div>
+              <div className="break-words text-xs leading-relaxed text-textMain">{item.value}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* 固定 buff(不随等级变) */}
       {card.header.fixedBuffs?.length > 0 && (
         <div className="space-y-1 border-t border-border px-5 py-3">
@@ -666,24 +776,30 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
         <div className="space-y-2 border-t border-border px-5 py-3">
           <div className="text-[11px] text-textSub">成长效果说明</div>
           {growthBuffEffects.map((effect) => (
-            <div key={effect.key} className="rounded-lg bg-surface px-3 py-2">
+            <div key={effect.key} className="rounded-lg bg-surface px-3 py-2 border-l-2 border-purple-500/40">
               <div className="flex flex-wrap items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
                 <span className="text-xs font-semibold text-textMain">{effect.title}</span>
                 {effect.meta && <span className="rounded bg-card px-1.5 py-0.5 text-[10px] text-textSub">{effect.meta}</span>}
                 {effect.fixedParts.map((part) => (
                   <span key={part} className="rounded bg-card px-1.5 py-0.5 font-mono text-[10px] text-cta">{part}</span>
                 ))}
               </div>
-              {effect.detail && <div className="mt-1 pl-5 text-xs leading-relaxed text-textSub">{effect.detail}</div>}
-              {effect.formulaNote && <div className="mt-1 pl-5 text-xs leading-relaxed text-textSub">{effect.formulaNote}</div>}
+              {effect.detail && <div className="mt-1 pl-1 text-xs leading-relaxed text-textSub">{effect.detail}</div>}
+              {effect.formulaNote && <div className="mt-1 pl-1 text-xs leading-relaxed text-textSub">{effect.formulaNote}</div>}
             </div>
           ))}
         </div>
       )}
 
+      {isPassiveCard && passiveRows.length > 0 && (
+        <div className="space-y-3 border-t border-border px-5 py-4">
+          <div className="text-xs text-textSub">被动等级效果</div>
+          {passiveRows.map((level) => <PassiveLevelBlock key={level.level} level={level} />)}
+        </div>
+      )}
+
       {/* 成长区:数值随等级变化的列才展示;不随级成长的技能直接看附带效果 */}
-      <div className="mt-auto border-t border-border px-5 py-4">
+      {!isPassiveCard && <div className="mt-auto border-t border-border px-5 py-4">
         <div className="mb-2 text-xs text-textSub">
           成长数值
         </div>
@@ -733,7 +849,7 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
             本技能数值不随等级成长
           </div>
         )}
-      </div>
+      </div>}
 
       {/* warning 折叠角标 */}
       {card.warnings?.length > 0 && (

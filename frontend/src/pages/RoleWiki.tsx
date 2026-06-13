@@ -16,6 +16,7 @@ interface SkillSlot {
 interface RoleWikiPayload {
   role: { id: number; name: string; text?: string };
   slots: SkillSlot[];
+  passiveSlots?: SkillSlot[];
 }
 
 // 已生成 Wiki 的角色(数据源名 -> 显示名)。后续角色加到这里即可。
@@ -101,7 +102,7 @@ export default function RoleWiki({ dataSources }: Props) {
   // 把每个槽展开成要展示的卡片列表(觉醒合并:相同的不重复出卡,只在基础卡加标记)
   const cards = useMemo(() => {
     if (!payload?.slots) return [];
-    const out: { card: SkillCardData; slotLabel: string; badge?: string }[] = [];
+    const out: { card: SkillCardData; slotLabel: string; badge?: string; levels?: number[] }[] = [];
     for (const slot of payload.slots) {
       const distinctAwakens = slot.awakens.filter((a) => !a.identicalToBase);
       const mergedCount = slot.awakens.length - distinctAwakens.length;
@@ -113,6 +114,10 @@ export default function RoleWiki({ dataSources }: Props) {
       for (const aw of distinctAwakens) {
         out.push({ card: aw, slotLabel: `${slot.slotLabel} · 觉醒`, badge: '觉醒变化' });
       }
+    }
+    for (const slot of payload.passiveSlots || []) {
+      const passiveLevels = (slot.base.levels || []).map((level) => level.level).sort((a, b) => a - b);
+      out.push({ card: slot.base, slotLabel: slot.slotLabel, badge: '角色被动', levels: passiveLevels });
     }
     return out;
   }, [payload]);
@@ -173,7 +178,7 @@ export default function RoleWiki({ dataSources }: Props) {
       {/* 技能卡网格 */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {cards.map((c, i) => (
-          <SkillCard key={`${c.card.skillId}-${i}`} card={c.card} levels={selectedLevels} slotLabel={c.slotLabel} badge={c.badge} />
+          <SkillCard key={`${c.card.skillId}-${i}`} card={c.card} levels={c.levels || selectedLevels} slotLabel={c.slotLabel} badge={c.badge} />
         ))}
       </div>
     </div>

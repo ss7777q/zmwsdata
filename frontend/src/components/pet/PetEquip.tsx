@@ -1,5 +1,4 @@
-﻿import { useMemo } from 'react';
-import { Package, ArrowUpCircle } from 'lucide-react';
+import { useMemo } from 'react';
 import CostBadge from '../ui/CostBadge';
 
 interface Props {
@@ -24,7 +23,8 @@ export default function PetEquip({ dataSources }: Props) {
             <div className="bg-surface border border-border shadow-sm rounded-xl overflow-hidden flex flex-col h-[750px]">
                 <div className="p-4 border-b border-border bg-textMain/5 flex justify-between items-center shrink-0">
                     <h3 className="font-bold text-lg text-primary flex items-center gap-2">
-                        <Package className="w-5 h-5" /> 宠物装备重铸
+                        <span className="w-1 h-4 rounded-full bg-primary shrink-0"></span>
+                        宠物装备重铸
                     </h3>
                     <div className="text-sm font-mono text-textSub">套装进阶消耗</div>
                 </div>
@@ -101,7 +101,8 @@ export default function PetEquip({ dataSources }: Props) {
             <div className="bg-surface border border-border shadow-sm rounded-xl overflow-hidden flex flex-col h-[750px]">
                 <div className="p-4 border-b border-border bg-textMain/5 flex justify-between items-center shrink-0">
                     <h3 className="font-bold text-lg text-cta flex items-center gap-2">
-                        <ArrowUpCircle className="w-5 h-5" /> 宠物装备强化
+                        <span className="w-1 h-4 rounded-full bg-cta shrink-0"></span>
+                        宠物装备强化
                     </h3>
                     <div className="text-sm font-mono text-textSub">消耗强化经验以及灵魂</div>
                 </div>

@@ -1,14 +1,13 @@
 import { useMemo, useState } from 'react';
-import { Box, Database, Dog, ScrollText, Sparkles } from 'lucide-react';
 import { useTempPreviewCatalog, useTempPreviewRole } from '../hooks/useTempPreviewData';
 import type { TempPreviewCatalogCategory, TempPreviewExport } from '../lib/temp-preview-api';
 
 type CategoryId = 'role' | 'pet' | 'ride';
 
-const CATEGORY_META: Record<CategoryId, { icon: typeof Database; subtitle: string }> = {
-  role: { icon: Sparkles, subtitle: '按角色导出结构自动展示 excelDisplayRows 与技能分区。' },
-  pet: { icon: Dog, subtitle: '临时占位，后续接宠物导出结构。' },
-  ride: { icon: Box, subtitle: '临时占位，后续接坐骑导出结构。' },
+const CATEGORY_META: Record<CategoryId, { subtitle: string }> = {
+  role: { subtitle: '按角色导出结构自动展示 excelDisplayRows 与技能分区。' },
+  pet: { subtitle: '临时占位，后续接宠物导出结构。' },
+  ride: { subtitle: '临时占位，后续接坐骑导出结构。' },
 };
 
 function formatDate(value?: string | null) {
@@ -87,7 +86,7 @@ function GenericSectionCards({ title, items }: { title: string; items: unknown[]
   return (
     <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
       <div className="mb-4 flex items-center gap-2">
-        <ScrollText className="w-4 h-4 text-primary" />
+        <span className="w-1.5 h-4 bg-primary rounded-full shrink-0"></span>
         <h3 className="text-lg font-semibold text-textMain">{title}</h3>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
@@ -175,8 +174,8 @@ function RolePreviewPanel({ data }: { data: TempPreviewExport }) {
 function PlaceholderPanel({ category }: { category: TempPreviewCatalogCategory }) {
   return (
     <section className="rounded-2xl border border-dashed border-border bg-card p-8 text-center shadow-sm">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-surface text-primary">
-        <Database className="w-6 h-6" />
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-surface text-primary font-bold text-lg">
+        待
       </div>
       <h2 className="mt-4 text-2xl font-semibold text-textMain">{category.label}模块筹备中</h2>
       <p className="mt-2 text-textSub">{category.description}</p>
@@ -222,7 +221,6 @@ export default function ValuePreview() {
           <div className="grid gap-3 sm:grid-cols-3">
             {(['role', 'pet', 'ride'] as CategoryId[]).map((categoryId) => {
               const meta = CATEGORY_META[categoryId];
-              const Icon = meta.icon;
               const active = activeCategory === categoryId;
               return (
                 <button
@@ -234,7 +232,11 @@ export default function ValuePreview() {
                       : 'border-border bg-white/80 text-textMain hover:border-primary/30 hover:bg-white'
                     }`}
                 >
-                  <Icon className="w-5 h-5" />
+                  <div className="flex justify-between items-center">
+                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${active ? 'bg-white/20 text-white' : 'bg-primary/10 text-primary'}`}>
+                      {categoryId.toUpperCase()}
+                    </span>
+                  </div>
                   <div className="mt-3 text-base font-semibold">{categoryId === 'role' ? '角色' : categoryId === 'pet' ? '宠物' : '坐骑'}</div>
                   <div className={`mt-1 text-xs ${active ? 'text-white/80' : 'text-textSub'}`}>
                     {meta.subtitle}

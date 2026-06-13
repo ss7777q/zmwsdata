@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import CostBadge from '../components/ui/CostBadge';
-import { Sparkles, Sword, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface Props {
@@ -103,35 +103,29 @@ export default function RoleGodWeapon({ dataSources }: Props) {
                 {cards.map((card: any) => (
                     <div
                         key={card.id}
-                        className="group relative bg-card rounded-2xl border border-[#fb923c]/20 overflow-hidden hover:border-[#fb923c]/50 hover:shadow-[0_4px_30px_rgba(251,146,60,0.15)] transition-all duration-300"
+                        className="group relative bg-card rounded-2xl border border-border/80 overflow-hidden hover:border-purple-500/20 hover:shadow-[0_8px_30px_rgba(168,85,247,0.06)] transition-all duration-200"
                     >
-                        {/* 背景装饰 */}
-                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all duration-500 pointer-events-none">
-                            <Sword className="w-32 h-32 text-[#fb923c]" />
-                        </div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#fb923c]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-
-                        <div className="relative p-6 space-y-6">
+                        <div className="relative p-6 space-y-5">
                             {/* 标题区 */}
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <h3 className="text-lg sm:text-xl font-bold text-textMain group-hover:text-[#fb923c] transition-colors flex items-center gap-2">
+                                    <h3 className="text-base font-bold text-textMain group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors flex items-center gap-2">
                                         {card.name}
                                     </h3>
-                                    <div className="text-xs text-textSub mt-1">初始等阶: 阶数 {card.rank}</div>
+                                    <div className="text-xs text-textSub mt-1 font-medium">初始等阶: 阶数 {card.rank}</div>
                                 </div>
                             </div>
 
-                            <hr className="border-border/60" />
+                            <hr className="border-border/40" />
 
                             <div className="space-y-4">
                                 {/* 激活解锁 */}
                                 {card.activationCosts.length > 0 && (
-                                    <div className="bg-surface p-3 rounded-lg border border-border/40">
-                                        <div className="text-xs font-bold text-[#fb923c] mb-2 flex items-center gap-1.5 opacity-80 uppercase tracking-wider">
-                                            <Sparkles className="w-3.5 h-3.5" /> 激活消耗
+                                    <div className="bg-slate-500/[0.01] dark:bg-white/[0.01] p-3.5 rounded-xl border border-border/40 space-y-3 border-l-2 border-l-purple-500/50">
+                                        <div className="text-[10px] font-bold text-textMain/80 uppercase tracking-wider">
+                                            激活消耗
                                         </div>
-                                        <div className="flex flex-wrap items-center gap-2">
+                                        <div className="flex flex-wrap items-center gap-1.5">
                                             {card.activationCosts.map((c: any, i: number) => (
                                                 <CostBadge key={i} itemId={c.itemId} name={c.name} count={c.count} />
                                             ))}
@@ -141,17 +135,17 @@ export default function RoleGodWeapon({ dataSources }: Props) {
 
                                 {/* 等级拉满及明细 */}
                                 {card.levCosts.length > 0 && (
-                                    <div className="bg-surface p-3 rounded-lg border border-border/40 space-y-3">
-                                        <div className="flex justify-between items-center cursor-pointer" onClick={() => toggleExpand(card.id)}>
-                                            <div className="text-xs font-bold text-blue-400 flex items-center gap-1.5 opacity-80 uppercase tracking-wider">
-                                                <Sword className="w-3.5 h-3.5" /> 级别拉满总计
+                                    <div className="bg-slate-500/[0.01] dark:bg-white/[0.01] p-3.5 rounded-xl border border-border/40 space-y-3 border-l-2 border-l-indigo-500/50">
+                                        <div className="flex justify-between items-center cursor-pointer select-none" onClick={() => toggleExpand(card.id)}>
+                                            <div className="text-[10px] font-bold text-textMain/80 flex items-center gap-1.5 opacity-80 uppercase tracking-wider">
+                                                级别拉满总计
                                             </div>
-                                            <button className="text-textSub hover:text-cta transition-colors p-1 rounded-full hover:bg-black/20">
-                                                {expandedCards[card.id] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                            <button className="text-textSub hover:text-indigo-500 transition-colors p-0.5 rounded-md hover:bg-slate-200/50 dark:hover:bg-white/5 cursor-pointer">
+                                                {expandedCards[card.id] ? <ChevronUp className="w-4.5 h-4.5" /> : <ChevronDown className="w-4.5 h-4.5" />}
                                             </button>
                                         </div>
 
-                                        <div className="flex flex-wrap items-center gap-2">
+                                        <div className="flex flex-wrap items-center gap-1.5">
                                             {card.levCosts.map((c: any, i: number) => (
                                                 <CostBadge key={i} itemId={c.itemId} name={c.name} count={c.count} />
                                             ))}
@@ -160,14 +154,14 @@ export default function RoleGodWeapon({ dataSources }: Props) {
                                         {/* 明细展开面板 */}
                                         <div className={clsx(
                                             "grid gap-2 overflow-hidden transition-all duration-300",
-                                            expandedCards[card.id] ? "max-h-[500px] overflow-y-auto custom-scrollbar mt-2 pt-3 border-t border-border/50 opacity-100" : "max-h-0 opacity-0"
+                                            expandedCards[card.id] ? "max-h-[500px] overflow-y-auto custom-scrollbar mt-3 pt-3 border-t border-border/30 opacity-100" : "max-h-0 opacity-0"
                                         )}>
                                             {card.levDetails.map((detail: any, i: number) => (
-                                                <div key={i} className="flex flex-col gap-1.5 bg-black/10 rounded-md p-2">
-                                                    <span className="text-[10px] text-textSub font-mono tracking-wider ml-1">
+                                                <div key={i} className="flex flex-col gap-1.5 bg-slate-500/[0.04] dark:bg-black/20 rounded-lg p-2.5 border border-border/10">
+                                                    <span className="text-[10px] text-textSub font-mono tracking-wider">
                                                         {detail.rank}阶 Lv.{detail.originalLv} ➜ Lv.{detail.originalLv + 1} 消耗:
                                                     </span>
-                                                    <div className="flex flex-wrap items-center gap-2">
+                                                    <div className="flex flex-wrap items-center gap-1.5">
                                                         {detail.costs.map((c: any, j: number) => (
                                                             <CostBadge key={j} itemId={c.itemId} name={c.name} count={c.count} />
                                                         ))}

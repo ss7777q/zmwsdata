@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react';
-import { Feather, ArrowUpCircle, Settings, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { clsx } from 'clsx';
 import CostBadge from '../components/ui/CostBadge';
 
@@ -81,43 +80,44 @@ export default function RoleWing({ dataSources }: RoleWingProps) {
     return (
         <div className="space-y-6">
             {/* Top Navigation Tabs */}
-            <div className="flex border-b border-border max-w-[calc(100vw-2rem)] overflow-x-auto custom-scrollbar">
+            <div className="flex bg-slate-200/40 dark:bg-black/20 p-1 rounded-xl border border-slate-300/60 dark:border-border/60 w-max mb-6 gap-1 shadow-sm backdrop-blur-sm">
                 <button
                     onClick={() => setActiveTab('wing')}
                     className={clsx(
-                        "px-6 py-4 font-semibold text-lg transition-all border-b-2 flex items-center gap-2 whitespace-nowrap",
-                        activeTab === 'wing' ? "border-primary text-primary" : "border-transparent text-textSub hover:text-textMain"
+                        "px-6 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border active:scale-95",
+                        activeTab === 'wing'
+                            ? "bg-purple-500/10 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-300/50 dark:border-purple-500/30 shadow-[0_2px_10px_rgba(168,85,247,0.08)]"
+                            : "text-textSub hover:text-textMain hover:bg-slate-200/60 dark:hover:bg-white/5 border-transparent"
                     )}
                 >
-                    <ArrowUpCircle className="w-5 h-5" />
                     翅膀升级
                 </button>
                 <button
                     onClick={() => setActiveTab('feather')}
                     className={clsx(
-                        "px-6 py-4 font-semibold text-lg transition-all border-b-2 flex items-center gap-2 whitespace-nowrap",
-                        activeTab === 'feather' ? "border-cyan-500 text-cyan-500" : "border-transparent text-textSub hover:text-textMain"
+                        "px-6 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border active:scale-95",
+                        activeTab === 'feather'
+                            ? "bg-purple-500/10 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-300/50 dark:border-purple-500/30 shadow-[0_2px_10px_rgba(168,85,247,0.08)]"
+                            : "text-textSub hover:text-textMain hover:bg-slate-200/60 dark:hover:bg-white/5 border-transparent"
                     )}
                 >
-                    <Feather className="w-5 h-5" />
                     羽毛系统
                 </button>
             </div>
 
             {/* Content Area */}
             {activeTab === 'wing' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 animate-fade-in fade-in">
+                <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6 animate-fade-in fade-in">
                     {wings.map((wing: any) => (
-                        <div key={wing.buteId} className="card p-6 flex flex-col gap-4">
+                        <div key={wing.buteId} className="card p-6 flex flex-col gap-4 border border-border/80 hover:border-purple-500/20 hover:shadow-[0_8px_30px_rgba(168,85,247,0.06)] transition-all duration-200">
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <h3 className="text-xl font-bold flex items-center gap-2">
-                                        <ArrowUpCircle className="w-5 h-5 text-primary" />
+                                    <h3 className="text-base font-bold text-textMain transition-colors group-hover:text-purple-600 dark:group-hover:text-purple-400">
                                         {wing.wingName}
                                     </h3>
-                                    <p className="text-sm text-textSub mt-1">最大等级: Lv.{wing.maxLevel}</p>
+                                    <p className="text-xs text-textSub mt-1 font-medium">最大等级: Lv.{wing.maxLevel}</p>
                                 </div>
-                                <div className={clsx("px-2 py-1 rounded text-xs font-bold border",
+                                <div className={clsx("px-2 py-0.5 rounded text-[10px] font-bold border",
                                     wing.maxQuality >= 6 ? "bg-red-500/10 text-red-400 border-red-500/20" :
                                         wing.maxQuality === 5 ? "bg-orange-500/10 text-orange-400 border-orange-500/20" :
                                             "bg-purple-500/10 text-purple-400 border-purple-500/20"
@@ -126,9 +126,9 @@ export default function RoleWing({ dataSources }: RoleWingProps) {
                                 </div>
                             </div>
 
-                            <div className="bg-surface p-4 rounded-xl border border-border">
-                                <span className="text-xs text-textSub mb-2 block font-bold">1 ~ 满级总代价:</span>
-                                <div className="flex flex-wrap gap-2">
+                            <div className="bg-slate-500/[0.01] dark:bg-white/[0.01] p-3.5 rounded-xl border border-border/40 border-l-2 border-l-purple-500/50">
+                                <span className="text-[10px] text-textSub mb-2 block font-bold uppercase tracking-wider">1 ~ 满级总代价</span>
+                                <div className="flex flex-wrap gap-1.5">
                                     {wing.totalCost.map((c: any, i: number) => (
                                         <CostBadge key={i} itemId={c.itemId} name={c.name} count={c.count} />
                                     ))}
@@ -137,17 +137,17 @@ export default function RoleWing({ dataSources }: RoleWingProps) {
 
                             <button
                                 onClick={() => toggleWingExpand(wing.buteId)}
-                                className="w-full py-2 bg-surface hover:bg-black/20 rounded-lg text-sm font-medium transition-colors border border-border"
+                                className="w-full py-2 bg-slate-500/[0.02] dark:bg-white/[0.01] hover:bg-slate-500/[0.05] rounded-xl text-xs font-bold transition-all duration-200 border border-border active:scale-[0.99] cursor-pointer text-textMain"
                             >
                                 {expandedWingIds[wing.buteId] ? '收起每级明细' : '查看每级升级明细'}
                             </button>
 
                             <div className={clsx(
                                 "grid gap-2 overflow-hidden transition-all duration-300",
-                                expandedWingIds[wing.buteId] ? "max-h-[800px] overflow-y-auto custom-scrollbar opacity-100" : "max-h-0 opacity-0"
+                                expandedWingIds[wing.buteId] ? "max-h-[800px] overflow-y-auto custom-scrollbar mt-1 opacity-100" : "max-h-0 opacity-0"
                             )}>
                                 {wing.levels?.map((lv: any, i: number) => (
-                                    <div key={i} className="flex justify-between items-center p-2 rounded bg-black/10 border border-border/40">
+                                    <div key={i} className="flex justify-between items-center p-2 rounded-lg bg-slate-500/[0.04] dark:bg-black/20 border border-border/10">
                                         <div className="flex items-center gap-3">
                                             <span className="w-12 text-xs font-mono text-textSub">Lv.{lv.wingLevel}</span>
                                             {lv.consume ? (
@@ -172,16 +172,12 @@ export default function RoleWing({ dataSources }: RoleWingProps) {
             {activeTab === 'feather' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6 animate-fade-in fade-in">
                     {feathers.map((f: any) => (
-                        <div key={f.id} className="card p-6 flex flex-col gap-4 border border-cyan-500/20 relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-all pointer-events-none">
-                                <Feather className="w-32 h-32 text-cyan-500" />
-                            </div>
-
+                        <div key={f.id} className="card p-6 flex flex-col gap-4 border border-border/80 hover:border-purple-500/20 hover:shadow-[0_8px_30px_rgba(168,85,247,0.06)] transition-all duration-200 relative overflow-hidden group">
                             <div className="flex justify-between items-center relative">
-                                <h3 className="text-xl font-bold flex items-center gap-2 text-cyan-400">
-                                    <Feather className="w-5 h-5" /> {f.name}
+                                <h3 className="text-base font-bold text-textMain transition-colors group-hover:text-purple-600 dark:group-hover:text-purple-400">
+                                    {f.name}
                                 </h3>
-                                <div className={clsx("px-2 py-1 rounded text-xs font-bold border",
+                                <div className={clsx("px-2 py-0.5 rounded text-[10px] font-bold border",
                                     f.quality >= 6 ? "bg-red-500/10 text-red-400 border-red-500/20" :
                                         f.quality === 5 ? "bg-orange-500/10 text-orange-400 border-orange-500/20" :
                                             "bg-purple-500/10 text-purple-400 border-purple-500/20"
@@ -191,30 +187,30 @@ export default function RoleWing({ dataSources }: RoleWingProps) {
                             </div>
 
                             {/* Section 1: 羽毛进阶 (Advance) */}
-                            <div className="bg-surface p-3 rounded-lg border border-border/50 relative">
-                                <h4 className="text-xs font-bold text-textSub flex items-center gap-1.5 mb-3 uppercase tracking-wider">
-                                    <ArrowUpCircle className="w-3.5 h-3.5" /> 本命进阶
+                            <div className="bg-slate-500/[0.01] dark:bg-white/[0.01] p-3.5 rounded-xl border border-border/40 relative border-l-2 border-l-purple-500/50">
+                                <h4 className="text-[10px] font-bold text-textMain/80 flex items-center gap-1.5 mb-3 uppercase tracking-wider">
+                                    本命进阶
                                 </h4>
                                 <div className="flex flex-col gap-2">
                                     {f.advance.nextCost.length > 0 ? (
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-xs text-textSub w-16">升级消耗:</span>
-                                            <div className="flex gap-2">
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="text-textSub w-16">升级消耗:</span>
+                                            <div className="flex gap-1.5">
                                                 {f.advance.nextCost.map((c: any, i: number) => <CostBadge key={i} itemId={c.itemId} name={c.name} count={c.count} />)}
                                                 {f.advance.moneyCost.map((c: any, i: number) => <CostBadge key={`m_${i}`} itemId={c.itemId} name={c.name} count={c.count} />)}
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="text-xs text-green-400 text-center py-2 bg-green-500/10 rounded">羽阶已至大圆满境界</div>
+                                        <div className="text-xs text-green-500 dark:text-green-400 text-center py-2 bg-green-500/10 rounded">羽阶已至大圆满境界</div>
                                     )}
                                 </div>
                             </div>
 
                             <button
                                 onClick={() => toggleFeatherExpand(f.id)}
-                                className="w-full py-2 bg-surface hover:bg-black/20 rounded-lg text-sm font-medium transition-colors border border-cyan-500/20 text-cyan-400 flex items-center justify-center gap-1"
+                                className="w-full py-2 bg-slate-500/[0.02] dark:bg-white/[0.01] hover:bg-slate-500/[0.05] rounded-xl text-xs font-bold transition-all duration-200 border border-border active:scale-[0.99] cursor-pointer text-textMain"
                             >
-                                {expandedFeatherIds[f.id] ? <><ChevronUp className="w-4 h-4" />收起洗练详情</> : <><ChevronDown className="w-4 h-4" />展示羽枝洗炼与强运花费</>}
+                                {expandedFeatherIds[f.id] ? '收起洗练详情' : '展示羽枝洗炼与强运花费'}
                             </button>
 
                             <div className={clsx(
@@ -222,9 +218,9 @@ export default function RoleWing({ dataSources }: RoleWingProps) {
                                 expandedFeatherIds[f.id] ? "max-h-[1000px] opacity-100 mt-2" : "max-h-0 opacity-0 m-0 overflow-hidden"
                             )}>
                                 {/* Section 2: 羽枝洗练 (Baptize) */}
-                                <div className="bg-black/20 p-3 rounded-lg border border-white/5 space-y-3">
-                                    <h4 className="text-xs font-bold text-blue-400 flex items-center gap-1.5 uppercase tracking-wider">
-                                        <Settings className="w-3.5 h-3.5" /> 基础祭炼单次消耗
+                                <div className="bg-slate-500/[0.01] dark:bg-white/[0.01] p-3.5 rounded-xl border border-border/40 border-l-2 border-l-indigo-500/50 space-y-3">
+                                    <h4 className="text-[10px] font-bold text-textMain/80 flex items-center gap-1.5 uppercase tracking-wider">
+                                        基础祭炼单次消耗
                                     </h4>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -240,9 +236,9 @@ export default function RoleWing({ dataSources }: RoleWingProps) {
                                                 const baseItems = f.baptize[target.baseK] || [];
                                                 const incItems = f.baptize[target.k];
                                                 return (
-                                                    <div key={target.k} className="flex flex-col gap-1.5 p-2 rounded border border-white/5">
-                                                        <span className="text-[10px] text-textSub leading-tight">{target.l}</span>
-                                                        <div className="flex flex-wrap gap-2">
+                                                    <div key={target.k} className="flex flex-col gap-1.5 p-2 rounded-lg border border-border/10 bg-slate-500/[0.02] dark:bg-black/10">
+                                                        <span className="text-[10px] text-textSub font-medium leading-tight">{target.l}</span>
+                                                        <div className="flex flex-wrap gap-1.5">
                                                             {Array.from({ length: maxLocks }).map((_, lockIndex) => {
                                                                 const m = lockIndex + 1;
                                                                 return incItems.map((inc: any, i: number) => {
@@ -256,9 +252,9 @@ export default function RoleWing({ dataSources }: RoleWingProps) {
                                                 );
                                             } else if (!target.baseK) {
                                                 return (
-                                                    <div key={target.k} className="flex flex-col gap-1.5 p-2 rounded border border-white/5">
-                                                        <span className="text-[10px] text-textSub leading-tight">{target.l}</span>
-                                                        <div className="flex flex-wrap gap-2">
+                                                    <div key={target.k} className="flex flex-col gap-1.5 p-2 rounded-lg border border-border/10 bg-slate-500/[0.02] dark:bg-black/10">
+                                                        <span className="text-[10px] text-textSub font-medium leading-tight">{target.l}</span>
+                                                        <div className="flex flex-wrap gap-1.5">
                                                             {f.baptize[target.k].map((c: any, i: number) => (
                                                                 <CostBadge key={i} itemId={c.itemId} name={c.name} count={c.count} />
                                                             ))}
@@ -272,16 +268,16 @@ export default function RoleWing({ dataSources }: RoleWingProps) {
                                 </div>
 
                                 {/* Section 3: 强运洗练 (Luck) */}
-                                <div className="bg-black/20 p-3 rounded-lg border border-orange-500/10 space-y-3">
-                                    <h4 className="text-xs font-bold text-orange-400 flex items-center gap-1.5 uppercase tracking-wider">
-                                        <Sparkles className="w-3.5 h-3.5" /> 强运洗练
+                                <div className="bg-slate-500/[0.01] dark:bg-white/[0.01] p-3.5 rounded-xl border border-border/40 border-l-2 border-l-emerald-500/50 space-y-3">
+                                    <h4 className="text-[10px] font-bold text-textMain/80 flex items-center gap-1.5 uppercase tracking-wider">
+                                        强运洗练
                                     </h4>
 
                                     {f.luck.valuefixedCostLuck.length > 0 ? (
                                         <div className="space-y-2">
-                                            <div className="flex flex-col gap-1 p-2 rounded border border-white/5">
-                                                <span className="text-[10px] text-textSub">强运洗练:</span>
-                                                <div className="flex flex-wrap gap-2">
+                                            <div className="flex flex-col gap-1 p-2 rounded-lg border border-border/10 bg-slate-500/[0.02] dark:bg-black/10">
+                                                <span className="text-[10px] text-textSub font-medium">强运洗练:</span>
+                                                <div className="flex flex-wrap gap-1.5">
                                                     {f.luck.valuefixedCostLuck.map((c: any, i: number) => (
                                                         <CostBadge key={i} itemId={c.itemId} name={i === 0 ? '全部强运' : `锁${i}强运`} count={c.count} />
                                                     ))}

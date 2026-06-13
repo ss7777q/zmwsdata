@@ -2,17 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import {
-  BookOpenText,
   CheckCircle2,
-  Compass,
   LoaderCircle,
-  MessageSquareQuote,
-  Search,
-  SendHorizonal,
   ShieldAlert,
-  Sparkles,
-  Swords,
-  TrendingUp,
 } from 'lucide-react';
 import { fetchVisitorHistory, submitFeedback, type FeedbackCategory, type VisitorHistoryResponse } from '../lib/api';
 
@@ -27,17 +19,14 @@ const coreHighlights = [
   {
     title: '集中查询养成消耗',
     description: '把角色、翅膀、宠物、坐骑、时装、修炼等系统的材料和成长成本集中到一个站点里。',
-    icon: Compass,
   },
   {
     title: '直接查看结果',
     description: '像神魔相关和 BOSS 属性这类模块，不只是看配置，还能直接看数值结果。',
-    icon: Sparkles,
   },
   {
     title: '少翻表，少对文件',
     description: '很多页面会先给总览，再给逐项细节，适合做规划、核对和分析。',
-    icon: Search,
   },
 ];
 
@@ -55,8 +44,8 @@ const moduleGroups = [
   {
     title: '宠物与坐骑',
     items: [
-      '宠物系统：查看技能、潜能、升星进阶和宠物装备。',
-      '坐骑系统：查看图鉴、升星、技能和装备打造升级。',
+      '宠物系统：查看技能、潜能、升星进阶 and 宠物装备。',
+      '坐骑系统：查看图鉴、升星、技能 and 装备打造升级。',
     ],
   },
   {
@@ -114,20 +103,16 @@ function formatVisitorDate(value: string) {
 }
 
 function SectionTitle({
-  icon: Icon,
   title,
   description,
 }: {
-  icon: typeof BookOpenText;
   title: string;
   description: string;
 }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div className="flex min-w-0 items-center gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-          <Icon className="h-5 w-5" />
-        </div>
+        <div className="w-1.5 h-8 bg-primary rounded-full shrink-0"></div>
         <div className="min-w-0">
           <h2 className="text-2xl font-bold text-textMain">{title}</h2>
           <p className="mt-1 text-sm leading-6 text-textSub">{description}</p>
@@ -230,9 +215,8 @@ export default function HelpCenter() {
     <div className="space-y-8 pb-20 animate-in fade-in duration-500">
       <section className="rounded-[28px] border border-border bg-card px-6 py-7 shadow-sm lg:px-8 lg:py-8">
         <div className="w-full min-w-0 space-y-6">
-          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-xs font-semibold tracking-[0.18em] text-primary uppercase">
-            <BookOpenText className="h-4 w-4" />
-            帮助与反馈
+          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-xs font-bold tracking-[0.18em] text-primary uppercase">
+            HELP & FEEDBACK
           </div>
 
           <div className="max-w-5xl min-w-0 space-y-4">
@@ -245,16 +229,10 @@ export default function HelpCenter() {
 
           <div className="grid gap-4 lg:grid-cols-3">
             {coreHighlights.map((item) => {
-              const Icon = item.icon;
               return (
-                <article key={item.title} className="rounded-2xl border border-border bg-surface/60 p-5">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-textMain">{item.title}</h3>
-                  </div>
-                  <p className="mt-4 text-sm leading-7 text-textSub break-words">{item.description}</p>
+                <article key={item.title} className="rounded-2xl border-y border-r border-l-4 border-l-primary border-border bg-surface/60 p-5 shadow-sm">
+                  <h3 className="text-lg font-semibold text-textMain">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-textSub break-words">{item.description}</p>
                 </article>
               );
             })}
@@ -265,7 +243,6 @@ export default function HelpCenter() {
       <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div className="rounded-[28px] border border-border bg-card p-6 shadow-sm lg:p-8">
           <SectionTitle
-            icon={Swords}
             title="主要模块能看什么"
             description="按模块快速了解站里都能查哪些内容。"
           />
@@ -287,7 +264,6 @@ export default function HelpCenter() {
         <div className="space-y-6">
           <section className="rounded-[28px] border border-border bg-card p-6 shadow-sm lg:p-7">
             <SectionTitle
-              icon={Sparkles}
               title="推荐使用方式"
               description="按这个顺序看，通常会更顺手。"
             />
@@ -306,7 +282,6 @@ export default function HelpCenter() {
 
           <section className="rounded-[28px] border border-border bg-card p-6 shadow-sm lg:p-7">
             <SectionTitle
-              icon={Compass}
               title="适合哪些场景"
               description="如果你平时主要用来看这些，就会很合适。"
             />
@@ -325,7 +300,6 @@ export default function HelpCenter() {
       <section className="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
         <div className="rounded-[28px] border border-border bg-card p-6 shadow-sm lg:p-7">
           <SectionTitle
-            icon={MessageSquareQuote}
             title="建议反馈"
             description="发现数据问题、显示异常，或者想提功能建议，都可以在这里提交。"
           />
@@ -347,7 +321,7 @@ export default function HelpCenter() {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <div className="flex items-center gap-2 text-sm font-semibold text-textMain">
-                  <TrendingUp className="h-4 w-4 text-cta" />
+                  <span className="w-1 h-4 bg-cta rounded-full shrink-0"></span>
                   访问趋势
                 </div>
                 <p className="mt-1 text-xs leading-5 text-textSub">最近 {VISITOR_HISTORY_DAYS} 天每日访客变化</p>
@@ -510,7 +484,7 @@ export default function HelpCenter() {
               disabled={!canSubmit}
               className="btn-primary inline-flex min-w-40 items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {submitting ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <SendHorizonal className="h-4 w-4" />}
+              {submitting ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
               {submitting ? '提交中' : '提交建议'}
             </button>
           </div>

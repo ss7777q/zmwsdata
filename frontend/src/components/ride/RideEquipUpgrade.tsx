@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { Activity } from 'lucide-react';
 
 interface Props {
     dataSources: Record<string, any>;
@@ -72,7 +71,7 @@ export default function RideEquipUpgrade({ dataSources }: Props) {
                 </div>
 
                 <div className="mt-4 flex items-center justify-end gap-2 text-xs text-textSub">
-                    <Activity className="w-3.5 h-3.5" /> 满级预估封顶所需总累加值: <span className="font-mono text-green-400 font-bold">{enrichedData[enrichedData.length - 1]?.accExp.toLocaleString()}</span> Exp
+                    满级预估封顶所需总累加值: <span className="font-mono text-green-400 font-bold">{enrichedData[enrichedData.length - 1]?.accExp.toLocaleString()}</span> Exp
                 </div>
             </div>
         </div>

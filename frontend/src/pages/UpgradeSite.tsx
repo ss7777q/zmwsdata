@@ -1,25 +1,22 @@
 import { useMemo } from 'react';
-import { ChevronRight, Dog, House, ScrollText, Sparkles, Swords } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { useTempPreviewCatalog, useTempPreviewUnit } from '../hooks/useTempPreviewData';
 import type { TempPreviewCatalogCategory, TempPreviewCategoryItem, TempPreviewExport } from '../lib/temp-preview-api';
 
 type CategoryId = 'role' | 'pet' | 'ride';
 
-const CATEGORY_META: Record<CategoryId, { label: string; icon: typeof Sparkles; description: string }> = {
+const CATEGORY_META: Record<CategoryId, { label: string; description: string }> = {
   role: {
     label: '角色',
-    icon: Sparkles,
     description: '查看当前已有角色的介绍与多表数值详情。',
   },
   pet: {
     label: '宠物',
-    icon: Dog,
     description: '宠物模块占位中，后续接正式数据。',
   },
   ride: {
     label: '坐骑',
-    icon: Swords,
     description: '坐骑模块占位中，后续接正式数据。',
   },
 };
@@ -60,8 +57,8 @@ function UpgradeLayout({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-[1600px] items-center justify-between px-6 py-5">
           <Link to="/upgrade/category/role" className="flex items-center gap-3 text-slate-900">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-lg">
-              <ScrollText className="h-5 w-5" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white shadow-lg font-black text-lg">
+              数
             </div>
             <div>
               <div className="text-2xl font-black tracking-tight">数值站点预览</div>
@@ -92,7 +89,6 @@ function UpgradeLayout({ children }: { children: React.ReactNode }) {
             <div className="space-y-2">
               {categories.map((category) => {
                 const meta = CATEGORY_META[category.id as CategoryId];
-                const Icon = meta.icon;
                 const active = location.pathname.startsWith(`/upgrade/category/${category.id}`);
                 return (
                   <Link
@@ -104,8 +100,8 @@ function UpgradeLayout({ children }: { children: React.ReactNode }) {
                         : 'border-transparent bg-slate-50 text-slate-700 hover:border-slate-200 hover:bg-white'
                     }`}
                   >
-                    <div className={`mt-0.5 flex h-10 w-10 items-center justify-center rounded-xl ${active ? 'bg-sky-600 text-white' : 'bg-white text-slate-600'}`}>
-                      <Icon className="h-5 w-5" />
+                    <div className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-bold text-sm ${active ? 'bg-sky-600 text-white shadow-sm shadow-sky-500/20' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
+                      {meta.label[0]}
                     </div>
                     <div className="min-w-0">
                       <div className="font-bold">{meta.label}</div>
@@ -205,8 +201,8 @@ function CategoryPage() {
         </section>
       ) : (
         <section className="space-y-5">
-          <div className="flex items-center gap-3">
-            <House className="h-5 w-5 text-sky-600" />
+          <div className="flex items-center gap-2">
+            <span className="w-1 h-5 rounded bg-sky-600"></span>
             <h2 className="text-2xl font-black text-slate-900">当前所有单位</h2>
           </div>
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">

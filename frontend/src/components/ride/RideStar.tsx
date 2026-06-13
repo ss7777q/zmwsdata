@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import CostBadge from '../ui/CostBadge';
-import { Sparkles } from 'lucide-react';
 
 interface Props {
     dataSources: Record<string, any>;
@@ -43,7 +42,7 @@ export default function RideStar({ dataSources }: Props) {
             <div className="card p-6 border border-border/50">
                 <div className="flex items-center gap-3 mb-6">
                     <h2 className="text-xl font-bold text-textMain flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-yellow-400" />
+                        <span className="w-1 h-4 rounded-full bg-yellow-500 shrink-0"></span>
                         坐骑升星消耗
                     </h2>
                 </div>

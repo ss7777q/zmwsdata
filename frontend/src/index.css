@@ -1,4 +1,8 @@
+@import url("https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.css");
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --color-primary: var(--primary);
@@ -13,8 +17,13 @@
   --color-textMatingNormal: var(--text-mating-normal);
   --color-textMatingAdvanced: var(--text-mating-advanced);
 
-  --font-sans: "Fira Sans", sans-serif;
-  --font-mono: "Fira Code", monospace;
+  --color-cardNestedBg: var(--card-nested-bg);
+  --color-cardNestedBorder: var(--card-nested-border);
+  --color-cardNestedSubBg: var(--card-nested-sub-bg);
+  --color-cardNestedSubBorder: var(--card-nested-sub-border);
+
+  --font-sans: "LXGW WenKai Screen", "Fira Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft YaHei", sans-serif;
+  --font-mono: "Fira Code", Consolas, ui-monospace, "SF Mono", Monaco, monospace;
 
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -24,39 +33,59 @@
   --spacing-2xl: 3rem;
   --spacing-3xl: 4rem;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.5);
+  --shadow-sm: var(--shadow-sm-val);
+  --shadow-md: var(--shadow-md-val);
+  --shadow-lg: var(--shadow-lg-val);
+  --shadow-xl: var(--shadow-xl-val);
 }
 
 @layer base {
   :root {
-    --primary: #1E40AF;
-    --secondary: #3B82F6;
-    --cta: #F59E0B;
-    --background: #F1F5F9;
-    --card: #FFFFFF;
-    --surface: #F8FAFC;
-    --border: #E2E8F0;
-    --text-main: #0F172A;
-    --text-sub: #475569;
+    --primary: #6366F1;             /* 靛蓝色 */
+    --secondary: #4F46E5;           /* 深靛蓝 */
+    --cta: #EF6C00;                 /* 亮橙色 */
+    --background: #F1F5F9;          /* 柔和灰蓝背景 */
+    --card: #FFFFFF;                /* 纯白卡片 */
+    --surface: #F1F5F9;             /* 区块背景 */
+    --border: #CBD5E1;              /* 钢灰边框 */
+    --text-main: #0F172A;           /* 黑曜石字 */
+    --text-sub: #475569;            /* 易读灰字 */
     --text-mating-normal: #2563EB;
     --text-mating-advanced: #9333EA;
+
+    --card-nested-bg: rgba(241, 245, 249, 0.4);
+    --card-nested-border: #EAEFF5;
+    --card-nested-sub-bg: rgba(226, 232, 240, 0.3);
+    --card-nested-sub-border: rgba(203, 213, 225, 0.2);
+
+    --shadow-sm-val: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md-val: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
+    --shadow-lg-val: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.08);
+    --shadow-xl-val: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
   }
 
   .dark {
-    --primary: #3B82F6;
-    --secondary: #60A5FA;
-    --cta: #FBBF24;
-    --background: #0A0A0F;
-    --card: #111827;
-    --surface: #1F2937;
-    --border: #1F2937;
-    --text-main: #F8FAFC;
-    --text-sub: #9CA3AF;
-    --text-mating-normal: #93C5FD;
-    --text-mating-advanced: #D8B4FE;
+    --primary: #3B82F6;             /* 经典科技蓝 */
+    --secondary: #60A5FA;           /* 数码天蓝 */
+    --cta: #EAB308;                 /* 温暖金黄 */
+    --background: #08090C;          /* 深空炭黑 */
+    --card: #12141C;                /* 科技冷灰炭黑卡片 */
+    --surface: #1A1D26;             /* 深灰表面 */
+    --border: #2B2F3D;              /* 科技冷灰描边 */
+    --text-main: #F1F5F9;           /* 纯净灰白 */
+    --text-sub: #94A3B8;            /* 柔和灰蓝 */
+    --text-mating-normal: #3B82F6;
+    --text-mating-advanced: #A855F7;
+
+    --card-nested-bg: rgba(255, 255, 255, 0.02);
+    --card-nested-border: rgba(255, 255, 255, 0.05);
+    --card-nested-sub-bg: rgba(255, 255, 255, 0.04);
+    --card-nested-sub-border: rgba(255, 255, 255, 0.02);
+
+    --shadow-sm-val: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --shadow-md-val: 0 4px 6px -1px rgba(0, 0, 0, 0.6), 0 2px 4px -2px rgba(0, 0, 0, 0.6);
+    --shadow-lg-val: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -4px rgba(0, 0, 0, 0.6);
+    --shadow-xl-val: 0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 8px 10px -6px rgba(0, 0, 0, 0.7);
   }
 
   body {
@@ -81,11 +110,11 @@
   }
 
   .card {
-    @apply bg-card rounded-xl p-6 shadow-md transition-all duration-300 border border-transparent cursor-pointer;
+    @apply bg-card rounded-2xl p-6 shadow-md transition-all duration-300 border border-border/40 cursor-pointer;
   }
 
   .card:hover {
-    @apply shadow-lg -translate-y-[2px] border-primary/20;
+    @apply shadow-lg -translate-y-[2px] border-primary/30;
   }
 
   .btn-primary {

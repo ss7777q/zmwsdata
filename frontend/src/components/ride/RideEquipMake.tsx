@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import CostBadge from '../ui/CostBadge';
-import { Hammer, ArrowRight } from 'lucide-react';
 
 interface Props {
     dataSources: Record<string, any>;
@@ -27,7 +26,7 @@ export default function RideEquipMake({ dataSources }: Props) {
     }, [makeData]);
 
     if (!makeData.length || !recastData.length) {
-        return <div className="text-center text-textSub p-10">等待坐骑装备锻造 / 重铸数据...</div>;
+        return <div className="text-center text-textSub p-10">等待坐骑装备打造 / 重铸数据...</div>;
     }
 
     return (
@@ -40,9 +39,7 @@ export default function RideEquipMake({ dataSources }: Props) {
                 {/* 打造面板 */}
                 <div className="space-y-4">
                     <div className="flex items-center gap-3 pb-2 border-b border-border/50">
-                        <div className="p-2 rounded bg-primary/20 text-primary">
-                            <Hammer className="w-5 h-5" />
-                        </div>
+                        <div className="w-1 h-4 rounded-full bg-primary shrink-0"></div>
                         <div>
                             <h3 className="text-lg font-bold text-textMain">装备打造</h3>
                             <p className="text-xs text-textSub">打造所需材料</p>
@@ -89,9 +86,7 @@ export default function RideEquipMake({ dataSources }: Props) {
                 {/* 神铸面板 */}
                 <div className="space-y-4">
                     <div className="flex items-center gap-3 pb-2 border-b border-border/50">
-                        <div className="p-2 rounded bg-purple-500/20 text-purple-400">
-                            <ArrowRight className="w-5 h-5" />
-                        </div>
+                        <div className="w-1 h-4 rounded-full bg-purple-500 shrink-0"></div>
                         <div>
                             <h3 className="text-lg font-bold text-textMain">装备神铸</h3>
                             <p className="text-xs text-textSub">神铸消耗数据</p>

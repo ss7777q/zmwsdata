@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import CostBadge from '../components/ui/CostBadge';
-import { ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface RoleEquipProps {
@@ -64,9 +64,9 @@ export default function RoleEquip({ dataSources }: RoleEquipProps) {
             <RoleEquipUpgrade dataSources={dataSources} />
 
             {/* 分组选择器 */}
-            <div className="bg-surface/50 border border-border/50 p-4 rounded-xl">
-                <div className="text-sm font-bold text-textMain mb-3 flex items-center gap-2">
-                    <span className="w-1.5 h-4 bg-primary rounded-full"></span>
+            <div className="bg-card border border-border/60 p-4 rounded-xl shadow-sm">
+                <div className="text-xs font-bold text-textMain mb-3.5 flex items-center gap-2 uppercase tracking-wider">
+                    <span className="w-1 h-3.5 bg-purple-500 rounded-full"></span>
                     选择特定等级/套装后加载详情
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -74,32 +74,37 @@ export default function RoleEquip({ dataSources }: RoleEquipProps) {
                         if (a[0] === 'none') return 1;
                         if (b[0] === 'none') return -1;
                         return (b[0] as number) - (a[0] as number); // 大数字（高等级/高阶）排在前面
-                    }).map(([groupId, items]) => (
-                        <button
-                            key={groupId}
-                            onClick={() => setActiveGroup(groupId)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${activeGroup === groupId
-                                ? 'bg-primary text-white border-primary shadow-md shadow-primary/20'
-                                : 'bg-background text-textSub hover:bg-white/5 border-border/50 hover:border-textSub/30'
-                                }`}
-                        >
-                            {groupId === 'none' ? '神化/魔化及升重消耗' : `${groupId}级套装`}
-                            <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded ${activeGroup === groupId ? 'bg-black/20 text-white/90' : 'bg-black/30'}`}>
-                                {items.length}件
-                            </span>
-                        </button>
-                    ))}
+                    }).map(([groupId, items]) => {
+                        const selected = activeGroup === groupId;
+                        return (
+                            <button
+                                key={groupId}
+                                onClick={() => setActiveGroup(groupId)}
+                                className={clsx(
+                                    "px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border active:scale-95",
+                                    selected
+                                        ? "bg-purple-500/10 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-300/50 dark:border-purple-500/30 shadow-[0_2px_10px_rgba(168,85,247,0.08)]"
+                                        : "text-textSub hover:text-textMain hover:bg-slate-200/60 dark:hover:bg-white/5 border-border/50"
+                                )}
+                            >
+                                {groupId === 'none' ? '神化/魔化及升重消耗' : `${groupId}级套装`}
+                                <span className={clsx("ml-1.5 text-[9px] px-1.5 py-0.5 rounded transition-colors font-mono font-medium", selected ? "bg-purple-500/20 text-purple-600 dark:text-purple-300" : "bg-black/10 dark:bg-white/5")}>
+                                    {items.length}件
+                                </span>
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 
             {/* 选中的套装详情呈现 */}
             {activeGroup !== null && groupedData.has(activeGroup) && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <h3 className="text-lg font-semibold text-textMain border-b border-border pb-2 flex items-center justify-between">
+                    <h3 className="text-base font-bold text-textMain border-b border-border/40 pb-2.5 flex items-center justify-between">
                         <span>
-                            {activeGroup === 'none' ? '重铸需求  以戒指为例' : `${activeGroup} 级套装`}
+                            {activeGroup === 'none' ? '重铸需求 以戒指为例' : `${activeGroup} 级套装`}
                         </span>
-                        <span className="text-sm text-textSub font-normal bg-surface px-3 py-1 rounded border border-border/30">
+                        <span className="text-[10px] text-textSub font-medium bg-slate-500/[0.04] dark:bg-black/20 px-2.5 py-0.5 rounded border border-border/40 font-mono">
                             共渲染 {groupedData.get(activeGroup)?.length} 个结构件
                         </span>
                     </h3>
@@ -119,21 +124,21 @@ export default function RoleEquip({ dataSources }: RoleEquipProps) {
                             const recastTotalCosts = Array.from(recastTotalMap.entries()).map(([itemId, v]) => ({ itemId, ...v }));
 
                             return (
-                                <div key={idx} className="card group hover:!border-cta/30">
+                                <div key={idx} className="card group hover:!border-purple-500/30 hover:shadow-[0_8px_30px_rgba(168,85,247,0.06)] transition-all duration-200">
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
-                                            <h4 className="font-bold text-textMain mt-1.5">{item.name || `未名装备 ${item.itemId}`}</h4>
+                                            <h4 className="text-sm font-bold text-textMain mt-1.5 transition-colors group-hover:text-purple-600 dark:group-hover:text-purple-400">{item.name || `未名装备 ${item.itemId}`}</h4>
                                         </div>
                                     </div>
 
                                     <div className="space-y-3">
                                         {/* cost */}
                                         {item.cost && item.cost.length > 0 && (
-                                            <div className="space-y-2 bg-black/10 p-2.5 rounded border border-white/5">
-                                                <div className="text-xs text-textSub font-semibold flex items-center gap-1">
-                                                    <div className="w-1 h-1 rounded-full bg-orange-400"></div> 打造/重铸需求
+                                            <div className="space-y-2 bg-slate-500/[0.01] dark:bg-white/[0.01] p-3.5 rounded-xl border border-border/40 border-l-2 border-l-purple-500/50">
+                                                <div className="text-[10px] text-textSub font-bold flex items-center gap-1.5 uppercase tracking-wide">
+                                                    <span className="tracking-wide">打造/重铸需求</span>
                                                 </div>
-                                                <div className="flex flex-wrap gap-2">
+                                                <div className="flex flex-wrap gap-1.5">
                                                     {item.cost.map((c: any, i: number) => (
                                                         <CostBadge key={i} itemId={c.itemId} count={c.count} name={c.name} />
                                                     ))}
@@ -143,18 +148,18 @@ export default function RoleEquip({ dataSources }: RoleEquipProps) {
 
                                         {/* recastUpgrade (神化/魔化/进阶消耗) */}
                                         {item.recastUpgrade && item.recastUpgrade.length > 0 && (
-                                            <div className="bg-surface p-3 rounded-lg border border-border/40 space-y-3 mt-4">
-                                                <div className="flex justify-between items-center cursor-pointer" onClick={() => toggleExpand(idx)}>
-                                                    <div className="text-xs font-bold text-cta flex flex-row items-center gap-1.5 opacity-80 uppercase tracking-wider">
-                                                        <Sparkles className="w-3.5 h-3.5" /> 升重总计 (共{item.recastUpgrade.length}重)
+                                            <div className="bg-slate-500/[0.01] dark:bg-white/[0.01] p-3.5 rounded-xl border border-border/40 space-y-3 mt-4 border-l-2 border-l-indigo-500/50">
+                                                <div className="flex justify-between items-center cursor-pointer select-none" onClick={() => toggleExpand(idx)}>
+                                                    <div className="text-[10px] font-bold text-textMain/80 flex flex-row items-center gap-1.5 opacity-90 uppercase tracking-wider">
+                                                        升重总计 (共{item.recastUpgrade.length}重)
                                                     </div>
-                                                    <button className="text-textSub hover:text-cta transition-colors p-1 rounded-full hover:bg-black/20">
-                                                        {expandedCards[idx] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                                    <button className="text-textSub hover:text-indigo-500 transition-colors p-0.5 rounded-md hover:bg-slate-200/50 dark:hover:bg-white/5 cursor-pointer">
+                                                        {expandedCards[idx] ? <ChevronUp className="w-4.5 h-4.5" /> : <ChevronDown className="w-4.5 h-4.5" />}
                                                     </button>
                                                 </div>
 
                                                 {/* 总计消耗 */}
-                                                <div className="flex flex-wrap items-center gap-2">
+                                                <div className="flex flex-wrap items-center gap-1.5">
                                                     {recastTotalCosts.map((c: any, i: number) => (
                                                         <CostBadge key={`total-${i}`} itemId={c.itemId} count={c.count} name={c.name} />
                                                     ))}
@@ -162,15 +167,15 @@ export default function RoleEquip({ dataSources }: RoleEquipProps) {
 
                                                 {/* 各重明细 */}
                                                 <div className={clsx(
-                                                    "grid gap-2 overflow-hidden transition-all duration-300",
-                                                    expandedCards[idx] ? "max-h-[500px] mt-2 pt-3 border-t border-border/50 opacity-100 overflow-y-auto custom-scrollbar" : "max-h-0 opacity-0"
+                                                    "grid gap-2.5 overflow-hidden transition-all duration-300",
+                                                    expandedCards[idx] ? "max-h-[500px] mt-3 pt-3 border-t border-border/30 opacity-100 overflow-y-auto custom-scrollbar" : "max-h-0 opacity-0"
                                                 )}>
                                                     {item.recastUpgrade.map((stage: any, stageIdx: number) => (
-                                                        <div key={`stage-${stageIdx}`} className="flex flex-col gap-1.5 bg-black/5 dark:bg-black/20 p-2 rounded">
-                                                            <span className="text-[10px] text-textSub uppercase font-mono bg-black/5 dark:bg-white/5 w-max px-1.5 py-0.5 rounded">
+                                                        <div key={`stage-${stageIdx}`} className="flex flex-col gap-2 bg-slate-500/[0.04] dark:bg-black/20 rounded-lg p-2.5 border border-border/10">
+                                                            <span className="text-[10px] text-textSub uppercase font-mono bg-black/5 dark:bg-white/5 w-max px-2 py-0.5 rounded">
                                                                 {formatAffixLevel(stage.toAffixLevel)} 消耗:
                                                             </span>
-                                                            <div className="flex flex-wrap items-center gap-2">
+                                                            <div className="flex flex-wrap items-center gap-1.5">
                                                                 {stage.cost.map((c: any, cIdx: number) => (
                                                                     <CostBadge key={`stage-${stageIdx}-cost-${cIdx}`} itemId={c.itemId} count={c.count} name={c.name} />
                                                                 ))}
@@ -187,12 +192,6 @@ export default function RoleEquip({ dataSources }: RoleEquipProps) {
                     </div>
                 </div>
             )}
-
-            {/* 其他装备系统附属模块 (用户要求暂时隐藏)
-
-            <RoleEquipSmelt dataSources={dataSources} />
-            <RoleEquipStone dataSources={dataSources} />
-            */}
         </div>
     );
 }

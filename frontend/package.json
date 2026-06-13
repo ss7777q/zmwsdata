@@ -7,7 +7,7 @@
     "dev": "vite",
     "dev:api": "node ../server/data-api.js",
     "build:cf-data": "node ../scripts/build_cf_static_data.js",
-    "build:cf": "npm run build:cf-data && npm run build",
+    "build:cf": "npm run build:cf-data && VITE_STATIC_DATA_BASE=/data VITE_SERVER_API_BASE=https://api.zmwsrank.top npm run build",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"

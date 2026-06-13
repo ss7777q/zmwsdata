@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import CostBadge from '../components/ui/CostBadge';
-import { Sparkles, Hexagon, Crosshair, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { clsx } from 'clsx';
 
 const QUALITY_NAMES: Record<number, string> = {
@@ -12,19 +12,11 @@ const QUALITY_NAMES: Record<number, string> = {
 };
 
 const QUALITY_COLORS: Record<number, string> = {
-    2: 'text-green-500 border-green-500/30 group-hover:border-green-500/60',
-    3: 'text-blue-500 border-blue-500/30 group-hover:border-blue-500/60',
-    4: 'text-purple-500 border-purple-500/30 group-hover:border-purple-500/60',
-    5: 'text-yellow-500 border-yellow-500/30 group-hover:border-yellow-500/60',
-    6: 'text-red-500 border-red-500/30 group-hover:border-red-500/60'
-};
-
-const QUALITY_BG: Record<number, string> = {
-    2: 'from-green-500/5',
-    3: 'from-blue-500/5',
-    4: 'from-purple-500/5',
-    5: 'from-yellow-500/5',
-    6: 'from-red-500/5'
+    2: 'text-green-500 border-green-500/20 group-hover:border-green-500/40 hover:shadow-[0_8px_30px_rgba(34,197,94,0.04)]',
+    3: 'text-blue-500 border-blue-500/20 group-hover:border-blue-500/40 hover:shadow-[0_8px_30px_rgba(59,130,246,0.04)]',
+    4: 'text-purple-500 border-purple-500/20 group-hover:border-purple-500/40 hover:shadow-[0_8px_30px_rgba(168,85,247,0.04)]',
+    5: 'text-yellow-600 dark:text-yellow-500 border-yellow-500/20 group-hover:border-yellow-500/40 hover:shadow-[0_8px_30px_rgba(234,179,8,0.04)]',
+    6: 'text-red-500 border-red-500/20 group-hover:border-red-500/40 hover:shadow-[0_8px_30px_rgba(239,68,68,0.04)]'
 };
 
 interface Props {
@@ -176,45 +168,38 @@ export default function RoleMatrix({ dataSources }: Props) {
         <div className="space-y-6 animate-fade-in fade-in">
             <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
                 {cards.map((card: any) => {
-                    const colorClass = QUALITY_COLORS[card.quality] || QUALITY_COLORS[2];
-                    const bgClass = QUALITY_BG[card.quality] || QUALITY_BG[2];
+                    const borderClass = QUALITY_COLORS[card.quality] || QUALITY_COLORS[2];
 
                     return (
                         <div
                             key={card.id}
                             className={clsx(
-                                "group relative bg-card rounded-2xl border transition-all duration-300 overflow-hidden",
-                                colorClass
+                                "group relative bg-card rounded-2xl border transition-all duration-200 overflow-hidden",
+                                borderClass
                             )}
                         >
-                            <div className={clsx("absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none", bgClass)}></div>
-                            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all duration-500 pointer-events-none">
-                                <Hexagon className="w-32 h-32" />
-                            </div>
-
-                            <div className="relative p-6 space-y-6">
+                            <div className="relative p-6 space-y-5">
                                 {/* 标题区 */}
-                                <h3 className="text-lg sm:text-xl font-bold transition-colors flex items-center gap-2 drop-shadow-md">
-                                    <Hexagon className="w-5 h-5 flex-shrink-0" />
+                                <h3 className="text-base font-bold transition-colors flex items-center gap-2 text-textMain">
                                     {card.name}
                                 </h3>
 
-                                <hr className="border-border/60" />
+                                <hr className="border-border/40" />
 
                                 <div className="space-y-4">
                                     {/* 阵法技能部位 */}
                                     {card.skillCosts.length > 0 && (
-                                        <div className="bg-surface p-3 rounded-lg border border-border/40 space-y-3">
-                                            <div className="flex justify-between items-center cursor-pointer" onClick={() => toggleSkillExpand(card.id)}>
-                                                <div className="text-xs font-bold text-orange-700 dark:text-orange-400 flex items-center gap-1.5 opacity-80 uppercase tracking-wider">
-                                                    <Sparkles className="w-3.5 h-3.5" /> 阵图满级消耗
+                                        <div className="bg-slate-500/[0.01] dark:bg-white/[0.01] p-3.5 rounded-xl border border-border/40 space-y-3 border-l-2 border-l-purple-500/50">
+                                            <div className="flex justify-between items-center cursor-pointer select-none" onClick={() => toggleSkillExpand(card.id)}>
+                                                <div className="text-[10px] font-bold text-textMain/80 uppercase tracking-wider">
+                                                    阵图满级消耗
                                                 </div>
-                                                <button className="text-textSub hover:text-orange-700 dark:hover:text-orange-400 transition-colors p-1 rounded-full hover:bg-black/20">
-                                                    {expandedSkillCards[card.id] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                                <button className="text-textSub hover:text-purple-500 transition-colors p-0.5 rounded-md hover:bg-slate-200/50 dark:hover:bg-white/5">
+                                                    {expandedSkillCards[card.id] ? <ChevronUp className="w-4.5 h-4.5" /> : <ChevronDown className="w-4.5 h-4.5" />}
                                                 </button>
                                             </div>
 
-                                            <div className="flex flex-wrap items-center gap-2">
+                                            <div className="flex flex-wrap items-center gap-1.5">
                                                 {card.skillCosts.map((c: any, i: number) => (
                                                     <CostBadge key={i} itemId={c.itemId} name={c.name} count={c.count} />
                                                 ))}
@@ -223,14 +208,14 @@ export default function RoleMatrix({ dataSources }: Props) {
                                             {/* 技能展开面板 */}
                                             <div className={clsx(
                                                 "grid gap-2 overflow-hidden transition-all duration-300",
-                                                expandedSkillCards[card.id] ? "max-h-[500px] overflow-y-auto custom-scrollbar mt-2 pt-3 border-t border-border/50 opacity-100" : "max-h-0 opacity-0"
+                                                expandedSkillCards[card.id] ? "max-h-[500px] overflow-y-auto custom-scrollbar mt-3 pt-3 border-t border-border/30 opacity-100" : "max-h-0 opacity-0"
                                             )}>
                                                 {card.skillDetails.map((detail: any, i: number) => (
-                                                    <div key={i} className="flex flex-col gap-1.5 bg-black/10 rounded-md p-2">
-                                                        <span className="text-[10px] text-textSub font-mono tracking-wider ml-1">
+                                                    <div key={i} className="flex flex-col gap-1.5 bg-slate-500/[0.04] dark:bg-black/20 rounded-lg p-2.5 border border-border/10">
+                                                        <span className="text-[10px] text-textSub font-mono tracking-wider">
                                                             技能 Lv.{detail.level} ➜ Lv.{detail.level + 1} 消耗:
                                                         </span>
-                                                        <div className="flex flex-wrap items-center gap-2">
+                                                        <div className="flex flex-wrap items-center gap-1.5">
                                                             {detail.costs.map((c: any, j: number) => (
                                                                 <CostBadge key={j} itemId={c.itemId} name={c.name} count={c.count} />
                                                             ))}
@@ -243,20 +228,20 @@ export default function RoleMatrix({ dataSources }: Props) {
 
                                     {/* 法器消耗部位 */}
                                     {(card.fqCosts.upCosts.length > 0 || card.fqCosts.clearCosts.length > 0) && (
-                                        <div className="bg-surface p-3 rounded-lg border border-border/40 space-y-3">
-                                            <div className="flex justify-between items-center cursor-pointer" onClick={() => toggleFqExpand(card.id)}>
-                                                <div className="text-xs font-bold text-cyan-700 dark:text-cyan-400 flex items-center gap-1.5 opacity-80 uppercase tracking-wider">
-                                                    <Crosshair className="w-3.5 h-3.5" /> 本阵全法器汇总 (含天地人剑)
+                                        <div className="bg-slate-500/[0.01] dark:bg-white/[0.01] p-3.5 rounded-xl border border-border/40 space-y-3 border-l-2 border-l-cyan-500/50">
+                                            <div className="flex justify-between items-center cursor-pointer select-none" onClick={() => toggleFqExpand(card.id)}>
+                                                <div className="text-[10px] font-bold text-textMain/80 uppercase tracking-wider">
+                                                    本阵全法器汇总 (含天地人剑)
                                                 </div>
-                                                <button className="text-textSub hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors p-1 rounded-full hover:bg-black/20">
-                                                    {expandedFqCards[card.id] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                                <button className="text-textSub hover:text-cyan-500 transition-colors p-0.5 rounded-md hover:bg-slate-200/50 dark:hover:bg-white/5">
+                                                    {expandedFqCards[card.id] ? <ChevronUp className="w-4.5 h-4.5" /> : <ChevronDown className="w-4.5 h-4.5" />}
                                                 </button>
                                             </div>
-                                            <div className="space-y-2">
+                                            <div className="space-y-2.5 pt-1">
                                                 {card.fqCosts.upCosts.length > 0 && (
-                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                                        <span className="text-xs text-textSub">等级拉满:</span>
-                                                        <div className="flex flex-wrap items-center gap-2">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                                                        <span className="text-textSub">等级拉满:</span>
+                                                        <div className="flex flex-wrap items-center gap-1.5">
                                                             {card.fqCosts.upCosts.map((c: any, i: number) => (
                                                                 <CostBadge key={i} itemId={c.itemId} name={c.name} count={c.count} />
                                                             ))}
@@ -264,9 +249,9 @@ export default function RoleMatrix({ dataSources }: Props) {
                                                     </div>
                                                 )}
                                                 {card.fqCosts.luckCosts.length > 0 && (
-                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-t border-border/20 pt-2">
-                                                        <span className="text-xs text-textSub">强运累计:</span>
-                                                        <div className="flex flex-wrap items-center gap-2">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-t border-border/20 pt-2 text-xs">
+                                                        <span className="text-textSub">强运累计:</span>
+                                                        <div className="flex flex-wrap items-center gap-1.5">
                                                             {card.fqCosts.luckCosts.map((c: any, i: number) => (
                                                                 <CostBadge key={i} itemId={c.itemId} name={c.name} count={c.count} />
                                                             ))}
@@ -278,28 +263,28 @@ export default function RoleMatrix({ dataSources }: Props) {
                                             {/* 法器详情折叠面板 */}
                                             <div className={clsx(
                                                 "grid gap-2 overflow-hidden transition-all duration-300",
-                                                expandedFqCards[card.id] ? "max-h-[800px] overflow-y-auto custom-scrollbar mt-2 pt-3 border-t border-border/50 opacity-100" : "max-h-0 opacity-0"
+                                                expandedFqCards[card.id] ? "max-h-[800px] overflow-y-auto custom-scrollbar mt-3 pt-3 border-t border-border/30 opacity-100" : "max-h-0 opacity-0"
                                             )}>
                                                 {card.fqCosts.details.map((detail: any, i: number) => (
-                                                    <div key={i} className="flex flex-col gap-2 bg-black/10 rounded-md p-2 border border-white/5">
-                                                        <span className="text-xs font-bold text-cyan-800 dark:text-cyan-300 font-mono flex items-center gap-1">
+                                                    <div key={i} className="flex flex-col gap-2 bg-slate-500/[0.04] dark:bg-black/20 rounded-lg p-2.5 border border-border/10">
+                                                        <span className="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 font-mono flex items-center gap-1">
                                                             <div className="w-1.5 h-1.5 rounded-full bg-cyan-600 dark:bg-cyan-400" />
                                                             {card.name.split('·')[0]} · {detail.name}
                                                         </span>
 
-                                                        <div className="pl-3 space-y-1.5 border-l border-white/10">
+                                                        <div className="pl-3 space-y-1.5 border-l border-border/20">
                                                             {detail.upCosts.length > 0 && (
-                                                                <div className="flex flex-wrap items-center gap-2">
-                                                                    <span className="text-[10px] text-textSub w-12 shrink-0">满级:</span>
+                                                                <div className="flex flex-wrap items-center gap-1.5">
+                                                                    <span className="text-[9px] text-textSub w-12 shrink-0">满级:</span>
                                                                     {detail.upCosts.map((c: any, j: number) => (
                                                                         <CostBadge key={j} itemId={c.itemId} name={c.name} count={c.count} />
                                                                     ))}
                                                                 </div>
                                                             )}
                                                             {detail.luckCosts.length > 0 && (
-                                                                <div className="flex items-center gap-2">
-                                                                    <span className="text-[10px] text-textSub w-12 shrink-0">洗练消耗:</span>
-                                                                    <div className="flex flex-wrap items-center gap-2">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span className="text-[9px] text-textSub w-12 shrink-0">洗练消耗:</span>
+                                                                    <div className="flex flex-wrap items-center gap-1.5">
                                                                         {detail.luckCosts.map((c: any, j: number) => (
                                                                             <CostBadge key={j} itemId={c.itemId} name={`${c.name}(${c.luckLabel})`} count={c.count} />
                                                                         ))}
@@ -315,20 +300,20 @@ export default function RoleMatrix({ dataSources }: Props) {
 
                                     {/* 镇魂消耗部位 */}
                                     {(card.zhCosts.upCosts.length > 0 || card.zhCosts.clearCosts.length > 0) && (
-                                        <div className="bg-surface p-3 rounded-lg border border-border/40 space-y-3">
-                                            <div className="flex justify-between items-center cursor-pointer" onClick={() => toggleZhExpand(card.id)}>
-                                                <div className="text-xs font-bold text-purple-700 dark:text-purple-400 flex items-center gap-1.5 opacity-80 uppercase tracking-wider">
-                                                    <Hexagon className="w-3.5 h-3.5" /> 本阵全镇魂汇总 (含主生觉)
+                                        <div className="bg-slate-500/[0.01] dark:bg-white/[0.01] p-3.5 rounded-xl border border-border/40 space-y-3 border-l-2 border-l-indigo-500/50">
+                                            <div className="flex justify-between items-center cursor-pointer select-none" onClick={() => toggleZhExpand(card.id)}>
+                                                <div className="text-[10px] font-bold text-textMain/80 uppercase tracking-wider">
+                                                    本阵全镇魂汇总 (含主生觉)
                                                 </div>
-                                                <button className="text-textSub hover:text-purple-700 dark:hover:text-purple-400 transition-colors p-1 rounded-full hover:bg-black/20">
-                                                    {expandedZhCards[card.id] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                                <button className="text-textSub hover:text-indigo-500 transition-colors p-0.5 rounded-md hover:bg-slate-200/50 dark:hover:bg-white/5">
+                                                    {expandedZhCards[card.id] ? <ChevronUp className="w-4.5 h-4.5" /> : <ChevronDown className="w-4.5 h-4.5" />}
                                                 </button>
                                             </div>
-                                            <div className="space-y-2">
+                                            <div className="space-y-2.5 pt-1">
                                                 {card.zhCosts.upCosts.length > 0 && (
-                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                                        <span className="text-xs text-textSub">等级拉满:</span>
-                                                        <div className="flex flex-wrap items-center gap-2">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                                                        <span className="text-textSub">等级拉满:</span>
+                                                        <div className="flex flex-wrap items-center gap-1.5">
                                                             {card.zhCosts.upCosts.map((c: any, i: number) => (
                                                                 <CostBadge key={i} itemId={c.itemId} name={c.name} count={c.count} />
                                                             ))}
@@ -336,9 +321,9 @@ export default function RoleMatrix({ dataSources }: Props) {
                                                     </div>
                                                 )}
                                                 {card.zhCosts.luckCosts.length > 0 && (
-                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-t border-border/20 pt-2">
-                                                        <span className="text-xs text-textSub">强运累计:</span>
-                                                        <div className="flex flex-wrap items-center gap-2">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-t border-border/20 pt-2 text-xs">
+                                                        <span className="text-textSub">强运累计:</span>
+                                                        <div className="flex flex-wrap items-center gap-1.5">
                                                             {card.zhCosts.luckCosts.map((c: any, i: number) => (
                                                                 <CostBadge key={i} itemId={c.itemId} name={c.name} count={c.count} />
                                                             ))}
@@ -350,27 +335,27 @@ export default function RoleMatrix({ dataSources }: Props) {
                                             {/* 镇魂详情折叠面板 */}
                                             <div className={clsx(
                                                 "grid gap-2 overflow-hidden transition-all duration-300",
-                                                expandedZhCards[card.id] ? "max-h-[800px] overflow-y-auto custom-scrollbar mt-2 pt-3 border-t border-border/50 opacity-100" : "max-h-0 opacity-0"
+                                                expandedZhCards[card.id] ? "max-h-[800px] overflow-y-auto custom-scrollbar mt-3 pt-3 border-t border-border/30 opacity-100" : "max-h-0 opacity-0"
                                             )}>
                                                 {card.zhCosts.details.map((detail: any, i: number) => (
-                                                    <div key={i} className="flex flex-col gap-2 bg-black/10 rounded-md p-2 border border-white/5">
-                                                        <span className="text-xs font-bold text-purple-800 dark:text-purple-300 font-mono flex items-center gap-1">
+                                                    <div key={i} className="flex flex-col gap-2 bg-slate-500/[0.04] dark:bg-black/20 rounded-lg p-2.5 border border-border/10">
+                                                        <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 font-mono flex items-center gap-1">
                                                             <div className="w-1.5 h-1.5 rounded-full bg-purple-600 dark:bg-purple-400" />
                                                             {card.name.split('·')[0]} · {detail.name}
                                                         </span>
 
-                                                        <div className="pl-3 space-y-1.5 border-l border-white/10">
+                                                        <div className="pl-3 space-y-1.5 border-l border-border/20">
                                                             {detail.upCosts.length > 0 && (
-                                                                <div className="flex flex-wrap items-center gap-2">
-                                                                    <span className="text-[10px] text-textSub w-12 shrink-0">满级:</span>
+                                                                <div className="flex flex-wrap items-center gap-1.5">
+                                                                    <span className="text-[9px] text-textSub w-12 shrink-0">满级:</span>
                                                                     {detail.upCosts.map((c: any, j: number) => (
                                                                         <CostBadge key={j} itemId={c.itemId} name={c.name} count={c.count} />
                                                                     ))}
                                                                 </div>
                                                             )}
                                                             {detail.luckCosts.length > 0 && (
-                                                                <div className="flex flex-wrap items-center gap-2">
-                                                                    <span className="text-[10px] text-textSub w-12 shrink-0">单次强运:</span>
+                                                                <div className="flex flex-wrap items-center gap-1.5">
+                                                                    <span className="text-[9px] text-textSub w-12 shrink-0">单次强运:</span>
                                                                     {detail.luckCosts.map((c: any, j: number) => (
                                                                         <CostBadge key={j} itemId={c.itemId} name={c.name} count={c.count} />
                                                                     ))}
