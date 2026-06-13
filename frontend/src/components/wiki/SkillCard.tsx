@@ -836,7 +836,7 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
                       {cols.val && <Td>{fmt(lv.totalVal)}</Td>}
                       {cols.baselineMultiplier && <Td cta>{fmtX(baseline?.fixedMultiplier)}</Td>}
                       {cols.baselineCorrection && <Td cta>{fmtRatio(baseline?.correctionRatio)}</Td>}
-                      {growthBuffCols.map((c) => <Td key={c.key} cta wrap>{(c.perLevel.get(lv.level) || ['—']).join(' / ')}</Td>)}
+                      {growthBuffCols.map((c) => <Td key={c.key} cta>{(c.perLevel.get(lv.level) || ['—']).join(' / ')}</Td>)}
                       {cols.metrics.map((c) => <Td key={c.key} cta>{metricText(lv, c.key)}</Td>)}
                     </tr>
                   );
@@ -879,12 +879,12 @@ function Stat({ icon, label, value, accent, hint }: { icon?: React.ReactNode; la
 }
 
 function Th({ children, sticky }: { children: React.ReactNode; sticky?: boolean }) {
-  const pin = sticky ? 'sticky left-0 z-20 bg-card shadow-[4px_0_10px_rgba(15,23,42,0.08)]' : '';
-  return <th className={`px-2 py-1 text-left font-medium whitespace-nowrap ${pin}`}>{children}</th>;
+  const pin = sticky ? 'sticky left-0 z-20 bg-card shadow-[4px_0_10px_rgba(15,23,42,0.08)] w-20 min-w-[5rem]' : '';
+  return <th className={`px-2 py-1 text-center font-medium whitespace-nowrap ${pin}`}>{children}</th>;
 }
 function Td({ children, accent, cta, wrap, sticky }: { children: React.ReactNode; accent?: boolean; cta?: boolean; wrap?: boolean; sticky?: boolean }) {
   const tone = accent ? 'text-textMain font-semibold' : cta ? 'text-cta' : 'text-textSub';
-  const flow = wrap ? 'min-w-[8rem] max-w-[18rem] whitespace-normal break-words leading-relaxed' : 'whitespace-nowrap';
-  const pin = sticky ? 'sticky left-0 z-10 bg-card shadow-[4px_0_10px_rgba(15,23,42,0.08)]' : '';
+  const flow = wrap ? 'min-w-[8rem] max-w-[18rem] whitespace-normal break-words leading-relaxed text-left' : 'whitespace-nowrap text-center';
+  const pin = sticky ? 'sticky left-0 z-10 bg-card shadow-[4px_0_10px_rgba(15,23,42,0.08)] w-20 min-w-[5rem]' : '';
   return <td className={`px-2 py-1 align-top ${flow} ${tone} ${pin}`}>{children}</td>;
 }

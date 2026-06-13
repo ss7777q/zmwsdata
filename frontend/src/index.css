@@ -140,4 +140,45 @@
   .input:focus {
     @apply border-primary ring-2 ring-primary/20;
   }
+
+  /* 全局自适应表格优化 (网页版/PC端与移动端通用) */
+  table {
+    table-layout: auto !important;
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+
+  /* 表格表头全局保持单行不折行，防止被浏览器挤压或截断，默认水平居中 */
+  table th {
+    white-space: nowrap !important;
+    text-align: center !important;
+  }
+
+  /* 全局 th 表头与 td 单元格默认保持单行不折行，防止列被浏览器恶意挤压截断，且默认水平居中对齐 */
+  table th, table td {
+    white-space: nowrap !important;
+    text-align: center !important;
+  }
+
+  /* 允许具有具体长备注或描述类单元格自适应折行，防止超长文本破坏排版，且换行后左对齐保证可读性 */
+  table td.whitespace-pre-wrap,
+  table td.whitespace-normal,
+  table td.break-words,
+  table td.normal-wrap {
+    white-space: normal !important;
+    word-break: break-word !important;
+    text-align: left !important;
+  }
+
+  /* Mobile Responsive Table Optimizations */
+  @media (max-width: 640px) {
+    /* 强力压缩单元格间距，提高屏幕利用率 */
+    table th, table td {
+      padding-left: 0.5rem !important;     /* px-2 */
+      padding-right: 0.5rem !important;    /* px-2 */
+      padding-top: 0.375rem !important;     /* py-1.5 */
+      padding-bottom: 0.375rem !important;  /* py-1.5 */
+      font-size: 0.75rem !important;        /* text-xs */
+    }
+  }
 }

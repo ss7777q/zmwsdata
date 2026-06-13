@@ -106,9 +106,10 @@ function App() {
   };
   const activeSystem = !showOps && currentSystem === OPS_SYSTEM ? DEFAULT_SYSTEM : currentSystem;
   const shouldLoadGameData = !NO_DATA_SYSTEMS.includes(activeSystem as typeof NO_DATA_SYSTEMS[number]);
+  const shouldLoadBulkGameData = shouldLoadGameData && activeSystem !== 'role_wiki';
   const supportsGlobalSearch = ['role_equip', 'role_fashion', 'boss'].includes(activeSystem);
   const shouldShowSearchBar = shouldLoadGameData && supportsGlobalSearch;
-  const { dataSources, loading } = useGameData(activeSystem, shouldLoadGameData);
+  const { dataSources, loading } = useGameData(activeSystem, shouldLoadBulkGameData);
   const isBossSystem = activeSystem === 'boss';
   const isSearching = shouldLoadGameData && searchQuery.trim().length > 0 && !isBossSystem;
 
@@ -257,7 +258,7 @@ function App() {
               </div>
             ) : null}
 
-            {loading && shouldLoadGameData && activeSystem !== 'call_god' ? (
+            {loading && shouldLoadBulkGameData && activeSystem !== 'call_god' ? (
               <div className="flex flex-col items-center justify-center py-20">
                 <div className="w-12 h-12 border-4 border-primary/20 border-t-cta rounded-full animate-spin"></div>
                 <div className="mt-4 text-textSub font-mono animate-pulse">Loading Game JSON Data...</div>
@@ -271,7 +272,7 @@ function App() {
             ) : (
               <>
                 <Suspense fallback={<PageFallback />}>
-                  {activeSystem === 'role_wiki' && <RoleWiki dataSources={dataSources} />}
+                  {activeSystem === 'role_wiki' && <RoleWiki />}
                   {activeSystem === 'role_equip' && <RoleEquip dataSources={dataSources} />}
                   {activeSystem === 'role_spiritual' && <RoleSpiritual dataSources={dataSources} />}
                   {activeSystem === 'role_wing' && <RoleWing dataSources={dataSources} />}

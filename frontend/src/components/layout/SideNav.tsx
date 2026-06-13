@@ -45,8 +45,8 @@ export default function SideNav({
           <span className={clsx("text-xl font-bold font-mono text-primary flex items-center truncate", isSidebarCollapsed && "lg:hidden")}>
             <span className="truncate">造梦无双资源消耗</span>
           </span>
-          <button
-            onClick={onToggleCollapse}
+          <button 
+            onClick={onToggleCollapse} 
             className="hidden lg:block p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-textSub hover:text-textMain cursor-pointer transition-colors shrink-0"
             title={isSidebarCollapsed ? "展开侧边栏" : "折叠侧边栏"}
           >
