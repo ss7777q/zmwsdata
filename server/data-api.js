@@ -873,7 +873,7 @@ function applyMaxLevel(value, maxLevel) {
     if (filteredEntry !== undefined) next[key] = filteredEntry;
   }
 
-  if (Array.isArray(value.levels) && Array.isArray(next.levels) && next.levels.length === 0) {
+  if (Array.isArray(value.levels) && value.levels.length > 0 && Array.isArray(next.levels) && next.levels.length === 0) {
     return undefined;
   }
 
@@ -1521,7 +1521,8 @@ function parseBattlefieldQuery(searchParams) {
 }
 
 const server = http.createServer(async (req, res) => {
-  setCommonHeaders(res);
+  try {
+    setCommonHeaders(res);
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
@@ -1858,6 +1859,10 @@ const server = http.createServer(async (req, res) => {
   }
 
   json(res, 404, { error: 'Not found' });
+  } catch (err) {
+    console.error('Unhandled request error:', err);
+    json(res, 500, { error: 'Unhandled request error: ' + (err.message || String(err)), stack: err.stack });
+  }
 });
 
 function shutdown() {

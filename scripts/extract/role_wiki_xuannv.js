@@ -9,6 +9,7 @@ const u = require("../lib/utils");
 const eng = require("./lib/skill-engine");
 const ov = require("./lib/overrides");
 const metrics = require("./lib/metrics");
+const passiveCards = require("./lib/role-passive-cards");
 
 const GAME_FPS = 30;
 const QICAI_STONE_SKILL_ID = 9001041;
@@ -803,6 +804,12 @@ function extract() {
   const unused = ctx.overrides.finalizeWarnings();
   if (unused.length && slots[0]) slots[0].base.warnings.push(...unused);
 
+  const fieldSlot = slots.find((slot) => slot.base?.skillId === BASE_FIELD_SKILL_ID);
+  const passiveSlots = passiveCards.buildRolePassiveSlots(ROLE_ID, {
+    ...ctx,
+    xuannvFieldReleaseFrames: fieldSlot?.base?.header?.releaseFrames,
+  });
+
   const payload = {
     role: {
       id: role.id,
@@ -817,6 +824,7 @@ function extract() {
       },
     },
     slots,
+    passiveSlots,
   };
 
   u.saveOutput("role_wiki_xuannv", payload, {

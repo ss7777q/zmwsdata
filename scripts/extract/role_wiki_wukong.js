@@ -12,6 +12,7 @@ const u = require("../lib/utils");
 const eng = require("./lib/skill-engine");
 const ov = require("./lib/overrides");
 const metrics = require("./lib/metrics");
+const passiveCards = require("./lib/role-passive-cards");
 
 // 通用派生指标(所有角色默认产出);角色特有指标(闪避率/血蓝比等需 buff 标注)写在
 // overrides/<role>.json 的 "metrics" 段,会与这里合并。攻略口径见 lib/metrics.js。
@@ -434,6 +435,8 @@ function extract() {
   const unused = ctx.overrides.finalizeWarnings();
   if (unused.length && slots[0]) slots[0].base.warnings.push(...unused);
 
+  const passiveSlots = passiveCards.buildRolePassiveSlots(ROLE_ID, ctx);
+
   const payload = {
     role: {
       id: role.id,
@@ -444,12 +447,13 @@ function extract() {
       guidePath: GUIDE_PATH,
     },
     slots,
+    passiveSlots,
   };
 
   u.saveOutput("role_wiki_wukong", payload, {
     system: "role_wiki",
-    sourceFiles: ["roleInitial.*.json", "role.*.json", "skill.*.json", "skillLevel.*.json", "monster.*.json", "bullets.json", "entityCtg/*.json", GUIDE_PATH],
-    note: "孙悟空全技能 Wiki,按段数/释放时间/等级成长精确计算。觉醒与基础数值全等者标 identicalToBase。",
+    sourceFiles: ["roleInitial.*.json", "role.*.json", "skill.*.json", "skillLevel.*.json", "monster.*.json", "passiveSkill.*.json", "beskill.*.json", "buff.*.json", "bullets.json", "entityCtg/*.json", GUIDE_PATH],
+    note: "孙悟空全技能 Wiki,按段数/释放时间/等级成长精确计算。觉醒与基础数值全等者标 identicalToBase；角色被动来自 passiveSkill。",
   });
 
   // 控制台摘要

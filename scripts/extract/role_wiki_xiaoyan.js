@@ -12,6 +12,7 @@ const u = require("../lib/utils");
 const eng = require("./lib/skill-engine");
 const ov = require("./lib/overrides");
 const metrics = require("./lib/metrics");
+const passiveCards = require("./lib/role-passive-cards");
 
 // 通用派生指标(同所有角色);角色特有指标写 overrides/xiaoyan.json 的 metrics 段。
 const DEFAULT_METRICS = [
@@ -41,6 +42,38 @@ const FORCE_DISTINCT_AWAKENS = new Set([
   7001071, // 仙山古灵·令御: 强攻同基础,但古灵增伤机制不同
   7001076, // 仙山古灵·乘御: 强攻同基础,但切换乘御技能组与增伤/减伤不同
   7001451, // 水之护盾(乘御版): 护盾值同指令版,但释放用时和模式不同
+]);
+const STONE_MECHANIC_EXAMPLE_LEVEL = 12;
+const STONE_MECHANIC_SEGMENT_MISSING = "XIAOYAN_STONE_MECHANIC_SEGMENT_MISSING";
+const STONE_MECHANIC_EXTRA_DAMAGE_MISSING = "XIAOYAN_STONE_MECHANIC_EXTRA_DAMAGE_MISSING";
+const STONE_FORMS = new Map([
+  [7001060, {
+    formulaGroups: [
+      { label: "滚动", skillIds: [7177000] },
+      { label: "碎岩爪击", skillIds: [7177010] },
+    ],
+    normalAttackSkillId: 7177011,
+    chargedSkillName: "碎岩爪击",
+  }],
+  [7001061, {
+    formulaGroups: [
+      { label: "滚动", skillIds: [7178000] },
+      { label: "碎岩爪击", skillIds: [7178010] },
+    ],
+    normalAttackSkillId: 7178011,
+    chargedSkillName: "碎岩爪击",
+    tauntSkillId: 7178020,
+  }],
+  [7001066, {
+    formulaGroups: [
+      { label: "滚动", skillIds: [7179000] },
+      { label: "碎岩爪击", skillIds: [7179010] },
+      { label: "巨石岩弹", skillIds: [7179020] },
+    ],
+    normalAttackSkillId: 7179011,
+    chargedSkillName: "碎岩爪击/巨石岩弹",
+    extraRockSkillId: 7179021,
+  }],
 ]);
 const SLOTS = [
   { key: "skill1", label: "技能1" },
@@ -342,6 +375,173 @@ function applyXiaoyanGuideDamageOverride(skillId, segments) {
   }
 }
 
+function round3(value) {
+  return Math.round(value * 1000) / 1000;
+}
+
+function fmtNumber(value) {
+  if (typeof value !== "number" || Number.isNaN(value)) return "—";
+  return value.toLocaleString("zh-CN", { maximumFractionDigits: 3 });
+}
+
+function uniqueNumbers(values) {
+  return [...new Set(values.filter((value) => typeof value === "number" && !Number.isNaN(value)).map(String))]
+    .map(Number);
+}
+
+function stoneGroupSummary(levelRow, group, warnings, cardName) {
+  const skillIds = new Set(group.skillIds);
+  const segments = levelRow.segments.filter((segment) => skillIds.has(segment.sourceSkillId));
+  if (!segments.length) {
+    warnings.push({
+      code: STONE_MECHANIC_SEGMENT_MISSING,
+      detail: `${cardName} Lv.${levelRow.level} 缺少${group.label}伤害段，无法生成石灵口径说明`,
+    });
+    return null;
+  }
+
+  const hits = segments.reduce((sum, segment) => sum + (segment.maxHit || 1), 0);
+  const totalPer = round3(segments.reduce((sum, segment) => sum + (segment.per || 0) * (segment.maxHit || 1), 0));
+  const totalVal = round3(segments.reduce((sum, segment) => sum + (segment.val || 0) * (segment.maxHit || 1), 0));
+  const perValues = uniqueNumbers(segments.map((segment) => segment.per));
+  const valValues = uniqueNumbers(segments.map((segment) => segment.val));
+  const coefficient = perValues.length === 1
+    ? `${fmtNumber(perValues[0])}×${hits}`
+    : segments.map((segment) => `${fmtNumber(segment.per)}×${segment.maxHit || 1}`).join(" + ");
+  const fixed = valValues.length === 1
+    ? `${fmtNumber(valValues[0])}×${hits}`
+    : segments.map((segment) => `${fmtNumber(segment.val)}×${segment.maxHit || 1}`).join(" + ");
+
+  return { label: group.label, hits, totalPer, totalVal, coefficient, fixed };
+}
+
+function summarizeConcreteSkillDamage(skillId, ctx, warnings) {
+  const skill = ctx.skillById.get(skillId);
+  if (!skill) {
+    warnings.push({
+      code: STONE_MECHANIC_EXTRA_DAMAGE_MISSING,
+      detail: `石灵说明缺少技能 ${skillId}`,
+    });
+    return null;
+  }
+
+  const row = queryXiaoyanLevelRow(skill, 1, ctx, warnings);
+  if (!row) return null;
+  const cfg = resolveXiaoyanCfgFile(skill, null, ROLE_ID, ctx.monsterById, warnings);
+  const damage = eng.computeDamageSegments(skill, row, cfg.actionCfg, warnings);
+  const realSegments = (damage.segments || []).filter((segment) => !isXiaoyanPlaceholderDamageSegment(segment));
+  if (!realSegments.length) return null;
+
+  const hits = realSegments.reduce((sum, segment) => sum + (segment.maxHit || 1), 0);
+  const totalPer = round3(realSegments.reduce((sum, segment) => sum + (segment.per || 0) * (segment.maxHit || 1), 0));
+  const totalVal = round3(realSegments.reduce((sum, segment) => sum + (segment.val || 0) * (segment.maxHit || 1), 0));
+  const perValues = uniqueNumbers(realSegments.map((segment) => segment.per));
+  const valValues = uniqueNumbers(realSegments.map((segment) => segment.val));
+
+  return {
+    name: skill.desName || skill.Name || `技能${skillId}`,
+    hits,
+    totalPer,
+    totalVal,
+    unitPer: perValues.length === 1 ? perValues[0] : null,
+    unitVal: valValues.length === 1 ? valValues[0] : null,
+  };
+}
+
+function stoneSkillLevelRowValue(skillId, level, ctx, warnings, field) {
+  const skill = ctx.skillById.get(skillId);
+  if (!skill) return null;
+  const row = queryXiaoyanLevelRow(skill, level, ctx, warnings);
+  const value = row ? row[field] : null;
+  return typeof value === "number" ? value : null;
+}
+
+function stoneRecallConsumeSkillId(displaySkillId, ctx) {
+  const skill = ctx.skillById.get(displaySkillId);
+  if (!skill) return null;
+  for (const beSkillId of skill.beSkill || []) {
+    const be = ctx.beskillById.get(beSkillId);
+    if (be?.label === "haveCallMonsterIdSkillMp" && be.scope === "replaceSkillConsumeMp") {
+      return typeof be.attribute?.skillId === "number" ? be.attribute.skillId : null;
+    }
+  }
+  return null;
+}
+
+function buildXiaoyanStoneMechanics(displaySkillId, cardName, levels, ctx, warnings) {
+  const form = STONE_FORMS.get(displaySkillId);
+  if (!form) return [];
+  const exampleLevel = levels.find((levelRow) => levelRow.level === STONE_MECHANIC_EXAMPLE_LEVEL) || levels[0] || null;
+  if (!exampleLevel) return [];
+
+  const summaries = form.formulaGroups
+    .map((group) => stoneGroupSummary(exampleLevel, group, warnings, cardName))
+    .filter(Boolean);
+  const fixedFormula = summaries.map((summary) => `${summary.label} ${summary.fixed}`).join(" + ");
+  const coefficientFormula = summaries.map((summary) => `${summary.label} ${summary.coefficient}`).join(" + ");
+  const mechanics = [];
+
+  if (summaries.length === form.formulaGroups.length) {
+    mechanics.push({
+      label: "总固伤口径",
+      value: `本卡只统计本次释放能确定次数的伤害，不等于石灵完整驻场循环。Lv.${exampleLevel.level} 固伤 = ${fixedFormula} = ${fmtNumber(exampleLevel.totalVal)}；总系数 = ${coefficientFormula} = ×${fmtNumber(exampleLevel.totalPer)}。`,
+    });
+  }
+
+  const summonMp = exampleLevel.consumeMp;
+  const recallSkillId = stoneRecallConsumeSkillId(displaySkillId, ctx);
+  const recallMp = recallSkillId ? stoneSkillLevelRowValue(recallSkillId, exampleLevel.level, ctx, warnings, "consumeMp") : null;
+  const chargedSkillIds = form.formulaGroups.flatMap((group) => group.skillIds).filter((skillId) => skillId !== recallSkillId);
+  const chargedCosts = chargedSkillIds
+    .map((skillId) => {
+      const skill = ctx.skillById.get(skillId);
+      const mp = stoneSkillLevelRowValue(skillId, exampleLevel.level, ctx, warnings, "consumeMp");
+      if (typeof mp !== "number") return null;
+      return `${skill?.desName || skill?.Name || `技能${skillId}`} ${fmtNumber(mp)}`;
+    })
+    .filter(Boolean);
+  const consumeParts = [];
+  if (typeof summonMp === "number") consumeParts.push(`首次召唤按技能入口消耗，Lv.${exampleLevel.level} 为 ${fmtNumber(summonMp)} 蓝`);
+  if (typeof recallMp === "number") consumeParts.push(`场上已有石灵时会改为召回滚动，Lv.${exampleLevel.level} 为 ${fmtNumber(recallMp)} 蓝`);
+  if (chargedCosts.length) consumeParts.push(`石灵后续耗蓝技能单独扣萧嫣魔法，Lv.${exampleLevel.level}：${chargedCosts.join("，")}`);
+  if (consumeParts.length) {
+    mechanics.push({
+      label: "耗蓝机制",
+      value: consumeParts.join("；") + "。",
+    });
+  }
+
+  const normalAttack = summarizeConcreteSkillDamage(form.normalAttackSkillId, ctx, warnings);
+  const attackText = normalAttack
+    ? `驻场普攻为 ${normalAttack.hits} 段 ×${fmtNumber(normalAttack.unitPer ?? normalAttack.totalPer)}，固定伤害每段 ${fmtNumber(normalAttack.unitVal ?? normalAttack.totalVal)}；`
+    : "";
+  mechanics.push({
+    label: "驻场攻击方式",
+    value: `${attackText}${form.chargedSkillName} 是耗蓝强化攻击，后续由石灵 AI 按模式和萧嫣剩余魔法自动选择。因为触发次数没有固定值，驻场普攻和后续 AI 行为不并入上方总固伤。`,
+  });
+
+  if (form.tauntSkillId) {
+    const tauntSkill = ctx.skillById.get(form.tauntSkillId);
+    mechanics.push({
+      label: "刚石嘲讽",
+      value: `刚石额外解锁嘲讽，冷却 ${fmtNumber(tauntSkill?.cd ?? null)} 秒；嘲讽会吸引周围敌人攻击石灵，本身没有直接伤害，所以不计入总固伤。`,
+    });
+  }
+
+  if (form.extraRockSkillId) {
+    const rock = summarizeConcreteSkillDamage(form.extraRockSkillId, ctx, warnings);
+    const rockText = rock
+      ? `云岩还有不耗蓝、不成长的岩弹动作，${rock.hits} 段 ×${fmtNumber(rock.unitPer ?? rock.totalPer)}，无成长固伤每段 ${fmtNumber(rock.unitVal ?? rock.totalVal)}；`
+      : "";
+    mechanics.push({
+      label: "云岩岩弹",
+      value: `${rockText}成长表已经把带耗蓝成长的巨石岩弹按 1 次计入。云岩的 10% 增伤是战斗增益，表格里的段数和系数仍按技能基础值展示。`,
+    });
+  }
+
+  return mechanics;
+}
+
 /** 拦截具体技能并重新映射段数与治疗值 */
 function computeXiaoyanLevel(displaySkillId, concreteIds, level, slot, ctx, hasAssociatedEffects, warnings) {
   let mergedSegments = [];
@@ -390,6 +590,8 @@ function computeXiaoyanLevel(displaySkillId, concreteIds, level, slot, ctx, hasA
       applyXiaoyanGuideDamageOverride(skillId, dmg.segments);
 
       for (const seg of dmg.segments) {
+        seg.sourceSkillId = skillId;
+        seg.sourceSkillName = skill.desName || skill.Name || `技能${skillId}`;
         // S2 风刃连击
         if ([7171010, 7172010, 7173010].includes(skillId)) {
           seg.maxHit = 10;
@@ -397,10 +599,6 @@ function computeXiaoyanLevel(displaySkillId, concreteIds, level, slot, ctx, hasA
         // S4 石灵滚动连击
         else if ([7177000, 7178000, 7179000].includes(skillId)) {
           seg.maxHit = 9;
-        }
-        // S4 爪击连击
-        else if ([7177010, 7178010, 7179010].includes(skillId)) {
-          seg.maxHit = 3;
         }
         // transSkill4 (飞砂走石指令版切割)
         else if (skillId === 7001361) {
@@ -515,6 +713,7 @@ function buildSkillCard(displaySkillId, slot, ctx) {
       cfgFileResolved: cfg.cfgFileResolved,
       cfgResolveSource: cfg.cfgResolveSource,
       fixedBuffs,
+      mechanics: buildXiaoyanStoneMechanics(displaySkillId, skill.desName || skill.Name || `技能${displaySkillId}`, levels, ctx, warnings),
       metrics: metrics.computeMetrics(
         ctx.metricDefs, "header",
         { skillId: displaySkillId, totalPer: lv1 ? lv1.totalPer : null, releaseSeconds: rel.releaseSeconds, segCount: lv1 ? lv1.segments.reduce((a, s) => a + s.maxHit, 0) : 0 },
@@ -635,6 +834,8 @@ function extract() {
   const unused = ctx.overrides.finalizeWarnings();
   if (unused.length && slots[0]) slots[0].base.warnings.push(...unused);
 
+  const passiveSlots = passiveCards.buildRolePassiveSlots(ROLE_ID, ctx);
+
   const payload = {
     role: {
       id: role.id,
@@ -645,6 +846,7 @@ function extract() {
       guidePath: GUIDE_PATH,
     },
     slots,
+    passiveSlots,
   };
 
   u.saveOutput("role_wiki_xiaoyan", payload, {

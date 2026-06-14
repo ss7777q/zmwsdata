@@ -9,6 +9,7 @@ const u = require("../lib/utils");
 const eng = require("./lib/skill-engine");
 const ov = require("./lib/overrides");
 const metrics = require("./lib/metrics");
+const passiveCards = require("./lib/role-passive-cards");
 
 // 通用派生指标(同所有角色);角色特有指标写 overrides/bajie.json 的 metrics 段。
 const DEFAULT_METRICS = [
@@ -558,6 +559,8 @@ function extract() {
   const unused = ctx.overrides.finalizeWarnings();
   if (unused.length && slots[0]) slots[0].base.warnings.push(...unused);
 
+  const passiveSlots = passiveCards.buildRolePassiveSlots(ROLE_ID, ctx);
+
   const payload = {
     role: {
       id: role.id,
@@ -568,12 +571,13 @@ function extract() {
       guidePath: GUIDE_PATH,
     },
     slots,
+    passiveSlots,
   };
 
   u.saveOutput("role_wiki_bajie", payload, {
     system: "role_wiki",
-    sourceFiles: ["roleInitial.*.json", "role.*.json", "skill.*.json", "skillLevel.*.json", "monster.*.json", "buff.*.json", "beskill.*.json", "bullets.json", "entityCtg/*.json", GUIDE_PATH],
-    note: "猪八戒全技能 Wiki，包括多段技能与无双技能动作 Cfg 解析。",
+    sourceFiles: ["roleInitial.*.json", "role.*.json", "skill.*.json", "skillLevel.*.json", "monster.*.json", "passiveSkill.*.json", "buff.*.json", "beskill.*.json", "bullets.json", "entityCtg/*.json", GUIDE_PATH],
+    note: "猪八戒全技能 Wiki，包括多段技能、无双技能动作 Cfg 解析与 passiveSkill 角色被动。",
   });
 
   // 打印最终提取概要

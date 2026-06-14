@@ -76,7 +76,9 @@ function applyMaxLevel(value, maxLevel) {
     if (filteredEntry !== undefined) next[key] = filteredEntry;
   }
 
-  if (Array.isArray(value.levels) && Array.isArray(next.levels) && next.levels.length === 0) return undefined;
+  if (Array.isArray(value.levels) && value.levels.length > 0 && Array.isArray(next.levels) && next.levels.length === 0) {
+    return undefined;
+  }
   if (Array.isArray(next.levels) && next.levels.length > 0 && typeof next.maxLevel === 'number') {
     const lastLevel = next.levels[next.levels.length - 1]?.level;
     if (typeof lastLevel === 'number' && Number.isFinite(lastLevel)) next.maxLevel = lastLevel;

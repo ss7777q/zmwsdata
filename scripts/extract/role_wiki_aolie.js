@@ -8,6 +8,7 @@ const u = require("../lib/utils");
 const eng = require("./lib/skill-engine");
 const ov = require("./lib/overrides");
 const metrics = require("./lib/metrics");
+const passiveCards = require("./lib/role-passive-cards");
 
 const DEFAULT_METRICS = [
   { key: "manaConv", label: "蓝转", scope: "level", expr: "totalVal / consumeMp", when: "totalVal * consumeMp", fixed: 2 },
@@ -442,6 +443,8 @@ function extract() {
   const unused = ctx.overrides.finalizeWarnings();
   if (unused.length && slots[0]) slots[0].base.warnings.push(...unused);
 
+  const passiveSlots = passiveCards.buildRolePassiveSlots(ROLE_ID, ctx);
+
   const payload = {
     role: {
       id: role.id,
@@ -452,6 +455,7 @@ function extract() {
       guidePath: GUIDE_PATH,
     },
     slots,
+    passiveSlots,
   };
 
   u.saveOutput("role_wiki_aolie", payload, {

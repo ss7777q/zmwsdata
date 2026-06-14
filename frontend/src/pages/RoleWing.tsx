@@ -1,6 +1,96 @@
 import { useState, useMemo } from 'react';
 import { clsx } from 'clsx';
 import CostBadge from '../components/ui/CostBadge';
+import { ChevronRight } from 'lucide-react';
+
+const QUALITY_NAMES: Record<number, string> = {
+    2: '优秀',
+    3: '精良',
+    4: '史诗',
+    5: '传说',
+    6: '上古'
+};
+
+interface WingEffectTable {
+    title: string;
+    columns: string[];
+    rows: {
+        level: number;
+        values: string[];
+    }[];
+    emptyText: string;
+}
+
+interface WingEffectSection {
+    title: string;
+    paragraphs: string[];
+}
+
+interface WingEffectDetail {
+    buteId: number;
+    wingName: string;
+    name: string;
+    skillName: string;
+    summary: string;
+    tags: string[];
+    cooldown: {
+        display: string;
+    };
+    sections: WingEffectSection[];
+    fixedMechanism: {
+        label: string;
+        value: string;
+    }[];
+    growthTables: WingEffectTable[];
+    warnings?: string[];
+}
+
+function EffectGrowthTable({ table }: { table: WingEffectTable | null }) {
+    if (!table) return null;
+    const hasRows = table.columns.length > 0 && table.rows.length > 0;
+
+    return (
+        <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden animate-in fade-in duration-300">
+            <div className="border-b border-border/60 bg-slate-500/[0.02] dark:bg-white/[0.01] px-5 py-3.5">
+                <div className="text-xs font-bold tracking-wider text-textMain uppercase">
+                    {table.title}
+                </div>
+            </div>
+            {hasRows ? (
+                <div className="overflow-x-auto custom-scrollbar">
+                    <table className="w-full min-w-[320px] text-center text-xs">
+                        <thead>
+                            <tr className="border-b border-border/40 bg-slate-500/[0.04] dark:bg-white/[0.02] text-textSub">
+                                <th className="sticky left-0 z-10 bg-card px-4 py-2.5 font-semibold text-[10px] tracking-wider">Lv.</th>
+                                {table.columns.map((column) => (
+                                    <th key={column} className="border-l border-border/20 px-4 py-2.5 font-semibold text-[10px] tracking-wider">
+                                        {column}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/20">
+                            {table.rows.map((row) => (
+                                <tr key={row.level} className="hover:bg-purple-500/[0.02] transition-colors duration-150">
+                                    <td className="sticky left-0 z-10 bg-card px-4 py-2.5 font-mono font-bold text-textMain text-xs">Lv.{row.level}</td>
+                                    {row.values.map((value, index) => (
+                                        <td key={index} className="border-l border-border/20 px-4 py-2.5 align-top font-mono leading-5 text-textSub text-[11px]">
+                                            {value}
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            ) : (
+                <div className="px-5 py-6 text-xs leading-6 text-textSub/75">
+                    {table.emptyText}
+                </div>
+            )}
+        </div>
+    );
+}
 
 interface RoleWingProps {
     dataSources: Record<string, any>;
@@ -8,11 +98,13 @@ interface RoleWingProps {
 
 export default function RoleWing({ dataSources }: RoleWingProps) {
     const wingData = dataSources['role_wing_upgrade']?.data || [];
+    const wingSkillData = (dataSources['role_wing_skill']?.data || []) as WingEffectDetail[];
     const _featherAdvanceData = dataSources['role_feather_advance']?.data || [];
     const _featherBaptizeData = dataSources['role_feather_baptize']?.data || [];
     const _featherLuckData = dataSources['role_feather_luck']?.data || [];
 
-    const [activeTab, setActiveTab] = useState<'wing' | 'feather'>('wing');
+    const [activeTab, setActiveTab] = useState<'wing' | 'feather' | 'skill'>('wing');
+    const [selectedWingId, setSelectedWingId] = useState<number | null>(null);
 
     // =========== 翅膀 Tab 逻辑 ===========
     const wings = useMemo(() => {
@@ -34,6 +126,24 @@ export default function RoleWing({ dataSources }: RoleWingProps) {
             }, []) || []
         }));
     }, [wingData]);
+
+    const effectByButeId = useMemo(() => {
+        return new Map(wingSkillData.map((effect) => [effect.buteId, effect]));
+    }, [wingSkillData]);
+
+    const activeWing = useMemo(() => {
+        if (!wings.length) return null;
+        if (selectedWingId !== null) {
+            return wings.find((w: any) => w.buteId === selectedWingId) || null;
+        }
+        const featuredWing = wings.find((w: any) => effectByButeId.has(w.buteId));
+        return featuredWing || wings[0] || null;
+    }, [wings, selectedWingId, effectByButeId]);
+
+    const activeEffect = useMemo(() => {
+        if (!activeWing) return null;
+        return effectByButeId.get(activeWing.buteId) || null;
+    }, [activeWing, effectByButeId]);
 
     const [expandedWingIds, setExpandedWingIds] = useState<Record<number, boolean>>({});
     const toggleWingExpand = (id: number) => {
@@ -102,6 +212,17 @@ export default function RoleWing({ dataSources }: RoleWingProps) {
                     )}
                 >
                     羽毛系统
+                </button>
+                <button
+                    onClick={() => setActiveTab('skill')}
+                    className={clsx(
+                        "px-6 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border active:scale-95",
+                        activeTab === 'skill'
+                            ? "bg-purple-500/10 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-300/50 dark:border-purple-500/30 shadow-[0_2px_10px_rgba(168,85,247,0.08)]"
+                            : "text-textSub hover:text-textMain hover:bg-slate-200/60 dark:hover:bg-white/5 border-transparent"
+                    )}
+                >
+                    翅膀技能
                 </button>
             </div>
 
@@ -291,6 +412,160 @@ export default function RoleWing({ dataSources }: RoleWingProps) {
                             </div>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {/* 翅膀技能 Tab */}
+            {activeTab === 'skill' && (
+                <div className="grid grid-cols-1 gap-5 xl:grid-cols-[360px_minmax(0,1fr)] xl:items-stretch animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    {/* 左侧翅膀列表 */}
+                    <div className="flex min-h-0 flex-col rounded-xl border border-border/80 bg-card shadow-sm xl:h-0 xl:min-h-[640px] overflow-hidden">
+                        <div className="border-b border-border/60 bg-slate-500/[0.02] dark:bg-white/[0.01] px-4 py-3.5">
+                            <div className="text-xs font-bold tracking-wider text-textMain uppercase">
+                                翅膀列表
+                            </div>
+                        </div>
+                        <div className="max-h-[500px] overflow-auto p-3.5 custom-scrollbar xl:max-h-none xl:flex-1 xl:min-h-0 space-y-2">
+                            {wings.map((item: any) => {
+                                const isSelected = item.buteId === activeWing?.buteId;
+                                const effect = effectByButeId.get(item.buteId);
+
+                                return (
+                                    <button
+                                        key={item.buteId}
+                                        onClick={() => setSelectedWingId(item.buteId)}
+                                        className={clsx(
+                                            'w-full rounded-xl border p-3.5 text-left transition-all duration-200 cursor-pointer active:scale-[0.99]',
+                                            isSelected
+                                                ? 'border-purple-500/40 bg-purple-500/10 dark:bg-purple-950/20 shadow-sm shadow-purple-500/5'
+                                                : 'border-transparent bg-slate-500/[0.02] dark:bg-white/[0.01] hover:border-slate-300/50 dark:hover:border-slate-800/80 hover:bg-slate-500/[0.04]'
+                                        )}
+                                    >
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="min-w-0">
+                                                <div className={clsx("truncate text-sm font-bold transition-colors", isSelected ? "text-purple-600 dark:text-purple-400" : "text-textMain")}>
+                                                    {item.wingName}
+                                                </div>
+                                                <div className="mt-1.5 text-xs leading-5 text-textSub truncate">
+                                                    {effect?.summary || '当前配置没有技能效果数据'}
+                                                </div>
+                                            </div>
+                                            <ChevronRight className={clsx('mt-0.5 h-4 w-4 shrink-0 transition-colors', isSelected ? 'text-purple-500' : 'text-textSub/50')} />
+                                        </div>
+                                        <div className="mt-3.5 flex flex-wrap gap-1.5">
+                                            {effect ? (
+                                                effect.tags.slice(0, 3).map((tag: string) => (
+                                                    <span key={tag} className="rounded-md border border-border/50 bg-slate-500/[0.04] dark:bg-black/20 px-2 py-0.5 text-[10px] text-textSub font-medium">
+                                                        {tag}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <span className="rounded-md border border-border/50 bg-slate-500/[0.04] dark:bg-black/20 px-2 py-0.5 text-[10px] text-textSub font-medium opacity-60">
+                                                    解析中
+                                                </span>
+                                            )}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* 右侧详情面板 */}
+                    {activeWing && (
+                        <div className="space-y-5 min-w-0 flex-1">
+                            {activeEffect ? (
+                                <div className="rounded-xl border border-border bg-card p-6 shadow-sm space-y-6">
+                                    {/* 头部信息 */}
+                                    <div>
+                                        <div className="flex flex-wrap items-center gap-2.5">
+                                            <h3 className="text-xl font-bold text-textMain">{activeEffect.name}</h3>
+                                            <span className="rounded-md border border-purple-500/20 bg-purple-500/10 px-2 py-0.5 text-[10px] font-bold text-purple-600 dark:text-purple-400 font-mono tracking-wide">
+                                                {activeEffect.cooldown.display}
+                                            </span>
+                                        </div>
+                                        <p className="mt-2 text-xs leading-6 text-textSub/90">{activeEffect.summary}</p>
+                                        <div className="mt-3.5 flex flex-wrap gap-1.5">
+                                            {activeEffect.tags.map((tag) => (
+                                                <span key={tag} className="rounded-md border border-border/50 bg-slate-500/[0.04] dark:bg-black/20 px-2 py-0.5 text-[10px] text-textSub font-medium">
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                                        {activeEffect.sections.map((section) => (
+                                            <div key={section.title} className="rounded-xl border border-border/60 bg-slate-500/[0.01] dark:bg-white/[0.01] p-4.5 space-y-3.5">
+                                                <div className="text-xs font-bold text-textMain border-b border-border/40 pb-2.5 uppercase tracking-wider">
+                                                    {section.title}
+                                                </div>
+                                                <div className="space-y-3 text-xs leading-relaxed text-textSub/90">
+                                                    {section.paragraphs.map((p, idx) => (
+                                                        <p key={idx}>{p}</p>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {activeEffect.fixedMechanism.length > 0 && (
+                                        <div className="rounded-xl border border-border/60 bg-slate-500/[0.01] dark:bg-white/[0.01] p-4.5">
+                                            <div className="text-xs font-bold text-textMain border-b border-border/40 pb-2.5 uppercase tracking-wider">
+                                                固定机制
+                                            </div>
+                                            <div className="mt-3.5 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                                {activeEffect.fixedMechanism.map((item) => (
+                                                    <div key={item.label} className="rounded-lg border border-border/30 bg-slate-500/[0.02] dark:bg-black/10 px-3 py-2.5">
+                                                        <div className="text-[10px] font-bold tracking-wider text-textSub uppercase">{item.label}</div>
+                                                        <div className="mt-1 text-xs leading-5 text-textMain">{item.value}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {activeEffect.warnings && activeEffect.warnings.length > 0 && (
+                                        <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.04] px-4 py-3 text-xs leading-6 text-amber-700 dark:text-amber-300">
+                                            {activeEffect.warnings.map((warning, idx) => (
+                                                <p key={idx}>{warning}</p>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {activeEffect.growthTables.length > 0 && (
+                                        <div className="grid grid-cols-1 gap-5">
+                                            {activeEffect.growthTables.map((table) => (
+                                                <EffectGrowthTable key={table.title} table={table} />
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                /* 其他翅膀占位 - 优雅虚线边框看板 */
+                                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-slate-500/[0.01] dark:bg-white/[0.01] py-20 min-h-[560px] animate-in fade-in duration-300">
+                                    <div className="relative flex items-center justify-center w-12 h-12 mb-5">
+                                        <span className="absolute inline-flex h-full w-full rounded-full bg-purple-500/10 animate-ping opacity-60"></span>
+                                        <div className="relative inline-flex rounded-full h-8 w-8 bg-purple-500/15 border border-purple-500/30 items-center justify-center">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
+                                        </div>
+                                    </div>
+                                    <h3 className="text-sm font-bold text-textMain">“{activeWing.wingName}”技能解析中</h3>
+                                    <p className="text-xs text-textSub mt-2.5 max-w-xs text-center leading-relaxed opacity-75">
+                                        当前导出数据尚未包含该羽翼的专属技能与附加机制。
+                                    </p>
+                                    <div className="mt-6 flex gap-1.5">
+                                        <span className="px-2.5 py-0.5 rounded-md border border-border/50 bg-slate-500/[0.04] dark:bg-black/20 text-[10px] text-textSub font-mono">
+                                            buteId: {activeWing.buteId}
+                                        </span>
+                                        <span className="px-2.5 py-0.5 rounded-md border border-border/50 bg-slate-500/[0.04] dark:bg-black/20 text-[10px] text-textSub font-mono">
+                                            {QUALITY_NAMES[activeWing.maxQuality] || '优秀'}级羽翼
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
         </div>

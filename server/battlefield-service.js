@@ -35,6 +35,7 @@ const MOUNTS = [
   { name: '青狮', baseId: '201801'}
 ];
 
+
 const DEMON_KINGS = [
   { name: '山鬼', baseId: '213010' },
   { name: '刑天', baseId: '213020' },

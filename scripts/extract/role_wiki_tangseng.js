@@ -11,6 +11,7 @@ const u = require("../lib/utils");
 const eng = require("./lib/skill-engine");
 const ov = require("./lib/overrides");
 const metrics = require("./lib/metrics");
+const passiveCards = require("./lib/role-passive-cards");
 
 // 通用派生指标(同所有角色);角色特有指标(闪避率/血蓝比等需 buff 标注)写在
 // overrides/tangseng.json 的 "metrics" 段,会与这里合并。攻略口径见 lib/metrics.js。
@@ -971,6 +972,8 @@ function extract() {
   const unused = ctx.overrides.finalizeWarnings();
   if (unused.length && slots[0]) slots[0].base.warnings.push(...unused);
 
+  const passiveSlots = passiveCards.buildRolePassiveSlots(ROLE_ID, ctx);
+
   const payload = {
     role: {
       id: role.id,
@@ -981,12 +984,13 @@ function extract() {
       guidePath: GUIDE_PATH,
     },
     slots,
+    passiveSlots,
   };
 
   u.saveOutput("role_wiki_tangseng", payload, {
     system: "role_wiki",
-    sourceFiles: ["roleInitial.*.json", "role.*.json", "skill.*.json", "skillLevel.*.json", "monster.*.json", "bullets.json", "entityCtg/*.json", GUIDE_PATH],
-    note: "唐三藏全技能 Wiki，包括多段金蝉子变身技能合并及特殊多段伤害后处理。",
+    sourceFiles: ["roleInitial.*.json", "role.*.json", "skill.*.json", "skillLevel.*.json", "monster.*.json", "passiveSkill.*.json", "beskill.*.json", "buff.*.json", "bullets.json", "entityCtg/*.json", GUIDE_PATH],
+    note: "唐三藏全技能 Wiki，包括多段金蝉子变身技能合并、特殊多段伤害后处理与 passiveSkill 角色被动。",
   });
 
   // 打印最终提取概要
