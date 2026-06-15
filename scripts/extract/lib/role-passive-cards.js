@@ -77,6 +77,18 @@ function pct(n) {
   return `${round(n * 100, 3)}%`;
 }
 
+function pctValue(value) {
+  return typeof value === "number" && Number.isFinite(value) ? pct(value) : "配置缺失";
+}
+
+function numberValue(value) {
+  return typeof value === "number" && Number.isFinite(value) ? `${value}` : "配置缺失";
+}
+
+function reciprocalValue(value) {
+  return typeof value === "number" && Number.isFinite(value) && value !== 0 ? `${round(1 / value, 3)}` : "配置缺失";
+}
+
 function frames(n) {
   return `${n}帧`;
 }
@@ -1110,10 +1122,10 @@ function describeBeskill(be, ctx, warnings) {
       }
       break;
     case "juduZhongziAddHp":
-      out.push(metric("毒种回血", `剧毒种子结算时按层数折算回血：层数越多回血越高，系数${pct(a?.hp || 0)}，单次最多按回血属性的${pct(a?.max || 0)}计算。`));
+      out.push(metric("毒种回血", `剧毒种子每30帧（1秒）为沙僧回血一次：先统计场上所有角色、宠物、怪物身上由沙僧施加的剧毒种子总层数；每秒恢复 = 向上取整(min(总层数^${reciprocalValue(a?.sqrt)} × 沙僧攻击 × 攻击比例${pctValue(a?.hp)}, 沙僧回血属性 × 回血比例${pctValue(a?.max)}))。`));
       break;
     case "clearBuffAndDamageDo":
-      out.push(metric("毒爆结算", `技能结束时清算目标身上的剧毒种子并回复生命，基础系数${pct(a?.hp || 0)}，结算倍率${a?.rate}，单次最多按回血属性的${pct(a?.max || 0)}计算。`));
+      out.push(metric("毒爆结算", `毒爆在技能结束时按本次清算的剧毒种子层数回血：回复 = 向上取整(min(清算层数^${reciprocalValue(a?.sqrt)} × 沙僧攻击 × 攻击比例${pctValue(a?.hp)}, 沙僧回血属性 × 回血比例${pctValue(a?.max)}) × ${numberValue(a?.rate)})${be.cd ? `；触发后有${frames(be.cd)}（${secondsFromFrames(be.cd)}）冷却` : ""}。`));
       break;
     case "hitBuffTypeAddEnergy":
       out.push(metric("命中奖励", `命中处于追猎/毒叶类状态的目标时，第${a?.skillIdx + 1}个技能的充能时间缩短${Math.abs(a?.addVal ?? 0)}秒。`));
