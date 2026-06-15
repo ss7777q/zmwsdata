@@ -1,7 +1,15 @@
-name = "zmws-data-cf"
+name = "datazmws"
 pages_build_output_dir = "frontend/dist"
 
 [vars]
 VITE_STATIC_DATA_BASE = "/data"
-# 服务器 API 地址。玩家查询、反馈、访问统计、战场计算、运维接口会继续走服务器。
+# 服务器 API 地址。玩家查询、反馈、战场计算、运维接口会继续走服务器。
 VITE_SERVER_API_BASE = "https://api.zmwsrank.top"
+# 访问统计默认走同源 Pages Functions。临时切回旧服务器时再填写这个值。
+VITE_VISITOR_API_BASE = ""
+
+# D1 绑定名固定为 VISITOR_STATS_DB，Pages Functions 代码会读取 env.VISITOR_STATS_DB。
+[[d1_databases]]
+binding = "VISITOR_STATS_DB"
+database_name = "zmws-visitor-stats"
+database_id = "f06392c5-e00e-4d82-84b9-d3f2d9fa9eaa"

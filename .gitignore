@@ -6,6 +6,7 @@ frontend/public/data/
 .env
 .env.*
 !.env.cloudflare.example
+.wrangler/
 
 *.log
 npm-debug.log*

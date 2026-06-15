@@ -6,7 +6,8 @@
 
 - Cloudflare Pages 托管 `frontend/dist`。
 - 展示用 JSON 从 `output/` 复制到 `frontend/public/data/`，由 Pages 静态托管和 CF CDN 缓存。
-- 玩家查询、反馈、访问统计、神魔战场计算、运维接口继续请求你的服务器后端。
+- 访问统计由 Cloudflare Pages Functions + D1 承担，接口路径保持 `/api/visitor-stats*` 不变。
+- 玩家查询、反馈、神魔战场计算、运维接口继续请求你的服务器后端。
 - 角色技能 Wiki 以测试性功能接入 CF 前端，静态 JSON 一并从 `output/role_wiki_*.json` 复制到 Pages 产物。
 
 ## 本地构建
@@ -51,10 +52,64 @@ Build output directory: dist
 ```text
 VITE_STATIC_DATA_BASE=/data
 VITE_SERVER_API_BASE=https://api.zmwsrank.top
+VITE_VISITOR_API_BASE=
 VITE_STATIC_DATA_STREAM=false
 ```
 
 服务器 API 域名使用 `https://api.zmwsrank.top`，主站域名 `https://data.zmwsrank.top` 保留给用户访问前端页面。
+`VITE_VISITOR_API_BASE` 留空时，访问统计走同源 Pages Function；临时切回旧服务器时才填写服务器地址。
+
+## Windows 一键部署
+
+项目根目录放置 `.env`，字段可参考 `.env.cloudflare.example`。真实 token 不提交到 git。
+
+```powershell
+cd D:\zmws\Server\deployable-app-cf
+.\deploy-cf.bat
+```
+
+脚本会在 Windows 端完成静态数据生成、Vite 构建和 Cloudflare Pages 上传。Pages 上传优先使用 `CLOUDFLARE_PAGES_API_TOKEN`，D1 初始化和导入使用 `CLOUDFLARE_D1_API_TOKEN`。
+
+## 访问统计 D1
+
+Pages Functions 需要绑定一个 D1 数据库，绑定名固定为：
+
+```text
+VISITOR_STATS_DB
+```
+
+初始化 D1：
+
+```powershell
+cd D:\zmws\Server\deployable-app-cf
+npx wrangler d1 create zmws-visitor-stats
+npx wrangler d1 execute zmws-visitor-stats --file .\schema\visitor_stats_d1.sql --remote
+```
+
+当前线上 D1：
+
+```text
+database_name = zmws-visitor-stats
+database_id = f06392c5-e00e-4d82-84b9-d3f2d9fa9eaa
+binding = VISITOR_STATS_DB
+```
+
+把现有服务器访问记录迁过去：
+
+```powershell
+cd D:\zmws\Server\deployable-app-cf
+$env:CLOUDFLARE_API_TOKEN = $env:CLOUDFLARE_D1_API_TOKEN
+node .\scripts\export_visitor_stats_d1.js <真实visitor-stats.db路径> .\temp\visitor_stats_seed.sql
+npx wrangler d1 execute zmws-visitor-stats --file .\temp\visitor_stats_seed.sql --remote
+```
+
+`wrangler.toml` 已声明 `VISITOR_STATS_DB` D1 绑定。以下接口会直接由 CF 承载：
+
+```text
+/api/visitor-stats
+/api/visitor-stats/history
+/api/visitor-stats/register
+```
 
 ## 服务器继续承担的功能
 
@@ -64,7 +119,6 @@ VITE_STATIC_DATA_STREAM=false
 /api/health
 /api/player-name/*
 /api/feedback
-/api/visitor-stats/*
 /api/battlefield*
 /api/admin/*
 ```
