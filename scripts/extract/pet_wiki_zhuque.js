@@ -514,11 +514,11 @@ function appendSpecialLevelEffects(levelData, displaySkillId) {
   if (displaySkillId === PET_SKILL.SKILL_4_DEATH && typeof levelData.formulaPer === "number" && typeof levelData.formulaVal === "number") {
     out.push({
       baseBuffId: PET_BESKILL.DEATH,
-      name: "不屈圣火每秒真伤",
+      name: "每秒固定成长数值",
       bindLabel: BIND_SOURCE_LABEL.guideEffect,
       time: null,
-      value: null,
-      displayText: `每秒真伤 = ${(levelData.formulaPer * 100).toFixed(3)}%自身最大生命 + ${levelData.formulaVal}；最终乘以存活秒数，存活秒数按 30~120 夹取`,
+      value: { per: null, val: levelData.formulaVal },
+      displayText: `每秒真伤 = ${(levelData.formulaPer * 100).toFixed(3)}%自身最大生命 + X；每秒固定增加 X 伤害，X 见下表；最终乘以存活秒数，存活秒数按 30~120 夹取`,
     });
   }
   return out;
