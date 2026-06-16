@@ -62,6 +62,16 @@
     --shadow-md-val: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
     --shadow-lg-val: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.08);
     --shadow-xl-val: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+
+    --motion-fast-duration: 180ms;
+    --motion-state-duration: 260ms;
+    --motion-enter-duration: 420ms;
+    --motion-page-duration: 520ms;
+    --motion-enter-offset: 14px;
+    --motion-soft-scale: 0.985;
+    --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+    --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .dark {
@@ -94,6 +104,103 @@
 }
 
 @layer components {
+  @keyframes module-heading-enter {
+    from {
+      opacity: 0;
+      transform: translate3d(0, calc(var(--motion-enter-offset) * -0.55), 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  @keyframes module-view-enter {
+    from {
+      opacity: 0;
+      transform: translate3d(0, var(--motion-enter-offset), 0) scale(var(--motion-soft-scale));
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+  }
+
+  @keyframes content-soft-enter {
+    from {
+      opacity: 0;
+      transform: translate3d(0, var(--motion-enter-offset), 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  .module-heading {
+    animation: module-heading-enter var(--motion-enter-duration) var(--ease-out-quint) both;
+  }
+
+  .module-view {
+    animation: module-view-enter var(--motion-page-duration) var(--ease-out-expo) both;
+    transform-origin: top center;
+  }
+
+  .animate-in,
+  .animate-fade-in {
+    animation: content-soft-enter var(--motion-enter-duration) var(--ease-out-quart) both;
+  }
+
+  .animate-in.duration-300,
+  .animate-fade-in.duration-300 {
+    animation-duration: var(--motion-state-duration);
+  }
+
+  .animate-in.duration-500,
+  .animate-fade-in.duration-500 {
+    animation-duration: var(--motion-enter-duration);
+  }
+
+  .animate-in.duration-700,
+  .animate-fade-in.duration-700 {
+    animation-duration: var(--motion-page-duration);
+  }
+
+  .slide-in-from-bottom-4 {
+    --motion-enter-offset: 16px;
+  }
+
+  .nav-item {
+    transition:
+      transform var(--motion-fast-duration) var(--ease-out-quart),
+      color var(--motion-fast-duration) var(--ease-out-quart),
+      background-color var(--motion-fast-duration) var(--ease-out-quart),
+      box-shadow var(--motion-fast-duration) var(--ease-out-quart);
+  }
+
+  .nav-item:hover {
+    transform: translateX(2px);
+  }
+
+  .nav-item:active {
+    transform: translateX(1px) scale(0.99);
+  }
+
+  .icon-button {
+    transition:
+      scale var(--motion-fast-duration) var(--ease-out-quart),
+      color var(--motion-fast-duration) var(--ease-out-quart),
+      background-color var(--motion-fast-duration) var(--ease-out-quart),
+      opacity var(--motion-fast-duration) var(--ease-out-quart);
+  }
+
+  .icon-button:hover {
+    scale: 1.04;
+  }
+
+  .icon-button:active {
+    scale: 0.94;
+  }
 
   /* Scrollbar override for Dark Mode */
   ::-webkit-scrollbar {
@@ -110,35 +217,67 @@
   }
 
   .card {
-    @apply bg-card rounded-2xl p-6 shadow-md transition-all duration-300 border border-border/40 cursor-pointer;
+    @apply bg-card rounded-2xl p-6 shadow-md border border-border/40 cursor-pointer;
+    transition:
+      transform var(--motion-state-duration) var(--ease-out-quart),
+      box-shadow var(--motion-state-duration) var(--ease-out-quart),
+      border-color var(--motion-state-duration) var(--ease-out-quart),
+      background-color var(--motion-state-duration) var(--ease-out-quart);
   }
 
   .card:hover {
     @apply shadow-lg -translate-y-[2px] border-primary/30;
   }
 
+  .card:active {
+    transform: translateY(-1px) scale(0.995);
+  }
+
   .btn-primary {
-    @apply bg-cta text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 cursor-pointer;
+    @apply bg-cta text-white px-6 py-3 rounded-lg font-semibold cursor-pointer;
+    transition:
+      transform var(--motion-fast-duration) var(--ease-out-quart),
+      opacity var(--motion-fast-duration) var(--ease-out-quart),
+      box-shadow var(--motion-fast-duration) var(--ease-out-quart),
+      background-color var(--motion-fast-duration) var(--ease-out-quart);
   }
 
   .btn-primary:hover {
     @apply opacity-90 -translate-y-[1px];
   }
 
+  .btn-primary:active {
+    transform: translateY(0) scale(0.98);
+  }
+
   .btn-secondary {
-    @apply bg-transparent text-primary border-2 border-primary px-6 py-3 rounded-lg font-semibold transition-all duration-300 cursor-pointer;
+    @apply bg-transparent text-primary border-2 border-primary px-6 py-3 rounded-lg font-semibold cursor-pointer;
+    transition:
+      transform var(--motion-fast-duration) var(--ease-out-quart),
+      background-color var(--motion-fast-duration) var(--ease-out-quart),
+      border-color var(--motion-fast-duration) var(--ease-out-quart);
   }
 
   .btn-secondary:hover {
     @apply bg-primary/10;
   }
 
+  .btn-secondary:active {
+    transform: scale(0.98);
+  }
+
   .input {
-    @apply px-4 py-3 bg-card border border-border rounded-lg text-textMain transition-colors duration-200 outline-none;
+    @apply px-4 py-3 bg-card border border-border rounded-lg text-textMain outline-none;
+    transition:
+      transform var(--motion-fast-duration) var(--ease-out-quart),
+      border-color var(--motion-fast-duration) var(--ease-out-quart),
+      box-shadow var(--motion-fast-duration) var(--ease-out-quart),
+      background-color var(--motion-fast-duration) var(--ease-out-quart);
   }
 
   .input:focus {
     @apply border-primary ring-2 ring-primary/20;
+    transform: translateY(-1px);
   }
 
   /* 全局自适应表格优化 (网页版/PC端与移动端通用) */
@@ -179,6 +318,27 @@
       padding-top: 0.375rem !important;     /* py-1.5 */
       padding-bottom: 0.375rem !important;  /* py-1.5 */
       font-size: 0.75rem !important;        /* text-xs */
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
+
+    .module-heading,
+    .module-view,
+    .animate-in,
+    .animate-fade-in,
+    .nav-item,
+    .icon-button {
+      transform: none !important;
+      scale: 1 !important;
     }
   }
 }

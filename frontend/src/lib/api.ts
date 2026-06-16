@@ -1,4 +1,4 @@
-﻿const API_BASE = (import.meta.env.VITE_SERVER_API_BASE || import.meta.env.VITE_DATA_API_BASE || '').replace(/\/$/, '');
+const API_BASE = (import.meta.env.VITE_SERVER_API_BASE || import.meta.env.VITE_DATA_API_BASE || '').replace(/\/$/, '');
 const VISITOR_API_BASE = (import.meta.env.VITE_VISITOR_API_BASE || '').replace(/\/$/, '');
 const STATIC_DATA_BASE = (import.meta.env.VITE_STATIC_DATA_BASE || '').replace(/\/$/, '');
 

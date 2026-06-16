@@ -1,0 +1,1953 @@
+{
+  "1": {
+    "mechanismExplanation": "普通效果降低自己受到的中毒伤害，按当前词条等级取对应百分比。极效不是继续降低中毒伤害，而是缩短自己受到的中毒持续时间：词条 Lv.10、Lv.20、Lv.30、Lv.40 分别解锁极效 1 至 4 级。",
+    "review": {
+      "status": "verified",
+      "batch": "001-005",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50000001-50000040 为 inMeChangeHp 降低中毒伤害",
+        "极效 skillId 50000501/50000502/50000503/50000504 为 changeBuffFrame 缩短中毒时间"
+      ]
+    }
+  },
+  "2": {
+    "mechanismExplanation": "普通效果提高自己造成的中毒伤害，按当前词条等级取对应百分比。极效不是中毒伤害加成，而是延长自己施加的中毒持续时间：词条 Lv.10、Lv.20、Lv.30、Lv.40 分别解锁极效 1 至 4 级。",
+    "review": {
+      "status": "verified",
+      "batch": "001-005",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50001001-50001040 为 inSourceChangeHp 提高中毒伤害",
+        "极效 skillId 50001501/50001502/50001503/50001504 为 changeGiveBuffFrame 延长中毒时间"
+      ]
+    }
+  },
+  "3": {
+    "mechanismExplanation": "普通效果降低自己受到的灼烧伤害，按当前词条等级取对应百分比。极效不是继续降低灼烧伤害，而是缩短自己受到的灼烧持续时间：词条 Lv.10、Lv.20、Lv.30、Lv.40 分别解锁极效 1 至 4 级。",
+    "review": {
+      "status": "verified",
+      "batch": "001-005",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50002001-50002040 为 inMeChangeHp 降低灼烧伤害",
+        "极效 skillId 50002501/50002502/50002503/50002504 为 changeBuffFrame 缩短灼烧时间"
+      ]
+    }
+  },
+  "4": {
+    "mechanismExplanation": "普通效果提高自己造成的灼烧伤害，按当前词条等级取对应百分比。极效不是灼烧伤害加成，而是延长自己施加的灼烧持续时间：词条 Lv.10、Lv.20、Lv.30、Lv.40 分别解锁极效 1 至 4 级。",
+    "review": {
+      "status": "verified",
+      "batch": "001-005",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50003001-50003040 为 inSourceChangeHp 提高灼烧伤害",
+        "极效 skillId 50003501/50003502/50003503/50003504 为 changeGiveBuffFrame 延长灼烧时间"
+      ]
+    }
+  },
+  "5": {
+    "mechanismExplanation": "普通效果缩短自己受到的晕眩持续时间，按当前词条等级取对应百分比。极效在受到晕眩瞬间尝试直接豁免这次晕眩：极效 1 至 4 级触发率分别为 2.5%、5%、7.5%、10%，触发判断有 30 秒冷却。",
+    "review": {
+      "status": "verified",
+      "batch": "001-005",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50004001-50004040 为 changeBuffFrame 缩短晕眩时间",
+        "极效 skillId 50004501/50004502/50004503/50004504 为 returnVal/isImmeBuff",
+        "极效 rate=0.025/0.05/0.075/0.1，cd=900帧=30秒"
+      ]
+    }
+  },
+  "6": {
+    "mechanismExplanation": "普通效果延长自己施加的晕眩持续时间，按当前词条等级取对应百分比。极效是在自己造成伤害命中时，额外尝试给目标附加 1 次晕眩：触发率固定为 0.75%，每次触发会消耗 1 次机会，最多存 1 次机会，每 157.5 秒恢复 1 次。极效 1 至 4 级的晕眩持续时间分别为 3 秒、3.3 秒、3.6 秒、3.9 秒。",
+    "review": {
+      "status": "verified",
+      "batch": "006-010",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50005001-50005040 为 changeGiveBuffFrame 延长造成的晕眩时间",
+        "极效 skillId 50005501/50005502/50005503/50005504 为 inHit/giveBuff",
+        "极效 rate=0.0075，chargedNumber=1，chargedCd=4725帧=157.5秒",
+        "极效 linked buff 3009301/3009302/3009303/3009304 持续 3/3.3/3.6/3.9 秒"
+      ]
+    }
+  },
+  "7": {
+    "mechanismExplanation": "普通效果缩短自己受到的冰冻持续时间，按当前词条等级取对应百分比。极效在受到冰冻瞬间尝试直接豁免这次冰冻：极效 1 至 4 级触发率分别为 2.5%、5%、7.5%、10%，触发判断有 30 秒冷却。",
+    "review": {
+      "status": "verified",
+      "batch": "006-010",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50006001-50006040 为 changeBuffFrame 缩短受到的冰冻时间",
+        "极效 skillId 50006501/50006502/50006503/50006504 为 returnVal/isImmeBuff",
+        "极效 buffTypes=35，rate=0.025/0.05/0.075/0.1，cd=900帧=30秒"
+      ]
+    }
+  },
+  "8": {
+    "mechanismExplanation": "普通效果延长自己施加的冰冻持续时间，按当前词条等级取对应百分比。极效是在自己造成伤害命中时，额外尝试给目标附加 1 次冰冻：触发率固定为 0.75%，每次触发会消耗 1 次机会，最多存 1 次机会，每 157.5 秒恢复 1 次。极效 1 至 4 级的冰冻持续时间分别为 3 秒、3.3 秒、3.6 秒、3.9 秒。",
+    "review": {
+      "status": "verified",
+      "batch": "006-010",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50007001-50007040 为 changeGiveBuffFrame 延长造成的冰冻时间",
+        "极效 skillId 50007501/50007502/50007503/50007504 为 inHit/giveBuff",
+        "极效 rate=0.0075，chargedNumber=1，chargedCd=4725帧=157.5秒",
+        "极效 linked buff 35003301/35003302/35003303/35003304 持续 3/3.3/3.6/3.9 秒"
+      ]
+    }
+  },
+  "9": {
+    "mechanismExplanation": "普通效果缩短自己受到的麻木持续时间，按当前词条等级取对应百分比。极效在受到麻木瞬间尝试直接豁免这次麻木：极效 1 至 4 级触发率分别为 2.5%、5%、7.5%、10%，触发判断有 30 秒冷却。",
+    "review": {
+      "status": "verified",
+      "batch": "006-010",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50008001-50008040 为 changeBuffFrame 缩短受到的麻木时间",
+        "极效 skillId 50008501/50008502/50008503/50008504 为 returnVal/isImmeBuff",
+        "极效 buffTypes=114，rate=0.025/0.05/0.075/0.1，cd=900帧=30秒"
+      ]
+    }
+  },
+  "10": {
+    "mechanismExplanation": "普通效果延长自己施加的麻木持续时间，按当前词条等级取对应百分比。极效是在自己造成伤害命中时，额外尝试给目标附加 1 次麻木：极效 1 至 4 级触发率分别为 2.5%、5%、7.5%、10%，触发判断有 30 秒冷却。附加的麻木配置值为 50%，持续 7.5 秒。",
+    "review": {
+      "status": "verified",
+      "batch": "006-010",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50009001-50009040 为 changeGiveBuffFrame 延长造成的麻木时间",
+        "极效 skillId 50009501/50009502/50009503/50009504 为 inHit/giveBuff",
+        "极效 rate=0.025/0.05/0.075/0.1，cd=900帧=30秒",
+        "极效 linked buff 114003301/114003302/114003303/114003304 为 50%，持续 7.5 秒"
+      ]
+    }
+  },
+  "11": {
+    "mechanismExplanation": "普通效果在玩家开始普通左右移动时触发，给自己添加 5 秒移动速度提升，触发后进入 30 秒冷却；位移技能不走这个触发点。升级只提高移动速度百分比，Lv.1 到 Lv.40 为 1.2% 到 48%。极效同样在开始普通移动时触发，给自己添加一组 0.1 秒闪避提升，用来表现官方说的“移动瞬间闪避提升，随后快速衰减”；极效 1 至 4 级分别为 10%、10%、15%、20% 闪避提升，均为 30 秒冷却。",
+    "review": {
+      "status": "verified",
+      "batch": "011-015",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50010001-50010040 为 dealInThumbMove/buff，linked buff 4059401-4059440 提升移动速度 5秒",
+        "运行时左右移动入口调用 dealInXXX(\"dealInThumbMove\")",
+        "极效 skillId 50010501/50010502/50010503/50010504 为 dealInThumbMove/buff，linked buff 8006201-8006204 提升闪避 0.1秒",
+        "普通与极效 cd=900帧=30秒"
+      ]
+    }
+  },
+  "12": {
+    "mechanismExplanation": "普通效果在玩家实际起跳时触发，给自己添加 0.2 秒跳跃高度提升，触发后进入 30 秒冷却；跳跃技能不走这个触发点。升级只提高跳跃高度百分比，Lv.1 到 Lv.40 为 0.8% 到 32%。极效同样在起跳时触发，给自己添加一组 0.1 秒闪避提升，用来表现官方说的“跳跃瞬间闪避提升，随后快速衰减”；极效 1 至 4 级分别为 10%、10%、15%、20% 闪避提升，均为 30 秒冷却。",
+    "review": {
+      "status": "verified",
+      "batch": "011-015",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50011001-50011040 为 inJump/buff，linked buff 143004901-143004940 提升跳跃力 0.2秒",
+        "运行时 jump() 开头调用 dealInXXX(\"inJump\")",
+        "极效 skillId 50011501/50011502/50011503/50011504 为 inJump/buff，linked buff 8006301/8006302/8006303/8006204 提升闪避 0.1秒",
+        "普通与极效 cd=900帧=30秒"
+      ]
+    }
+  },
+  "13": {
+    "mechanismExplanation": "普通效果在进入天赋无双变身时触发，给本次变身体添加缩小化和防御提升；缩小化会让攻击范围、受击范围变小，防御提升随词条等级成长，Lv.1 到 Lv.40 为 1.2% 到 48%。这些 buff 的配置持续时间是负帧哨兵值，导出按“随来源状态持续”展示，实际可理解为随本次天赋无双变身存在，不是负持续时间。极效同样只在天赋无双变身期间给本次变身体添加额外免伤，极效 1 至 4 级分别为 3%、6%、9%、12%。绝技无双不触发这组效果。",
+    "review": {
+      "status": "verified",
+      "batch": "011-015",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50012001-50012040 为 makeup/giveBuff，attribute 包含缩小化 buff 与防御强化 buff",
+        "运行时变身体创建后调用 dealInXXX(\"makeup\", s)，giveBuff 会给传入的变身体添加 buff",
+        "极效 skillId 50012501/50012502/50012503/50012504 为 makeup/giveBuff，linked buff 14013601-14013604 为 3%/6%/9%/12% 减伤",
+        "buff.time=-1帧为随来源状态持续的哨兵显示，不按 -0.03 秒写给玩家"
+      ]
+    }
+  },
+  "14": {
+    "mechanismExplanation": "普通效果在进入天赋无双变身时触发，给本次变身体添加巨大化和攻击提升；巨大化会让攻击范围、受击范围变大，攻击提升随词条等级成长，Lv.1 到 Lv.40 为 1.2% 到 48%。这些 buff 的配置持续时间是负帧哨兵值，导出按“随来源状态持续”展示，实际可理解为随本次天赋无双变身存在，不是负持续时间。极效同样只在天赋无双变身期间给本次变身体添加额外增伤，极效 1 至 4 级分别为 3%、6%、9%、12%。绝技无双不触发这组效果。",
+    "review": {
+      "status": "verified",
+      "batch": "011-015",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50013001-50013040 为 makeup/giveBuff，attribute 包含巨大化 buff 与攻击强化 buff",
+        "运行时变身体创建后调用 dealInXXX(\"makeup\", s)，giveBuff 会给传入的变身体添加 buff",
+        "极效 skillId 50013501/50013502/50013503/50013504 为 makeup/giveBuff，linked buff 17005301-17005304 为 3%/6%/9%/12% 增伤",
+        "buff.time=-1帧为随来源状态持续的哨兵显示，不按 -0.03 秒写给玩家"
+      ]
+    }
+  },
+  "15": {
+    "mechanismExplanation": "普通效果包含两个：一是延长天赋无双变身本身的持续时间（从 2% 提升到 80%），二是延长天赋无双变身期间指定免伤效果的持续时间（从 2% 提升到 80%）。本词条无极效效果。",
+    "ignoreWarnings": [
+      "未配置普通极效"
+    ],
+    "review": {
+      "status": "verified",
+      "batch": "011-015",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通效果1（变身时间）：skillId 50014001-50014040 为 makeupTimeAdd/addValue，attribute.per 从 0.02 到 0.8",
+        "普通效果2（免伤时间）：skillId 50014201-50014240 为 changeGiveBuffFrame/addValue，scopeParam.buffGroups=[14002201]",
+        "本词条没有独立的极效效果，两个效果均为常规属性且随词条等级同步成长"
+      ]
+    }
+  },
+  "16": {
+    "mechanismExplanation": "普通效果在自己受到伤害结算时生效，只有自己当前处于霸体状态才降低这次受到的伤害；升级只提高减伤比例，Lv.1 到 Lv.40 为 0.2% 到 8%。极效在自己的霸体被对方强攻破除时触发，给自己添加 2 秒额外减伤；极效 1 至 4 级分别为 60%、12%、18%、24%。其中极效 1 的 60% 按当前配置原样生效并展示。",
+    "review": {
+      "status": "verified",
+      "batch": "016-020",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50015001-50015040 为 countDamage/damageAdd，scopeParam.judgeMeCondition=[\"aromr\"]",
+        "运行时 dealInCountDamage 会在受到伤害结算时检查自身条件并调用 damageAdd 修正伤害",
+        "极效 skillId 50015501/50015502/50015503/50015504 为 inBeForceAtk/buff，linked buff 14013801-14013804 为 60%/12%/18%/24% 减伤，持续 2 秒",
+        "运行时强攻破除霸体时，受击方调用 dealInTargetXXX(\"inBeForceAtk\")"
+      ]
+    }
+  },
+  "17": {
+    "mechanismExplanation": "普通效果在自己造成伤害结算时生效，只有受击目标当前处于霸体状态才提高这次伤害；升级只提高增伤比例，Lv.1 到 Lv.40 为 0.4% 到 16%。极效在自己通过强攻破除敌人霸体时触发，给自己添加 3 秒额外增伤；极效 1 至 4 级分别为 12%、24%、36%、48%。",
+    "review": {
+      "status": "verified",
+      "batch": "016-020",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50016001-50016040 为 countGiveDamage/damageAdd，scopeParam.judgeHurtEnityCondition=[\"aromr\"]",
+        "运行时 dealInCountGiveDamage 会在造成伤害结算时检查目标条件并调用 damageAdd 修正伤害",
+        "极效 skillId 50016501/50016502/50016503/50016504 为 inForceAtk/buff，linked buff 17005401-17005404 为 12%/24%/36%/48% 增伤，持续 3 秒",
+        "运行时强攻破除霸体时，攻击方调用 dealInTargetXXX(\"inForceAtk\")"
+      ]
+    }
+  },
+  "18": {
+    "mechanismExplanation": "普通效果在自己攻击命中前触发，给自己添加一次短暂的生命恢复 buff；该触发有 1 次充能，每 1 秒恢复 1 次，所以最多每秒触发 1 次。升级只提高恢复生命百分比，Lv.1 到 Lv.40 为 0% 到 0.18%，buff 持续 0.2 秒。极效同样是命中前触发，但要求被攻击目标处于霸体状态；极效 1 至 4 级分别额外恢复 0.04%、0.09%、0.13%、0.18% 生命，持续 0.2 秒，同样最多每秒触发 1 次。",
+    "review": {
+      "status": "verified",
+      "batch": "016-020",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50017001-50017040 为 preHit/buff，linked buff 1057701-1057740 为生命恢复，持续 0.2 秒",
+        "普通 chargedNumber=1，chargedCd=30帧=1秒",
+        "运行时 dealInPreHit 在命中前处理 preHit，并对 chargedNumber 消耗充能",
+        "极效 skillId 50017501/50017502/50017503/50017504 为 preHit/buff，scopeParam.judgeHurtEnityCondition=[\"aromr\"]，linked buff 1057801-1057804",
+        "极效 chargedNumber=1，chargedCd=30帧=1秒"
+      ]
+    }
+  },
+  "19": {
+    "mechanismExplanation": "普通效果在自己受到伤害时按 5% 概率触发，把反击 buff 添加给这次伤害来源；该效果最多存 10 次触发机会，每 90 秒恢复这些机会。升级只提高反击 buff 的配置值，Lv.1 到 Lv.40 从 13.86% 提升到 5.544，buff 持续 0.2 秒；表格中超过 100% 的值按当前配置原样展示。极效要求自己处于霸体状态时受到伤害才会触发，触发率为 10%，同样每 90 秒最多触发 10 次；极效 1 至 4 级反击值分别为 69.3%、1.386、2.079、2.772，持续 0.2 秒。",
+    "review": {
+      "status": "verified",
+      "batch": "016-020",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50018001-50018040 为 hurt/toHurtSourceBuffs，rate=0.05，chargedNumber=10，chargedCd=2700帧=90秒，linked buff 1057901-1057940",
+        "运行时 toHurtSourceBuffs 会 enterCd 并把 configured buff 加到 hurt source/攻击者身上",
+        "极效 skillId 50018501/50018502/50018503/50018504 为 hurt/toHurtSourceBuffs，scopeParam.judgeMeCondition=[\"aromr\"]，rate=0.1，chargedNumber=10，chargedCd=2700帧=90秒，linked buff 1058001-1058004"
+      ]
+    }
+  },
+  "20": {
+    "mechanismExplanation": "普通效果提高自己作为治疗来源时造成的治疗量，治疗结算会按当前治疗值乘以本词条比例再加回去；升级只提高治疗提升比例，Lv.1 到 Lv.40 为 0.2% 到 8%。极效不是把总治疗量直接提高 100%，而是让命中的【妙手回春】普通治疗提升效果额外提高 100%：极效 1 作用于 Lv.10-Lv.19 的普通效果，极效 2 作用于 Lv.20-Lv.29，极效 3 作用于 Lv.30-Lv.39，极效 4 作用于 Lv.40-Lv.49。按当前导出等级看，等价于对应段位的普通治疗提升效果翻倍。",
+    "review": {
+      "status": "verified",
+      "batch": "016-020",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50019001-50019040 为 sourceBuffCureAdd，attribute[0] 从 0.002 到 0.08",
+        "运行时治疗结算会调用来源 dealSourceBuffCureAdd，并以当前治疗值计算额外治疗量",
+        "极效 skillId 50019501/50019502/50019503/50019504 为 beskillEffectRate，attribute.rate=1",
+        "运行时 dealBeskillEffectRate 对命中的 beskillId 执行 i += t * rate，因此 rate=1 表示本词条普通治疗提升效果额外提高 100%",
+        "极效 beskillIds 分别覆盖 50019010-50019019、50019020-50019029、50019030-50019039、50019040-50019049"
+      ]
+    }
+  },
+  "21": {
+    "mechanismExplanation": "普通效果提高自己作为护盾来源时产生的护盾量，护盾结算会按当前护盾值乘以本词条比例再加回去；升级只提高护盾提升比例，Lv.1 到 Lv.40 为 0.2% 到 8%。极效不是把总护盾量直接提高 100%，而是让命中的【护盾强化】普通护盾提升效果额外提高 100%：极效 1 作用于 Lv.10-Lv.19 的普通效果，极效 2 作用于 Lv.20-Lv.29，极效 3 作用于 Lv.30-Lv.39，极效 4 作用于 Lv.40-Lv.49。按当前导出等级看，等价于对应段位的普通护盾提升效果翻倍。",
+    "review": {
+      "status": "verified",
+      "batch": "021-025",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50020001-50020040 为 sourceBuffShieldAdd，attribute[0] 从 0.002 到 0.08",
+        "运行时护盾结算会调用来源 dealSourceBuffShieldAdd，并以当前护盾值计算额外护盾量",
+        "极效 skillId 50020501/50020502/50020503/50020504 为 beskillEffectRate，attribute.rate=1",
+        "运行时 dealBeskillEffectRate 对命中的 beskillId 执行 i += t * rate，因此 rate=1 表示本词条普通护盾提升效果额外提高 100%",
+        "极效 beskillIds 分别覆盖 50020010-50020019、50020020-50020029、50020030-50020039、50020040-50020049"
+      ]
+    }
+  },
+  "22": {
+    "mechanismExplanation": "普通效果在自己攻击命中造成伤害时追加一段水属性伤害，追加值先按本次伤害乘以词条比例计算，再受目标水属性抗性修正，最终至少造成 1 点伤害。升级只提高追加伤害比例，Lv.1 到 Lv.40 为 0.2% 到 8%。极效在自己攻击命中前触发，有 1% 概率给自己添加 0.2 秒法力回复 buff；该触发最多存 1 次机会，每 135 秒恢复 1 次。极效 1 至 4 级分别回复自身最大法力的 10%、20%、30%、40%。",
+    "review": {
+      "status": "verified",
+      "batch": "021-025",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50021001-50021040 为 inHit/addResistDamage，skillAttribute=3，resistRate=3，per 从 0.002 到 0.08",
+        "运行时 addResistDamage 以本次伤害 n * per + val 计算额外属性伤害，再按目标对应抗性修正，最低 1 点",
+        "极效 skillId 50021501/50021502/50021503/50021504 为 preHit/buff，rate=0.01，chargedNumber=1，chargedCd=4050帧=135秒",
+        "运行时 preHit 的 label=buff 调用 buff()，buff() 给 this.mEntity 添加配置 buff，即攻击者自己获得法力回复",
+        "linked buff 16007001-16007004 为 BUFF_CHANGE_MP，time=6帧=0.2秒，param[2]=0.1/0.2/0.3/0.4",
+        "BUFF_CHANGE_MP 运行时按目标最大法力 param[2] 计算 countMp，因此为回复自身最大法力 10%/20%/30%/40%"
+      ]
+    }
+  },
+  "23": {
+    "mechanismExplanation": "普通效果在自己攻击命中造成伤害时追加一段火属性伤害，追加值先按本次伤害乘以词条比例计算，再受目标火属性抗性修正，最终至少造成 1 点伤害。升级只提高追加伤害比例，Lv.1 到 Lv.40 为 0.2% 到 8%。极效在自己攻击命中造成伤害时，有 2% 概率给目标添加 5 秒灼烧；该触发最多存 1 次机会，每 90 秒恢复 1 次。极效 1 至 4 级的灼烧配置值分别为 90%、1.8、2.7、3.6，按当前 buff 配置原样展示。",
+    "review": {
+      "status": "verified",
+      "batch": "021-025",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50022001-50022040 为 inHit/addResistDamage，skillAttribute=4，resistRate=3，per 从 0.002 到 0.08",
+        "运行时 addResistDamage 以本次伤害 n * per + val 计算额外属性伤害，再按目标对应抗性修正，最低 1 点",
+        "极效 skillId 50022501/50022502/50022503/50022504 为 inHit/giveBuff，rate=0.02，chargedNumber=1，chargedCd=2700帧=90秒",
+        "运行时 giveBuff 会把配置 buff 添加给命中的目标",
+        "linked buff 1058201-1058204 为灼烧，time=150帧=5秒，interval=30帧=1秒，value=-0.9/-1.8/-2.7/-3.6"
+      ]
+    }
+  },
+  "24": {
+    "mechanismExplanation": "普通效果在自己攻击命中造成伤害时追加一段木属性伤害，追加值先按本次伤害乘以词条比例计算，再受目标木属性抗性修正，最终至少造成 1 点伤害。升级只提高追加伤害比例，Lv.1 到 Lv.40 为 0.2% 到 8%。极效在自己攻击命中造成伤害时，有 2% 概率给目标添加 5 秒中毒；该触发最多存 1 次机会，每 90 秒恢复 1 次。极效 1 至 4 级的中毒配置值分别为 90%、1.8、2.7、3.6，按当前 buff 配置原样展示。",
+    "review": {
+      "status": "verified",
+      "batch": "021-025",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50023001-50023040 为 inHit/addResistDamage，skillAttribute=5，resistRate=3，per 从 0.002 到 0.08",
+        "运行时 addResistDamage 以本次伤害 n * per + val 计算额外属性伤害，再按目标对应抗性修正，最低 1 点",
+        "极效 skillId 50023501/50023502/50023503/50023504 为 inHit/giveBuff，rate=0.02，chargedNumber=1，chargedCd=2700帧=90秒",
+        "运行时 giveBuff 会把配置 buff 添加给命中的目标",
+        "linked buff 1058301-1058304 为中毒，time=150帧=5秒，interval=30帧=1秒，value=-0.9/-1.8/-2.7/-3.6"
+      ]
+    }
+  },
+  "25": {
+    "mechanismExplanation": "普通效果在自己攻击命中造成伤害时追加一段雷属性伤害，追加值先按本次伤害乘以词条比例计算，再受目标雷属性抗性修正，最终至少造成 1 点伤害。升级只提高追加伤害比例，Lv.1 到 Lv.40 为 0.2% 到 8%。极效在自己攻击命中造成伤害时，给目标添加 7.5 秒麻木；该触发最多存 1 次机会，每 90 秒恢复 1 次。极效 1 至 4 级的触发率分别为 2%、4%、6%、8%，麻木本身的配置值均为 50%，间隔 5 秒造成一次身体僵直。",
+    "review": {
+      "status": "verified",
+      "batch": "021-025",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50024001-50024040 为 inHit/addResistDamage，skillAttribute=8，resistRate=3，per 从 0.002 到 0.08",
+        "运行时 addResistDamage 以本次伤害 n * per + val 计算额外属性伤害，再按目标对应抗性修正，最低 1 点",
+        "极效 skillId 50024501/50024502/50024503/50024504 为 inHit/giveBuff，rate=0.02/0.04/0.06/0.08，chargedNumber=1，chargedCd=2700帧=90秒",
+        "运行时 giveBuff 会把配置 buff 添加给命中的目标",
+        "linked buff 114003401-114003404 为麻木，value=0.5，time=225帧=7.5秒，interval=150帧=5秒"
+      ]
+    }
+  },
+  "26": {
+    "mechanismExplanation": "普通效果在自己攻击命中造成伤害时追加一段风属性伤害，追加值先按本次伤害乘以词条比例计算，再受目标风属性抗性修正，最终至少造成 1 点伤害。升级只提高追加伤害比例，Lv.1 到 Lv.40 为 0.2% 到 8%。极效在自己攻击命中前触发，有概率给自己添加 5 秒疾风；该触发最多存 1 次机会，每 90 秒恢复 1 次。极效 1 至 4 级的触发率分别为 2%、4%、6%、8%，疾风分别提高 18%、36%、54%、72% 移动速度。",
+    "review": {
+      "status": "verified",
+      "batch": "026-030",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50025001-50025040 为 inHit/addResistDamage，skillAttribute=7，resistRate=3，per 从 0.002 到 0.08",
+        "运行时 addResistDamage 以本次伤害 n * per + val 计算额外属性伤害，再按目标对应抗性修正，最低 1 点",
+        "极效 skillId 50025501/50025502/50025503/50025504 为 preHit/buff，rate=0.02/0.04/0.06/0.08，chargedNumber=1，chargedCd=2700帧=90秒",
+        "运行时 preHit 的 label=buff 调用 buff()，buff() 给 this.mEntity 添加配置 buff，因此疾风给攻击者自己",
+        "linked buff 4059501-4059504 为疾风，time=150帧=5秒，value=0.18/0.36/0.54/0.72"
+      ]
+    }
+  },
+  "27": {
+    "mechanismExplanation": "普通效果在自己攻击命中造成伤害时追加一段土属性伤害，追加值先按本次伤害乘以词条比例计算，再受目标土属性抗性修正，最终至少造成 1 点伤害。升级只提高追加伤害比例，Lv.1 到 Lv.40 为 0.2% 到 8%。极效在自己攻击命中造成伤害时，有 0.75% 概率给目标添加 1 次晕眩；该触发最多存 1 次机会，每 157.5 秒恢复 1 次。极效 1 至 4 级的晕眩持续时间分别为 3 秒、3.3 秒、3.6 秒、3.9 秒。",
+    "review": {
+      "status": "verified",
+      "batch": "026-030",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50026001-50026040 为 inHit/addResistDamage，skillAttribute=6，resistRate=3，per 从 0.002 到 0.08",
+        "运行时 addResistDamage 以本次伤害 n * per + val 计算额外属性伤害，再按目标对应抗性修正，最低 1 点",
+        "极效 skillId 50026501/50026502/50026503/50026504 为 inHit/giveBuff，rate=0.0075，chargedNumber=1，chargedCd=4725帧=157.5秒",
+        "运行时 giveBuff 会把配置 buff 添加给命中的目标",
+        "linked buff 3009401-3009404 为晕眩，time=90/99/108/117帧=3/3.3/3.6/3.9秒"
+      ]
+    }
+  },
+  "28": {
+    "mechanismExplanation": "普通效果在自己攻击命中造成伤害时追加一段光属性伤害，追加值先按本次伤害乘以词条比例计算，再受目标光属性抗性修正，最终至少造成 1 点伤害。升级只提高追加伤害比例，Lv.1 到 Lv.40 为 0.2% 到 8%。极效只在自己命中的目标当前拥有护盾值时生效，会给目标添加 0.2 秒破盾伤害 buff；这个极效没有配置触发概率冷却，满足护盾条件时按配置执行。极效 1 至 4 级的破盾 buff 配置值分别为攻击者攻击力的 20%、40%、60%、80%，来源是 BUFF_CHANGE_HP 的攻击力系数。",
+    "review": {
+      "status": "verified",
+      "batch": "026-030",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50027001-50027040 为 inHit/addResistDamage，skillAttribute=1，resistRate=3，per 从 0.002 到 0.08",
+        "运行时 addResistDamage 以本次伤害 n * per + val 计算额外属性伤害，再按目标对应抗性修正，最低 1 点",
+        "极效 skillId 50027501/50027502/50027503/50027504 为 inHit/giveBuff，scopeParam.judgeHurtEnityCondition=[\"shield\"]，rate=1",
+        "运行时 shield 条件为目标 getShiledVal() > 0",
+        "linked buff 1058401-1058404 为破盾，type=BUFF_CHANGE_HP，time=6帧=0.2秒，value[0][0]=-0.2/-0.4/-0.6/-0.8",
+        "运行时 calcChangeHpValue 的 value[0] 按来源攻击力计算，因此破盾伤害值来自攻击者攻击力比例"
+      ]
+    }
+  },
+  "29": {
+    "mechanismExplanation": "普通效果在自己攻击命中造成伤害时追加一段暗属性伤害，追加值先按本次伤害乘以词条比例计算，再受目标暗属性抗性修正，最终至少造成 1 点伤害。升级只提高追加伤害比例，Lv.1 到 Lv.40 为 0.2% 到 8%。极效在命中回调阶段触发，有概率给自己添加驱散失明和免疫失明；该触发最多存 1 次机会，每 90 秒恢复 1 次。极效 1 至 4 级的触发率分别为 2%、4%、5%、8%，驱散失明持续 0.2 秒，免疫失明持续 5 秒。",
+    "review": {
+      "status": "verified",
+      "batch": "026-030",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50028001-50028040 为 inHit/addResistDamage，skillAttribute=2，resistRate=3，per 从 0.002 到 0.08",
+        "运行时 addResistDamage 以本次伤害 n * per + val 计算额外属性伤害，再按目标对应抗性修正，最低 1 点",
+        "极效 skillId 50028501/50028502/50028503/50028504 为 hitCb/buff，rate=0.02/0.04/0.05/0.08，chargedNumber=1，chargedCd=2700帧=90秒",
+        "运行时 hitCb 的 label=buff 调用 buff()，buff() 给 this.mEntity 添加配置 buff，因此驱散与免疫都给攻击者自己",
+        "linked buff 139002801 为驱散失明，time=6帧=0.2秒，debuffs=[8]",
+        "linked buff 49000201-49000204 为免疫失明，time=150帧=5秒"
+      ]
+    }
+  },
+  "30": {
+    "mechanismExplanation": "普通效果直接提高自己的水属性抗性固定值，按当前词条等级取对应数值；Lv.1、Lv.5、Lv.10、Lv.20、Lv.30、Lv.40 分别为 1、2、4、8、12、16。极效在自己受到伤害时触发，有 20% 概率给自己添加 0.2 秒生命回复 buff；该触发最多存 1 次机会，每 90 秒恢复 1 次。极效 1 至 4 级分别回复自身最大生命的 1%、2%、3%、4%。",
+    "review": {
+      "status": "verified",
+      "batch": "026-030",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50029001-50029040 为 waterResist，attribute[1] 从 1 到 16",
+        "极效 skillId 50029501/50029502/50029503/50029504 为 hurt/buff，rate=0.2，chargedNumber=1，chargedCd=2700帧=90秒",
+        "运行时 dealInHurt 在受到伤害时处理 hurt scope，并消耗 chargedNumber",
+        "运行时 hurt 的 label=buff 调用 buff()，buff() 给 this.mEntity 添加配置 buff，因此治疗给受击者自己",
+        "linked buff 1058101-1058104 为恢复生命，type=BUFF_CHANGE_HP，time=6帧=0.2秒，value[0][3]=0.01/0.02/0.03/0.04",
+        "运行时 calcChangeHpValue 的 value[3] 按目标最大生命计算，因此为回复自身最大生命 1%/2%/3%/4%"
+      ]
+    }
+  },
+  "31": {
+    "mechanismExplanation": "普通效果直接提高自己的火属性抗性固定值，按当前词条等级取对应数值；Lv.1、Lv.5、Lv.10、Lv.20、Lv.30、Lv.40 分别为 1、2、4、8、12、16。极效在自己受到伤害时触发，有概率给自己添加驱散灼烧和免疫灼烧；该触发最多存 1 次机会，每 90 秒恢复 1 次。极效 1 至 4 级触发率分别为 2%、4%、5%、8%，驱散灼烧持续 0.2 秒，免疫灼烧持续 5 秒。",
+    "review": {
+      "status": "verified",
+      "batch": "031-035",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50030001-50030040 为 fireResist，attribute[1] 从 1 到 16",
+        "极效 skillId 50030501/50030502/50030503/50030504 为 hurt/buff，rate=0.02/0.04/0.05/0.08，chargedNumber=1，chargedCd=2700帧=90秒",
+        "运行时 dealInHurt 在受到伤害时处理 hurt scope，并消耗 chargedNumber",
+        "运行时 hurt 的 label=buff 调用 buff()，buff() 给 this.mEntity 添加配置 buff，因此驱散与免疫给受击者自己",
+        "linked buff 139002401 为驱散灼烧，time=6帧=0.2秒",
+        "linked buff 42001001-42001004 为免疫灼烧，time=150帧=5秒"
+      ]
+    }
+  },
+  "32": {
+    "mechanismExplanation": "普通效果直接提高自己的木属性抗性固定值，按当前词条等级取对应数值；Lv.1、Lv.5、Lv.10、Lv.20、Lv.30、Lv.40 分别为 1、2、4、8、12、16。极效在自己受到伤害时触发，有概率给自己添加驱散中毒和免疫中毒；该触发最多存 1 次机会，每 90 秒恢复 1 次。极效 1 至 4 级触发率分别为 2%、4%、5%、8%，驱散中毒持续 0.2 秒，免疫中毒持续 5 秒。",
+    "review": {
+      "status": "verified",
+      "batch": "031-035",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50031001-50031040 为 woodResist，attribute[1] 从 1 到 16",
+        "极效 skillId 50031501/50031502/50031503/50031504 为 hurt/buff，rate=0.02/0.04/0.05/0.08，chargedNumber=1，chargedCd=2700帧=90秒",
+        "运行时 dealInHurt 在受到伤害时处理 hurt scope，并消耗 chargedNumber",
+        "运行时 hurt 的 label=buff 调用 buff()，buff() 给 this.mEntity 添加配置 buff，因此驱散与免疫给受击者自己",
+        "linked buff 139002501 为驱散中毒，time=6帧=0.2秒",
+        "linked buff 44000801-44000804 为免疫中毒，time=150帧=5秒"
+      ]
+    }
+  },
+  "33": {
+    "mechanismExplanation": "普通效果直接提高自己的雷属性抗性固定值，按当前词条等级取对应数值；Lv.1、Lv.5、Lv.10、Lv.20、Lv.30、Lv.40 分别为 1、2、4、8、12、16。极效在自己受到伤害时触发，有概率给自己添加驱散麻木和免疫麻木；该触发最多存 1 次机会，每 90 秒恢复 1 次。极效 1 至 4 级触发率分别为 2%、4%、5%、8%，驱散麻木持续 0.2 秒，免疫麻木持续 5 秒。",
+    "review": {
+      "status": "verified",
+      "batch": "031-035",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50032001-50032040 为 rayResist，attribute[1] 从 1 到 16",
+        "极效 skillId 50032501/50032502/50032503/50032504 为 hurt/buff，rate=0.02/0.04/0.05/0.08，chargedNumber=1，chargedCd=2700帧=90秒",
+        "运行时 dealInHurt 在受到伤害时处理 hurt scope，并消耗 chargedNumber",
+        "运行时 hurt 的 label=buff 调用 buff()，buff() 给 this.mEntity 添加配置 buff，因此驱散与免疫给受击者自己",
+        "linked buff 139002601 为驱散麻木，time=6帧=0.2秒",
+        "linked buff 47000201-47000204 为免疫麻木，time=150帧=5秒"
+      ]
+    }
+  },
+  "34": {
+    "mechanismExplanation": "普通效果直接提高自己的风属性抗性固定值，按当前词条等级取对应数值；Lv.1、Lv.5、Lv.10、Lv.20、Lv.30、Lv.40 分别为 1、2、4、8、12、16。极效在自己受到伤害时触发，有概率给自己添加 5 秒乘风；该触发最多存 1 次机会，每 90 秒恢复 1 次。极效 1 至 4 级触发率分别为 2%、4%、5%、8%，乘风分别提高 10%、20%、30%、40% 跳跃力。",
+    "review": {
+      "status": "verified",
+      "batch": "031-035",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50033001-50033040 为 windResist，attribute[1] 从 1 到 16",
+        "极效 skillId 50033501/50033502/50033503/50033504 为 hurt/buff，rate=0.02/0.04/0.05/0.08，chargedNumber=1，chargedCd=2700帧=90秒",
+        "运行时 dealInHurt 在受到伤害时处理 hurt scope，并消耗 chargedNumber",
+        "运行时 hurt 的 label=buff 调用 buff()，buff() 给 this.mEntity 添加配置 buff，因此乘风给受击者自己",
+        "linked buff 143005001-143005004 为乘风，time=150帧=5秒，value=0.1/0.2/0.3/0.4"
+      ]
+    }
+  },
+  "35": {
+    "mechanismExplanation": "普通效果直接提高自己的土属性抗性固定值，按当前词条等级取对应数值；Lv.1、Lv.5、Lv.10、Lv.20、Lv.30、Lv.40 分别为 1、2、4、8、12、16。极效在自己受到伤害时触发，有概率给自己添加驱散晕眩和免疫晕眩；该触发最多存 1 次机会，每 90 秒恢复 1 次。极效 1 至 4 级触发率分别为 2%、4%、5%、8%，驱散晕眩持续 0.2 秒，免疫晕眩持续 5 秒。",
+    "review": {
+      "status": "verified",
+      "batch": "031-035",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50034001-50034040 为 soilResist，attribute[1] 从 1 到 16",
+        "极效 skillId 50034501/50034502/50034503/50034504 为 hurt/buff，rate=0.02/0.04/0.05/0.08，chargedNumber=1，chargedCd=2700帧=90秒",
+        "运行时 dealInHurt 在受到伤害时处理 hurt scope，并消耗 chargedNumber",
+        "运行时 hurt 的 label=buff 调用 buff()，buff() 给 this.mEntity 添加配置 buff，因此驱散与免疫给受击者自己",
+        "linked buff 139002701 为驱散晕眩，time=6帧=0.2秒",
+        "linked buff 45000201-45000204 为免疫晕眩，time=150帧=5秒"
+      ]
+    }
+  },
+  "36": {
+    "mechanismExplanation": "普通效果直接提高自己的光属性抗性固定值，按当前词条等级取对应数值；Lv.1、Lv.5、Lv.10、Lv.20、Lv.30、Lv.40 分别为 1、2、4、8、12、16。极效在自己受到伤害时触发，有概率给自己添加 5 秒护盾；该触发最多存 1 次机会，每 90 秒恢复 1 次。极效 1 至 4 级触发率分别为 2%、4%、5%、8%，护盾基础值分别为自身最大生命的 2%、4%、6%、8%，并会继续受到来源护盾强化等护盾加成影响。",
+    "review": {
+      "status": "verified",
+      "batch": "036-040",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50035001-50035040 为 lightResist，attribute[1] 从 1 到 16",
+        "极效 skillId 50035501/50035502/50035503/50035504 为 hurt/buff，rate=0.02/0.04/0.05/0.08，chargedNumber=1，chargedCd=2700帧=90秒",
+        "运行时 hurt 的 label=buff 调用 buff()，buff() 给 this.mEntity 添加配置 buff，因此护盾给受击者自己",
+        "linked buff 13006501-13006504 为 BUFF_SHIELD_BLOOD，time=150帧=5秒，value[3]=0.02/0.04/0.06/0.08",
+        "运行时 VAL_BUFF_FUNC[13] 按目标当前/最大生命等字段计算护盾，value[3] 为目标最大生命比例，并继续调用 dealSourceBuffShieldAdd"
+      ]
+    }
+  },
+  "37": {
+    "mechanismExplanation": "普通效果直接提高自己的暗属性抗性固定值，按当前词条等级取对应数值；Lv.1、Lv.5、Lv.10、Lv.20、Lv.30、Lv.40 分别为 1、2、4、8、12、16。极效在自己受到伤害时触发，有概率把失明添加给这次伤害来源；该触发最多存 1 次机会，每 90 秒恢复 1 次。极效 1 至 4 级触发率分别为 2%、4%、5%、8%，施加的失明持续 5 秒，命中降低分别为 2%、4%、6%、8%。",
+    "review": {
+      "status": "verified",
+      "batch": "036-040",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50036001-50036040 为 darkResist，attribute[1] 从 1 到 16",
+        "极效 skillId 50036501/50036502/50036503/50036504 为 hurt/toHurtSourceBuffs，rate=0.02/0.04/0.05/0.08，chargedNumber=1，chargedCd=2700帧=90秒",
+        "运行时 toHurtSourceBuffs 会把配置 buff 添加给 hurt source/伤害来源",
+        "linked buff 7005401-7005404 为失明，time=150帧=5秒，value=-0.02/-0.04/-0.06/-0.08"
+      ]
+    }
+  },
+  "40": {
+    "mechanismExplanation": "普通效果在自己的连击评价首次达到【傲视三界】时触发，给自己添加 15 秒攻击强化 buff；升级只提高攻击强化比例，Lv.1 到 Lv.40 为 0.6% 到 24%。极效同样在达到【傲视三界】时触发，额外给自己添加 15 秒暴击强化 buff；极效 1 至 4 级分别提高 0.75%、1.5%、2.25%、3% 暴击。",
+    "review": {
+      "status": "verified",
+      "batch": "036-040",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50039001-50039040 为 maxEvaluate/addBuffToMaxEvaluate，linked buff 5013001-5013040 为攻击强化，time=450帧=15秒",
+        "极效 skillId 50039501/50039502/50039503/50039504 为 maxEvaluate/addBuffToMaxEvaluate，linked buff 9005301-9005304 为暴击强化，time=450帧=15秒",
+        "运行时连击评价升级到 MAX_EVALAUATE 时调用 dealInXXX(\"maxEvaluate\")",
+        "运行时 addBuffToMaxEvaluate 会给 this.mEntity 添加配置 buff，因此攻击与暴击强化都给自己"
+      ]
+    }
+  },
+  "41": {
+    "mechanismExplanation": "普通效果在自己的连击评价首次达到【傲视三界】时触发，给自己添加 15 秒防御强化 buff；升级只提高防御强化比例，Lv.1 到 Lv.40 为 0.6% 到 24%。极效同样在达到【傲视三界】时触发，额外给自己添加 15 秒韧性强化 buff；极效 1 至 4 级分别提高 3%、6%、9%、12% 韧性。",
+    "review": {
+      "status": "verified",
+      "batch": "041-045",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "复用 rewardGroup 800011/800012 -> 通用",
+        "普通 skillId 50040001-50040040 为 maxEvaluate/addBuffToMaxEvaluate，linked buff 6012101-6012140 为防御强化，time=450帧=15秒",
+        "极效 skillId 50040501/50040502/50040503/50040504 为 maxEvaluate/addBuffToMaxEvaluate，linked buff 10004901-10004904 为韧性强化，time=450帧=15秒",
+        "运行时连击评价升级到 MAX_EVALAUATE 时调用 dealInXXX(\"maxEvaluate\")",
+        "运行时 addBuffToMaxEvaluate 会给 this.mEntity 添加配置 buff，因此防御与韧性强化都给自己"
+      ]
+    },
+    "summary": "普通效果：达到【傲视三界】时获得15秒防御强化。极效：同条件获得15秒韧性强化。",
+    "baseEffectName": "达到【傲视三界】时获得防御强化",
+    "extremeEffectName": "达到【傲视三界】时获得韧性强化",
+    "baseTiers": [
+      {
+        "level": 1,
+        "skillId": 50040001,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：0.6%，持续15秒",
+        "raw": {
+          "id": 50040001,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012101
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012101,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "0.6%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 2,
+        "skillId": 50040002,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：1.2%，持续15秒",
+        "raw": {
+          "id": 50040002,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012102
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012102,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "1.2%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 3,
+        "skillId": 50040003,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：1.8%，持续15秒",
+        "raw": {
+          "id": 50040003,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012103
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012103,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "1.8%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 4,
+        "skillId": 50040004,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：2.4%，持续15秒",
+        "raw": {
+          "id": 50040004,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012104
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012104,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "2.4%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 5,
+        "skillId": 50040005,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：3%，持续15秒",
+        "raw": {
+          "id": 50040005,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012105
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012105,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "3%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 6,
+        "skillId": 50040006,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：3.6%，持续15秒",
+        "raw": {
+          "id": 50040006,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012106
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012106,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "3.6%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 7,
+        "skillId": 50040007,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：4.2%，持续15秒",
+        "raw": {
+          "id": 50040007,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012107
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012107,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "4.2%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 8,
+        "skillId": 50040008,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：4.8%，持续15秒",
+        "raw": {
+          "id": 50040008,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012108
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012108,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "4.8%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 9,
+        "skillId": 50040009,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：5.4%，持续15秒",
+        "raw": {
+          "id": 50040009,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012109
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012109,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "5.4%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 10,
+        "skillId": 50040010,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：6%，持续15秒",
+        "raw": {
+          "id": 50040010,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012110
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012110,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "6%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 11,
+        "skillId": 50040011,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：6.6%，持续15秒",
+        "raw": {
+          "id": 50040011,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012111
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012111,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "6.6%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 12,
+        "skillId": 50040012,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：7.2%，持续15秒",
+        "raw": {
+          "id": 50040012,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012112
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012112,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "7.2%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 13,
+        "skillId": 50040013,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：7.8%，持续15秒",
+        "raw": {
+          "id": 50040013,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012113
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012113,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "7.8%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 14,
+        "skillId": 50040014,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：8.4%，持续15秒",
+        "raw": {
+          "id": 50040014,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012114
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012114,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "8.4%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 15,
+        "skillId": 50040015,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：9%，持续15秒",
+        "raw": {
+          "id": 50040015,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012115
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012115,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "9%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 16,
+        "skillId": 50040016,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：9.6%，持续15秒",
+        "raw": {
+          "id": 50040016,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012116
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012116,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "9.6%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 17,
+        "skillId": 50040017,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：10.2%，持续15秒",
+        "raw": {
+          "id": 50040017,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012117
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012117,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "10.2%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 18,
+        "skillId": 50040018,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：10.8%，持续15秒",
+        "raw": {
+          "id": 50040018,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012118
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012118,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "10.8%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 19,
+        "skillId": 50040019,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：11.4%，持续15秒",
+        "raw": {
+          "id": 50040019,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012119
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012119,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "11.4%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 20,
+        "skillId": 50040020,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：12%，持续15秒",
+        "raw": {
+          "id": 50040020,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012120
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012120,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "12%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 21,
+        "skillId": 50040021,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：12.6%，持续15秒",
+        "raw": {
+          "id": 50040021,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012121
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012121,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "12.6%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 22,
+        "skillId": 50040022,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：13.2%，持续15秒",
+        "raw": {
+          "id": 50040022,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012122
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012122,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "13.2%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 23,
+        "skillId": 50040023,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：13.8%，持续15秒",
+        "raw": {
+          "id": 50040023,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012123
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012123,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "13.8%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 24,
+        "skillId": 50040024,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：14.4%，持续15秒",
+        "raw": {
+          "id": 50040024,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012124
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012124,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "14.4%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 25,
+        "skillId": 50040025,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：15%，持续15秒",
+        "raw": {
+          "id": 50040025,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012125
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012125,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "15%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 26,
+        "skillId": 50040026,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：15.6%，持续15秒",
+        "raw": {
+          "id": 50040026,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012126
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012126,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "15.6%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 27,
+        "skillId": 50040027,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：16.2%，持续15秒",
+        "raw": {
+          "id": 50040027,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012127
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012127,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "16.2%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 28,
+        "skillId": 50040028,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：16.8%，持续15秒",
+        "raw": {
+          "id": 50040028,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012128
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012128,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "16.8%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 29,
+        "skillId": 50040029,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：17.4%，持续15秒",
+        "raw": {
+          "id": 50040029,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012129
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012129,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "17.4%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 30,
+        "skillId": 50040030,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：18%，持续15秒",
+        "raw": {
+          "id": 50040030,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012130
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012130,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "18%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 31,
+        "skillId": 50040031,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：18.6%，持续15秒",
+        "raw": {
+          "id": 50040031,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012131
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012131,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "18.6%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 32,
+        "skillId": 50040032,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：19.2%，持续15秒",
+        "raw": {
+          "id": 50040032,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012132
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012132,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "19.2%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 33,
+        "skillId": 50040033,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：19.8%，持续15秒",
+        "raw": {
+          "id": 50040033,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012133
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012133,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "19.8%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 34,
+        "skillId": 50040034,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：20.4%，持续15秒",
+        "raw": {
+          "id": 50040034,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012134
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012134,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "20.4%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 35,
+        "skillId": 50040035,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：21%，持续15秒",
+        "raw": {
+          "id": 50040035,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012135
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012135,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "21%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 36,
+        "skillId": 50040036,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：21.6%，持续15秒",
+        "raw": {
+          "id": 50040036,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012136
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012136,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "21.6%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 37,
+        "skillId": 50040037,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：22.2%，持续15秒",
+        "raw": {
+          "id": 50040037,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012137
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012137,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "22.2%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 38,
+        "skillId": 50040038,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：22.8%，持续15秒",
+        "raw": {
+          "id": 50040038,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012138
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012138,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "22.8%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 39,
+        "skillId": 50040039,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：23.4%，持续15秒",
+        "raw": {
+          "id": 50040039,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012139
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012139,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "23.4%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 40,
+        "skillId": 50040040,
+        "effect": "达到【傲视三界】时获得防御强化",
+        "value": "防御强化：24%，持续15秒",
+        "raw": {
+          "id": 50040040,
+          "label": "addBuffToMaxEvaluate",
+          "scope": "maxEvaluate",
+          "attribute": {
+            "addBuffs": [
+              6012140
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 6012140,
+            "name": "防御强化",
+            "text": "提升防御力",
+            "value": "24%，持续15秒"
+          }
+        ]
+      }
+    ],
+    "extremeTiers": [
+      {
+        "level": 1,
+        "unlockLevel": 10,
+        "skillIds": [
+          50040501
+        ],
+        "effect": "达到【傲视三界】时获得韧性强化",
+        "value": "韧性强化：3%，持续15秒",
+        "raw": [
+          {
+            "id": 50040501,
+            "label": "addBuffToMaxEvaluate",
+            "scope": "maxEvaluate",
+            "attribute": {
+              "addBuffs": [
+                10004901
+              ]
+            },
+            "rate": 1,
+            "cd": 0,
+            "chargedCd": null,
+            "chargedNumber": null
+          }
+        ],
+        "linkedBuffs": [
+          {
+            "id": 10004901,
+            "name": "韧性强化",
+            "text": "增加韧性",
+            "value": "3%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 2,
+        "unlockLevel": 20,
+        "skillIds": [
+          50040502
+        ],
+        "effect": "达到【傲视三界】时获得韧性强化",
+        "value": "韧性强化：6%，持续15秒",
+        "raw": [
+          {
+            "id": 50040502,
+            "label": "addBuffToMaxEvaluate",
+            "scope": "maxEvaluate",
+            "attribute": {
+              "addBuffs": [
+                10004902
+              ]
+            },
+            "rate": 1,
+            "cd": 0,
+            "chargedCd": null,
+            "chargedNumber": null
+          }
+        ],
+        "linkedBuffs": [
+          {
+            "id": 10004902,
+            "name": "韧性强化",
+            "text": "增加韧性",
+            "value": "6%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 3,
+        "unlockLevel": 30,
+        "skillIds": [
+          50040503
+        ],
+        "effect": "达到【傲视三界】时获得韧性强化",
+        "value": "韧性强化：9%，持续15秒",
+        "raw": [
+          {
+            "id": 50040503,
+            "label": "addBuffToMaxEvaluate",
+            "scope": "maxEvaluate",
+            "attribute": {
+              "addBuffs": [
+                10004903
+              ]
+            },
+            "rate": 1,
+            "cd": 0,
+            "chargedCd": null,
+            "chargedNumber": null
+          }
+        ],
+        "linkedBuffs": [
+          {
+            "id": 10004903,
+            "name": "韧性强化",
+            "text": "增加韧性",
+            "value": "9%，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 4,
+        "unlockLevel": 40,
+        "skillIds": [
+          50040504
+        ],
+        "effect": "达到【傲视三界】时获得韧性强化",
+        "value": "韧性强化：12%，持续15秒",
+        "raw": [
+          {
+            "id": 50040504,
+            "label": "addBuffToMaxEvaluate",
+            "scope": "maxEvaluate",
+            "attribute": {
+              "addBuffs": [
+                10004904
+              ]
+            },
+            "rate": 1,
+            "cd": 0,
+            "chargedCd": null,
+            "chargedNumber": null
+          }
+        ],
+        "linkedBuffs": [
+          {
+            "id": 10004904,
+            "name": "韧性强化",
+            "text": "增加韧性",
+            "value": "12%，持续15秒"
+          }
+        ]
+      }
+    ]
+  },
+  "49": {
+    "mechanismExplanation": "当前配置没有可验证的星石掉落链路，分类与归属只能保留为未知。运行时会按受击技能记录上一次命中的技能实体；当同一个技能再次造成伤害，并且已经有上一段记录时，才按当前词条的减伤比例修正这次伤害。普通配置目前只找到 Lv.1 和 Lv.10：Lv.1 对重复同技能伤害减免 10%，Lv.10 对重复同技能伤害减免 50%；Lv.2-Lv.9 与 Lv.11-Lv.40 的普通技能当前缺失，不能补成连续成长。极效：满足同技能重复伤害判定时，有 50% 触发率把这次重复伤害完全抵消；由于各极效解锁等级实际都引用同一个极效技能，所以表现相同。",
+    "summary": "普通效果：重复受到同一配置技能伤害时降低本次伤害，但多数普通等级缺配置。极效：50% 概率完全抵消重复同技能伤害。",
+    "baseEffectName": "重复同技能受击减伤",
+    "extremeEffectName": "概率抵消重复同技能伤害",
+    "warnings": [
+      "词条组 49 未命中 starStone.affixRandom，也没有 starHavocPond 掉落链路，分类与归属保持未知。"
+    ],
+    "review": {
+      "status": "verified",
+      "batch": "046-050",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "未找到 starStone.affixRandom 包含 group 49 的星石行 -> 攻伐/守御未知",
+        "未找到 starHavocPond -> dropGroup -> drop -> item -> starStone -> affixRandom group 49 链路 -> 归属未知",
+        "普通 skillId 50048001 存在，attribute.addPer=-0.1；50048010 存在，attribute.addPer=-0.5；其余普通等级 beskill 当前缺失",
+        "极效普通 skillId 在 Lv.10/Lv.20/Lv.30/Lv.40 均引用 50048501，rate=0.5，attribute.addPer=-1",
+        "运行时 sameSkillHurtCountDamage 按受击技能 cfg.id 记录 skillEntityId/frame；已有上一段记录后才按 addPer 修正本次伤害"
+      ]
+    }
+  },
+  "60": {
+    "mechanismExplanation": "当前只有 Lv.1 占位配置，该效果只有名称和类型，没有具体属性与效果文本，也没有可验证的随机星石词条或星池掉落链路。因此本词条按占位/未知处理：不展示成正常战斗效果，不补写数值，不归入任何星池。",
+    "summary": "占位配置：当前没有可验证的战斗效果、分类或星池归属。",
+    "baseEffectName": "占位配置",
+    "extremeEffectName": "未配置极效",
+    "baseTiers": [
+      {
+        "level": 1,
+        "skillId": 50059001,
+        "skillIds": [
+          50059001
+        ],
+        "effect": "占位配置",
+        "value": "无可验证战斗效果"
+      }
+    ],
+    "warnings": [
+      "该占位词条仅配置了部分等级，且缺少具体的标签、效果类型和属性参数，未作为正常效果展示。"
+    ],
+    "review": {
+      "status": "verified",
+      "batch": "056-060",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStoneAffix group=60 只有 1 行，skillId=[50059001]，skillIdSuper=[50059001]",
+        "beskill 50059001 只有 name=等级1-占位 与 type=3，无 label/scope/attribute/text",
+        "无 starStone.affixRandom 命中 group 60，无法解析攻伐/守御分类",
+        "无 starHavocPond -> dropGroup -> drop -> item -> starStone -> affixRandom 归属链，ownership 保持未知并保留 warning"
+      ]
+    }
+  }
+}

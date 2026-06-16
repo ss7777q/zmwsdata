@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiUrl, dataFileUrl, dataManifestUrl, staticDataEnabled } from '../lib/api';
 
 export interface MetaData {

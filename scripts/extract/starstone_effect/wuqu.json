@@ -1,0 +1,6348 @@
+{
+  "38": {
+    "mechanismExplanation": "普通效果在自己攻击取攻击力时即时判断：只有目标当前生命百分比高于自己时，才按当前词条等级提高本次取到的攻击力。升级只提高攻击力加成，Lv.1 到 Lv.40 为 0.6% 到 24%。极效使用同一个生命百分比条件，但改为提高本次取到的暴击；极效 1 至 4 级分别提高 3%、6%、9%、12% 暴击。",
+    "review": {
+      "status": "verified",
+      "batch": "036-040",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "归属链路命中武曲星池 -> 专属武曲星池",
+        "普通 skillId 50037001-50037040 为 getAtk/valueAddWithBeskillLv，scopeParam.judgeEnityCondition=[\"hpMoreMe\"]，attribute.rate 从 0.006 到 0.24",
+        "极效 skillId 50037501/50037502/50037503/50037504 为 getCrit/valueAddWithBeskillLv，scopeParam.judgeEnityCondition=[\"hpMoreMe\"]，attribute.rate=0.03/0.06/0.09/0.12",
+        "运行时 hpMoreMe 判断为目标当前生命百分比 > 自己当前生命百分比",
+        "运行时 valueAddWithBeskillLv 返回 Math.ceil(rate * 传入基础值) + fixVal"
+      ]
+    }
+  },
+  "39": {
+    "mechanismExplanation": "普通效果在自己取防御力时即时判断：只有目标当前生命百分比低于自己时，才按当前词条等级提高本次取到的防御力。升级只提高防御力加成，Lv.1 到 Lv.40 为 0.6% 到 24%。极效使用同一个生命百分比条件，但改为提高本次取到的韧性；极效 1 至 4 级分别提高 3%、6%、9%、12% 韧性。",
+    "review": {
+      "status": "verified",
+      "batch": "036-040",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "归属链路命中武曲星池 -> 专属武曲星池",
+        "普通 skillId 50038001-50038040 为 getDef/valueAddWithBeskillLv，scopeParam.judgeEnityCondition=[\"hpLowMe\"]，attribute.rate 从 0.006 到 0.24",
+        "极效 skillId 50038501/50038502/50038503/50038504 为 getTenacity/valueAddWithBeskillLv，scopeParam.judgeEnityCondition=[\"hpLowMe\"]，attribute.rate=0.03/0.06/0.09/0.12",
+        "运行时 hpLowMe 判断为目标当前生命百分比 < 自己当前生命百分比",
+        "运行时 valueAddWithBeskillLv 返回 Math.ceil(rate * 传入基础值) + fixVal"
+      ]
+    }
+  },
+  "42": {
+    "mechanismExplanation": "普通效果会在自己受到伤害时累计受伤量：每累计满自身当前最大生命约 3.33% 的受伤量，就添加 1 层 30 秒罡盾标记。标记最多 10 层，满 10 层时移除标记并生成 10 秒罡盾；升级只提高生成罡盾的基础护盾值，Lv.1 到 Lv.40 为自身最大生命的 0.07% 到 2.93%。极效在罡盾生成时按自身已损失生命追加护盾值；由于当前普通极效解锁行都引用同一个极效技能，所以各极效等级实际都是每损失 2% 最大生命，就让本次基础护盾值额外提高 1%。配置中虽然存在更高的极效技能数据，但当前普通词条规则没有引用它们。",
+    "review": {
+      "status": "verified",
+      "batch": "041-045",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "归属链路命中武曲星池 -> 专属武曲星池",
+        "普通 skillId 50041001-50041040 为 countHp/valueWithMaxHpPerDeal，attribute.propName=hp，propPer=0.0333",
+        "运行时 valueWithMaxHpPerDeal 使用 ceil(当前最大生命 * propPer + propVal) 作为阈值，累计传入受伤量，满阈值添加配置 buff",
+        "罡盾标记 buff 136015501-136015540 maxPiles=10，time=900帧=30秒，满层 doVal 生成 13007201-13007240",
+        "生成的罡盾 buff 13007201-13007240 为 type=13 护盾，time=300帧=10秒，value[3]=0.0007 到 0.0293",
+        "极效普通 skillId 在 Lv.10/Lv.20/Lv.30/Lv.40 均引用 50041501，scope=addShield，limitBuffGroupIds=[13007201]，unit=0.02，per=0.01",
+        "运行时 dealInBuffValueAdd(\"addShield\", buffId, 基础护盾值) 会调用 addValueWithSubPropPer；addValueWithSubPropPer 按自身已损失生命比例 / unit 向下取整后，返回 ceil(基础值 * per * 档数 + val * 档数)"
+      ]
+    },
+    "summary": "普通效果：受伤量每满自身最大生命约3.33% 获得1层罡盾标记，10层生成10秒护盾。极效：当前四档均引用极效1，按已损失生命提高本次护盾值。",
+    "baseEffectName": "受伤累计罡盾标记，满10层生成护盾",
+    "extremeEffectName": "生成罡盾时按已损失生命提高护盾值",
+    "warnings": [
+      "罡盾在数据中定义了更高等级的极效效果，但当前极效等级 2/3/4 在配置上仍重复引用了极效等级 1，导致高等级极效效果未生效。"
+    ],
+    "baseTiers": [
+      {
+        "level": 1,
+        "skillId": 50041001,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 0.07%，持续10秒",
+        "raw": {
+          "id": 50041001,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015501
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015501,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007201"
+          },
+          {
+            "id": 13007201,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 0.07%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 2,
+        "skillId": 50041002,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 0.15%，持续10秒",
+        "raw": {
+          "id": 50041002,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015502
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015502,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007202"
+          },
+          {
+            "id": 13007202,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 0.15%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 3,
+        "skillId": 50041003,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 0.22%，持续10秒",
+        "raw": {
+          "id": 50041003,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015503
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015503,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007203"
+          },
+          {
+            "id": 13007203,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 0.22%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 4,
+        "skillId": 50041004,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 0.29%，持续10秒",
+        "raw": {
+          "id": 50041004,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015504
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015504,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007204"
+          },
+          {
+            "id": 13007204,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 0.29%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 5,
+        "skillId": 50041005,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 0.37%，持续10秒",
+        "raw": {
+          "id": 50041005,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015505
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015505,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007205"
+          },
+          {
+            "id": 13007205,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 0.37%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 6,
+        "skillId": 50041006,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 0.44%，持续10秒",
+        "raw": {
+          "id": 50041006,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015506
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015506,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007206"
+          },
+          {
+            "id": 13007206,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 0.44%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 7,
+        "skillId": 50041007,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 0.51%，持续10秒",
+        "raw": {
+          "id": 50041007,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015507
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015507,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007207"
+          },
+          {
+            "id": 13007207,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 0.51%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 8,
+        "skillId": 50041008,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 0.59%，持续10秒",
+        "raw": {
+          "id": 50041008,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015508
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015508,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007208"
+          },
+          {
+            "id": 13007208,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 0.59%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 9,
+        "skillId": 50041009,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 0.66%，持续10秒",
+        "raw": {
+          "id": 50041009,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015509
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015509,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007209"
+          },
+          {
+            "id": 13007209,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 0.66%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 10,
+        "skillId": 50041010,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 0.73%，持续10秒",
+        "raw": {
+          "id": 50041010,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015510
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015510,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007210"
+          },
+          {
+            "id": 13007210,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 0.73%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 11,
+        "skillId": 50041011,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 0.81%，持续10秒",
+        "raw": {
+          "id": 50041011,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015511
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015511,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007211"
+          },
+          {
+            "id": 13007211,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 0.81%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 12,
+        "skillId": 50041012,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 0.88%，持续10秒",
+        "raw": {
+          "id": 50041012,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015512
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015512,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007212"
+          },
+          {
+            "id": 13007212,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 0.88%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 13,
+        "skillId": 50041013,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 0.95%，持续10秒",
+        "raw": {
+          "id": 50041013,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015513
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015513,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007213"
+          },
+          {
+            "id": 13007213,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 0.95%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 14,
+        "skillId": 50041014,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 1.03%，持续10秒",
+        "raw": {
+          "id": 50041014,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015514
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015514,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007214"
+          },
+          {
+            "id": 13007214,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 1.03%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 15,
+        "skillId": 50041015,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 1.1%，持续10秒",
+        "raw": {
+          "id": 50041015,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015515
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015515,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007215"
+          },
+          {
+            "id": 13007215,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 1.1%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 16,
+        "skillId": 50041016,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 1.17%，持续10秒",
+        "raw": {
+          "id": 50041016,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015516
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015516,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007216"
+          },
+          {
+            "id": 13007216,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 1.17%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 17,
+        "skillId": 50041017,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 1.25%，持续10秒",
+        "raw": {
+          "id": 50041017,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015517
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015517,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007217"
+          },
+          {
+            "id": 13007217,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 1.25%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 18,
+        "skillId": 50041018,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 1.32%，持续10秒",
+        "raw": {
+          "id": 50041018,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015518
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015518,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007218"
+          },
+          {
+            "id": 13007218,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 1.32%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 19,
+        "skillId": 50041019,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 1.39%，持续10秒",
+        "raw": {
+          "id": 50041019,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015519
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015519,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007219"
+          },
+          {
+            "id": 13007219,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 1.39%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 20,
+        "skillId": 50041020,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 1.47%，持续10秒",
+        "raw": {
+          "id": 50041020,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015520
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015520,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007220"
+          },
+          {
+            "id": 13007220,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 1.47%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 21,
+        "skillId": 50041021,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 1.54%，持续10秒",
+        "raw": {
+          "id": 50041021,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015521
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015521,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007221"
+          },
+          {
+            "id": 13007221,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 1.54%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 22,
+        "skillId": 50041022,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 1.61%，持续10秒",
+        "raw": {
+          "id": 50041022,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015522
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015522,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007222"
+          },
+          {
+            "id": 13007222,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 1.61%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 23,
+        "skillId": 50041023,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 1.69%，持续10秒",
+        "raw": {
+          "id": 50041023,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015523
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015523,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007223"
+          },
+          {
+            "id": 13007223,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 1.69%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 24,
+        "skillId": 50041024,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 1.76%，持续10秒",
+        "raw": {
+          "id": 50041024,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015524
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015524,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007224"
+          },
+          {
+            "id": 13007224,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 1.76%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 25,
+        "skillId": 50041025,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 1.83%，持续10秒",
+        "raw": {
+          "id": 50041025,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015525
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015525,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007225"
+          },
+          {
+            "id": 13007225,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 1.83%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 26,
+        "skillId": 50041026,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 1.91%，持续10秒",
+        "raw": {
+          "id": 50041026,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015526
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015526,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007226"
+          },
+          {
+            "id": 13007226,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 1.91%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 27,
+        "skillId": 50041027,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 1.98%，持续10秒",
+        "raw": {
+          "id": 50041027,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015527
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015527,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007227"
+          },
+          {
+            "id": 13007227,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 1.98%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 28,
+        "skillId": 50041028,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 2.05%，持续10秒",
+        "raw": {
+          "id": 50041028,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015528
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015528,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007228"
+          },
+          {
+            "id": 13007228,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 2.05%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 29,
+        "skillId": 50041029,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 2.13%，持续10秒",
+        "raw": {
+          "id": 50041029,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015529
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015529,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007229"
+          },
+          {
+            "id": 13007229,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 2.13%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 30,
+        "skillId": 50041030,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 2.2%，持续10秒",
+        "raw": {
+          "id": 50041030,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015530
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015530,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007230"
+          },
+          {
+            "id": 13007230,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 2.2%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 31,
+        "skillId": 50041031,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 2.27%，持续10秒",
+        "raw": {
+          "id": 50041031,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015531
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015531,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007231"
+          },
+          {
+            "id": 13007231,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 2.27%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 32,
+        "skillId": 50041032,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 2.35%，持续10秒",
+        "raw": {
+          "id": 50041032,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015532
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015532,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007232"
+          },
+          {
+            "id": 13007232,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 2.35%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 33,
+        "skillId": 50041033,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 2.42%，持续10秒",
+        "raw": {
+          "id": 50041033,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015533
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015533,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007233"
+          },
+          {
+            "id": 13007233,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 2.42%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 34,
+        "skillId": 50041034,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 2.49%，持续10秒",
+        "raw": {
+          "id": 50041034,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015534
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015534,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007234"
+          },
+          {
+            "id": 13007234,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 2.49%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 35,
+        "skillId": 50041035,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 2.57%，持续10秒",
+        "raw": {
+          "id": 50041035,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015535
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015535,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007235"
+          },
+          {
+            "id": 13007235,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 2.57%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 36,
+        "skillId": 50041036,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 2.64%，持续10秒",
+        "raw": {
+          "id": 50041036,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015536
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015536,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007236"
+          },
+          {
+            "id": 13007236,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 2.64%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 37,
+        "skillId": 50041037,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 2.71%，持续10秒",
+        "raw": {
+          "id": 50041037,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015537
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015537,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007237"
+          },
+          {
+            "id": 13007237,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 2.71%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 38,
+        "skillId": 50041038,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 2.79%，持续10秒",
+        "raw": {
+          "id": 50041038,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015538
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015538,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007238"
+          },
+          {
+            "id": 13007238,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 2.79%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 39,
+        "skillId": 50041039,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 2.86%，持续10秒",
+        "raw": {
+          "id": 50041039,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015539
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015539,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007239"
+          },
+          {
+            "id": 13007239,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 2.86%，持续10秒"
+          }
+        ]
+      },
+      {
+        "level": 40,
+        "skillId": 50041040,
+        "effect": "受伤累计罡盾标记，满10层生成护盾",
+        "value": "生成护盾：自身最大生命 2.93%，持续10秒",
+        "raw": {
+          "id": 50041040,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015540
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015540,
+            "name": "罡盾标记",
+            "text": "累积10层标记将生成【罡盾】保护自身",
+            "value": "最多10层，持续30秒，满层触发 13007240"
+          },
+          {
+            "id": 13007240,
+            "name": "罡盾",
+            "text": "获得护盾值,持续一段时间",
+            "value": "生成护盾：自身最大生命 2.93%，持续10秒"
+          }
+        ]
+      }
+    ],
+    "extremeTiers": [
+      {
+        "level": 1,
+        "unlockLevel": 10,
+        "skillIds": [
+          50041501
+        ],
+        "effect": "生成罡盾时按已损失生命提高护盾值",
+        "value": "每损失 2% 最大生命，额外提高本次基础值 1%",
+        "raw": [
+          {
+            "id": 50041501,
+            "label": "addValueWithSubPropPer",
+            "scope": "addShield",
+            "attribute": {
+              "propName": "hp",
+              "unit": 0.02,
+              "per": 0.01,
+              "val": 0
+            },
+            "rate": 1,
+            "cd": 0,
+            "chargedCd": null,
+            "chargedNumber": null,
+            "scopeParam": {
+              "limitBuffGroupIds": [
+                13007201
+              ]
+            }
+          }
+        ],
+        "linkedBuffs": []
+      },
+      {
+        "level": 2,
+        "unlockLevel": 20,
+        "skillIds": [
+          50041501
+        ],
+        "effect": "生成罡盾时按已损失生命提高护盾值",
+        "value": "每损失 2% 最大生命，额外提高本次基础值 1%",
+        "raw": [
+          {
+            "id": 50041501,
+            "label": "addValueWithSubPropPer",
+            "scope": "addShield",
+            "attribute": {
+              "propName": "hp",
+              "unit": 0.02,
+              "per": 0.01,
+              "val": 0
+            },
+            "rate": 1,
+            "cd": 0,
+            "chargedCd": null,
+            "chargedNumber": null,
+            "scopeParam": {
+              "limitBuffGroupIds": [
+                13007201
+              ]
+            }
+          }
+        ],
+        "linkedBuffs": []
+      },
+      {
+        "level": 3,
+        "unlockLevel": 30,
+        "skillIds": [
+          50041501
+        ],
+        "effect": "生成罡盾时按已损失生命提高护盾值",
+        "value": "每损失 2% 最大生命，额外提高本次基础值 1%",
+        "raw": [
+          {
+            "id": 50041501,
+            "label": "addValueWithSubPropPer",
+            "scope": "addShield",
+            "attribute": {
+              "propName": "hp",
+              "unit": 0.02,
+              "per": 0.01,
+              "val": 0
+            },
+            "rate": 1,
+            "cd": 0,
+            "chargedCd": null,
+            "chargedNumber": null,
+            "scopeParam": {
+              "limitBuffGroupIds": [
+                13007201
+              ]
+            }
+          }
+        ],
+        "linkedBuffs": []
+      },
+      {
+        "level": 4,
+        "unlockLevel": 40,
+        "skillIds": [
+          50041501
+        ],
+        "effect": "生成罡盾时按已损失生命提高护盾值",
+        "value": "每损失 2% 最大生命，额外提高本次基础值 1%",
+        "raw": [
+          {
+            "id": 50041501,
+            "label": "addValueWithSubPropPer",
+            "scope": "addShield",
+            "attribute": {
+              "propName": "hp",
+              "unit": 0.02,
+              "per": 0.01,
+              "val": 0
+            },
+            "rate": 1,
+            "cd": 0,
+            "chargedCd": null,
+            "chargedNumber": null,
+            "scopeParam": {
+              "limitBuffGroupIds": [
+                13007201
+              ]
+            }
+          }
+        ],
+        "linkedBuffs": []
+      }
+    ]
+  },
+  "43": {
+    "mechanismExplanation": "普通效果会在自己受到伤害时累计受伤量：每累计满自身当前最大生命约 3.33% 的受伤量，就添加 1 层 30 秒罡刀标记。标记最多 10 层，满 10 层时移除标记并生成罡刀；罡刀会在下一次成功命中目标时造成一次额外伤害并消失。升级只提高这次额外伤害的基础系数，Lv.1 到 Lv.40 为自身攻击力的 0.55% 到 21.94%。极效在罡刀额外伤害结算时按自身已损失生命追加伤害；由于当前普通极效解锁行都引用同一个极效技能，所以各极效等级实际都是每损失 2% 最大生命，就让本次基础额外伤害提高 1%。配置中虽然存在更高的极效技能数据，但当前普通词条规则没有引用它们。",
+    "review": {
+      "status": "verified",
+      "batch": "041-045",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "归属链路命中武曲星池 -> 专属武曲星池",
+        "普通 skillId 50042001-50042040 为 countHp/valueWithMaxHpPerDeal，attribute.propName=hp，propPer=0.0333",
+        "运行时 valueWithMaxHpPerDeal 使用 ceil(当前最大生命 * propPer + propVal) 作为阈值，累计传入受伤量，满阈值添加配置 buff",
+        "罡刀标记 buff 136015601-136015640 maxPiles=10，time=900帧=30秒，满层 doVal 生成 453000101-453000140",
+        "生成的罡刀 buff 453000101-453000140 为 type=453，下一次 onHit 按自身攻击力 per 造成额外伤害，并 stiffRemoveSelf=true 自行移除",
+        "极效普通 skillId 在 Lv.10/Lv.20/Lv.30/Lv.40 均引用 50042501，scope=calcNextExtraDamageBuffPer，limitBuffGroupIds=[453000101]，unit=0.02，per=0.01",
+        "运行时 buffModel_453.onHit 先算基础额外伤害，再调用 dealInBuffValueAdd(\"calcNextExtraDamageBuffPer\", buffId, 基础伤害) 追加极效伤害"
+      ]
+    },
+    "summary": "普通效果：受伤量每满自身最大生命约3.33% 获得1层罡刀标记，10层让下一次命中追加伤害。极效：当前四档均引用极效1，按已损失生命提高本次追加伤害。",
+    "baseEffectName": "受伤累计罡刀标记，满10层强化下一次命中",
+    "extremeEffectName": "罡刀命中时按已损失生命提高额外伤害",
+    "warnings": [
+      "罡刀在数据中定义了更高等级的极效效果，但当前极效等级 2/3/4 在配置上仍重复引用了极效等级 1，导致高等级极效效果未生效。"
+    ],
+    "baseTiers": [
+      {
+        "level": 1,
+        "skillId": 50042001,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 0.55%",
+        "raw": {
+          "id": 50042001,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015601
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015601,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000101"
+          },
+          {
+            "id": 453000101,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 0.55%"
+          }
+        ]
+      },
+      {
+        "level": 2,
+        "skillId": 50042002,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 1.1%",
+        "raw": {
+          "id": 50042002,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015602
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015602,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000102"
+          },
+          {
+            "id": 453000102,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 1.1%"
+          }
+        ]
+      },
+      {
+        "level": 3,
+        "skillId": 50042003,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 1.65%",
+        "raw": {
+          "id": 50042003,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015603
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015603,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000103"
+          },
+          {
+            "id": 453000103,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 1.65%"
+          }
+        ]
+      },
+      {
+        "level": 4,
+        "skillId": 50042004,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 2.19%",
+        "raw": {
+          "id": 50042004,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015604
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015604,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000104"
+          },
+          {
+            "id": 453000104,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 2.19%"
+          }
+        ]
+      },
+      {
+        "level": 5,
+        "skillId": 50042005,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 2.74%",
+        "raw": {
+          "id": 50042005,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015605
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015605,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000105"
+          },
+          {
+            "id": 453000105,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 2.74%"
+          }
+        ]
+      },
+      {
+        "level": 6,
+        "skillId": 50042006,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 3.29%",
+        "raw": {
+          "id": 50042006,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015606
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015606,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000106"
+          },
+          {
+            "id": 453000106,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 3.29%"
+          }
+        ]
+      },
+      {
+        "level": 7,
+        "skillId": 50042007,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 3.84%",
+        "raw": {
+          "id": 50042007,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015607
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015607,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000107"
+          },
+          {
+            "id": 453000107,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 3.84%"
+          }
+        ]
+      },
+      {
+        "level": 8,
+        "skillId": 50042008,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 4.39%",
+        "raw": {
+          "id": 50042008,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015608
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015608,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000108"
+          },
+          {
+            "id": 453000108,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 4.39%"
+          }
+        ]
+      },
+      {
+        "level": 9,
+        "skillId": 50042009,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 4.94%",
+        "raw": {
+          "id": 50042009,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015609
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015609,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000109"
+          },
+          {
+            "id": 453000109,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 4.94%"
+          }
+        ]
+      },
+      {
+        "level": 10,
+        "skillId": 50042010,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 5.49%",
+        "raw": {
+          "id": 50042010,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015610
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015610,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000110"
+          },
+          {
+            "id": 453000110,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 5.49%"
+          }
+        ]
+      },
+      {
+        "level": 11,
+        "skillId": 50042011,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 6.03%",
+        "raw": {
+          "id": 50042011,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015611
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015611,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000111"
+          },
+          {
+            "id": 453000111,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 6.03%"
+          }
+        ]
+      },
+      {
+        "level": 12,
+        "skillId": 50042012,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 6.58%",
+        "raw": {
+          "id": 50042012,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015612
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015612,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000112"
+          },
+          {
+            "id": 453000112,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 6.58%"
+          }
+        ]
+      },
+      {
+        "level": 13,
+        "skillId": 50042013,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 7.13%",
+        "raw": {
+          "id": 50042013,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015613
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015613,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000113"
+          },
+          {
+            "id": 453000113,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 7.13%"
+          }
+        ]
+      },
+      {
+        "level": 14,
+        "skillId": 50042014,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 7.68%",
+        "raw": {
+          "id": 50042014,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015614
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015614,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000114"
+          },
+          {
+            "id": 453000114,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 7.68%"
+          }
+        ]
+      },
+      {
+        "level": 15,
+        "skillId": 50042015,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 8.23%",
+        "raw": {
+          "id": 50042015,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015615
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015615,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000115"
+          },
+          {
+            "id": 453000115,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 8.23%"
+          }
+        ]
+      },
+      {
+        "level": 16,
+        "skillId": 50042016,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 8.78%",
+        "raw": {
+          "id": 50042016,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015616
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015616,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000116"
+          },
+          {
+            "id": 453000116,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 8.78%"
+          }
+        ]
+      },
+      {
+        "level": 17,
+        "skillId": 50042017,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 9.33%",
+        "raw": {
+          "id": 50042017,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015617
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015617,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000117"
+          },
+          {
+            "id": 453000117,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 9.33%"
+          }
+        ]
+      },
+      {
+        "level": 18,
+        "skillId": 50042018,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 9.87%",
+        "raw": {
+          "id": 50042018,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015618
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015618,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000118"
+          },
+          {
+            "id": 453000118,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 9.87%"
+          }
+        ]
+      },
+      {
+        "level": 19,
+        "skillId": 50042019,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 10.42%",
+        "raw": {
+          "id": 50042019,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015619
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015619,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000119"
+          },
+          {
+            "id": 453000119,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 10.42%"
+          }
+        ]
+      },
+      {
+        "level": 20,
+        "skillId": 50042020,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 10.97%",
+        "raw": {
+          "id": 50042020,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015620
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015620,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000120"
+          },
+          {
+            "id": 453000120,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 10.97%"
+          }
+        ]
+      },
+      {
+        "level": 21,
+        "skillId": 50042021,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 11.52%",
+        "raw": {
+          "id": 50042021,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015621
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015621,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000121"
+          },
+          {
+            "id": 453000121,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 11.52%"
+          }
+        ]
+      },
+      {
+        "level": 22,
+        "skillId": 50042022,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 12.07%",
+        "raw": {
+          "id": 50042022,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015622
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015622,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000122"
+          },
+          {
+            "id": 453000122,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 12.07%"
+          }
+        ]
+      },
+      {
+        "level": 23,
+        "skillId": 50042023,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 12.62%",
+        "raw": {
+          "id": 50042023,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015623
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015623,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000123"
+          },
+          {
+            "id": 453000123,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 12.62%"
+          }
+        ]
+      },
+      {
+        "level": 24,
+        "skillId": 50042024,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 13.16%",
+        "raw": {
+          "id": 50042024,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015624
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015624,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000124"
+          },
+          {
+            "id": 453000124,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 13.16%"
+          }
+        ]
+      },
+      {
+        "level": 25,
+        "skillId": 50042025,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 13.71%",
+        "raw": {
+          "id": 50042025,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015625
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015625,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000125"
+          },
+          {
+            "id": 453000125,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 13.71%"
+          }
+        ]
+      },
+      {
+        "level": 26,
+        "skillId": 50042026,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 14.26%",
+        "raw": {
+          "id": 50042026,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015626
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015626,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000126"
+          },
+          {
+            "id": 453000126,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 14.26%"
+          }
+        ]
+      },
+      {
+        "level": 27,
+        "skillId": 50042027,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 14.81%",
+        "raw": {
+          "id": 50042027,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015627
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015627,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000127"
+          },
+          {
+            "id": 453000127,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 14.81%"
+          }
+        ]
+      },
+      {
+        "level": 28,
+        "skillId": 50042028,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 15.36%",
+        "raw": {
+          "id": 50042028,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015628
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015628,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000128"
+          },
+          {
+            "id": 453000128,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 15.36%"
+          }
+        ]
+      },
+      {
+        "level": 29,
+        "skillId": 50042029,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 15.91%",
+        "raw": {
+          "id": 50042029,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015629
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015629,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000129"
+          },
+          {
+            "id": 453000129,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 15.91%"
+          }
+        ]
+      },
+      {
+        "level": 30,
+        "skillId": 50042030,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 16.46%",
+        "raw": {
+          "id": 50042030,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015630
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015630,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000130"
+          },
+          {
+            "id": 453000130,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 16.46%"
+          }
+        ]
+      },
+      {
+        "level": 31,
+        "skillId": 50042031,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 17%",
+        "raw": {
+          "id": 50042031,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015631
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015631,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000131"
+          },
+          {
+            "id": 453000131,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 17%"
+          }
+        ]
+      },
+      {
+        "level": 32,
+        "skillId": 50042032,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 17.55%",
+        "raw": {
+          "id": 50042032,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015632
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015632,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000132"
+          },
+          {
+            "id": 453000132,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 17.55%"
+          }
+        ]
+      },
+      {
+        "level": 33,
+        "skillId": 50042033,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 18.1%",
+        "raw": {
+          "id": 50042033,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015633
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015633,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000133"
+          },
+          {
+            "id": 453000133,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 18.1%"
+          }
+        ]
+      },
+      {
+        "level": 34,
+        "skillId": 50042034,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 18.65%",
+        "raw": {
+          "id": 50042034,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015634
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015634,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000134"
+          },
+          {
+            "id": 453000134,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 18.65%"
+          }
+        ]
+      },
+      {
+        "level": 35,
+        "skillId": 50042035,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 19.2%",
+        "raw": {
+          "id": 50042035,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015635
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015635,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000135"
+          },
+          {
+            "id": 453000135,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 19.2%"
+          }
+        ]
+      },
+      {
+        "level": 36,
+        "skillId": 50042036,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 19.75%",
+        "raw": {
+          "id": 50042036,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015636
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015636,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000136"
+          },
+          {
+            "id": 453000136,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 19.75%"
+          }
+        ]
+      },
+      {
+        "level": 37,
+        "skillId": 50042037,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 20.3%",
+        "raw": {
+          "id": 50042037,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015637
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015637,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000137"
+          },
+          {
+            "id": 453000137,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 20.3%"
+          }
+        ]
+      },
+      {
+        "level": 38,
+        "skillId": 50042038,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 20.84%",
+        "raw": {
+          "id": 50042038,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015638
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015638,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000138"
+          },
+          {
+            "id": 453000138,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 20.84%"
+          }
+        ]
+      },
+      {
+        "level": 39,
+        "skillId": 50042039,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 21.39%",
+        "raw": {
+          "id": 50042039,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015639
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015639,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000139"
+          },
+          {
+            "id": 453000139,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 21.39%"
+          }
+        ]
+      },
+      {
+        "level": 40,
+        "skillId": 50042040,
+        "effect": "受伤累计罡刀标记，满10层强化下一次命中",
+        "value": "下一次成功命中额外伤害：自身攻击力 21.94%",
+        "raw": {
+          "id": 50042040,
+          "label": "valueWithMaxHpPerDeal",
+          "scope": "countHp",
+          "attribute": {
+            "propName": "hp",
+            "propPer": 0.0333,
+            "propVal": 0,
+            "buffIds": [
+              136015640
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 136015640,
+            "name": "罡刀标记",
+            "text": "累积10层标记将生成【罡刀】，下一次攻击额外造成伤害",
+            "value": "最多10层，持续30秒，满层触发 453000140"
+          },
+          {
+            "id": 453000140,
+            "name": "罡刀",
+            "text": "下次成功命中目标造成额外伤害",
+            "value": "下一次成功命中额外伤害：自身攻击力 21.94%"
+          }
+        ]
+      }
+    ],
+    "extremeTiers": [
+      {
+        "level": 1,
+        "unlockLevel": 10,
+        "skillIds": [
+          50042501
+        ],
+        "effect": "罡刀命中时按已损失生命提高额外伤害",
+        "value": "每损失 2% 最大生命，额外提高本次基础值 1%",
+        "raw": [
+          {
+            "id": 50042501,
+            "label": "addValueWithSubPropPer",
+            "scope": "calcNextExtraDamageBuffPer",
+            "attribute": {
+              "propName": "hp",
+              "unit": 0.02,
+              "per": 0.01,
+              "val": 0
+            },
+            "rate": 1,
+            "cd": 0,
+            "chargedCd": null,
+            "chargedNumber": null,
+            "scopeParam": {
+              "limitBuffGroupIds": [
+                453000101
+              ]
+            }
+          }
+        ],
+        "linkedBuffs": []
+      },
+      {
+        "level": 2,
+        "unlockLevel": 20,
+        "skillIds": [
+          50042501
+        ],
+        "effect": "罡刀命中时按已损失生命提高额外伤害",
+        "value": "每损失 2% 最大生命，额外提高本次基础值 1%",
+        "raw": [
+          {
+            "id": 50042501,
+            "label": "addValueWithSubPropPer",
+            "scope": "calcNextExtraDamageBuffPer",
+            "attribute": {
+              "propName": "hp",
+              "unit": 0.02,
+              "per": 0.01,
+              "val": 0
+            },
+            "rate": 1,
+            "cd": 0,
+            "chargedCd": null,
+            "chargedNumber": null,
+            "scopeParam": {
+              "limitBuffGroupIds": [
+                453000101
+              ]
+            }
+          }
+        ],
+        "linkedBuffs": []
+      },
+      {
+        "level": 3,
+        "unlockLevel": 30,
+        "skillIds": [
+          50042501
+        ],
+        "effect": "罡刀命中时按已损失生命提高额外伤害",
+        "value": "每损失 2% 最大生命，额外提高本次基础值 1%",
+        "raw": [
+          {
+            "id": 50042501,
+            "label": "addValueWithSubPropPer",
+            "scope": "calcNextExtraDamageBuffPer",
+            "attribute": {
+              "propName": "hp",
+              "unit": 0.02,
+              "per": 0.01,
+              "val": 0
+            },
+            "rate": 1,
+            "cd": 0,
+            "chargedCd": null,
+            "chargedNumber": null,
+            "scopeParam": {
+              "limitBuffGroupIds": [
+                453000101
+              ]
+            }
+          }
+        ],
+        "linkedBuffs": []
+      },
+      {
+        "level": 4,
+        "unlockLevel": 40,
+        "skillIds": [
+          50042501
+        ],
+        "effect": "罡刀命中时按已损失生命提高额外伤害",
+        "value": "每损失 2% 最大生命，额外提高本次基础值 1%",
+        "raw": [
+          {
+            "id": 50042501,
+            "label": "addValueWithSubPropPer",
+            "scope": "calcNextExtraDamageBuffPer",
+            "attribute": {
+              "propName": "hp",
+              "unit": 0.02,
+              "per": 0.01,
+              "val": 0
+            },
+            "rate": 1,
+            "cd": 0,
+            "chargedCd": null,
+            "chargedNumber": null,
+            "scopeParam": {
+              "limitBuffGroupIds": [
+                453000101
+              ]
+            }
+          }
+        ],
+        "linkedBuffs": []
+      }
+    ]
+  },
+  "44": {
+    "mechanismExplanation": "普通效果会检查自己距离上次受击是否已经过 3 秒；每满足一次，就给自己添加 1 层攻击强化。攻击强化没有自然持续时间，最多 9 层；受击后会清除武圣的攻击强化和穿透强化层数。升级只提高每层攻击强化比例，Lv.1 到 Lv.40 为每层 0.09% 到 3.42%。极效使用同样的 3 秒未受击与受击清除规则，额外添加穿透强化；由于当前普通极效解锁行都引用同一个极效技能，所以各极效等级实际都是每层穿透 1.43%，最多 9 层。配置中虽然存在更高的极效技能数据，但当前普通词条规则没有引用它们。",
+    "review": {
+      "status": "verified",
+      "batch": "041-045",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "归属链路命中武曲星池 -> 专属武曲星池",
+        "普通 skillId 50043001-50043040 为 frameNoHurtDeal，attribute.frame=90帧，buffIds=[452000101, 50144xx]",
+        "运行时 frameNoHurtDeal 记录 mLastHurtByFrame；当前帧与记录帧差值达到 frame 时添加配置 buff，并把记录帧重置为当前帧",
+        "buff 5014401-5014440 为攻击强化，time=-1，maxPiles=9，value[0]=0.0009 到 0.0342",
+        "buff 452000101 为删除 BUFF 组，stiffRemoveBuffGroupIds=[5014401,70001601]，用于受击后清除武圣层数",
+        "极效普通 skillId 在 Lv.10/Lv.20/Lv.30/Lv.40 均引用 50043501，linked buff 70001601 为穿透强化，time=-1，maxPiles=9，value[0]=0.0143",
+        "配置中 50043502/50043503/50043504 分别关联 70001602/70001603/70001604，但当前普通 skillId 未引用"
+      ]
+    },
+    "summary": "普通效果：每3秒未受击叠1层攻击强化，最多9层，受击清除。极效：当前四档均引用极效1，每3秒未受击叠1层穿透强化。",
+    "baseEffectName": "每3秒未受击叠加攻击强化，受击清除",
+    "extremeEffectName": "每3秒未受击叠加穿透强化，受击清除",
+    "warnings": [
+      "武圣在数据中定义了更高等级的极效效果，但当前极效等级 2/3/4 在配置上仍重复引用了极效等级 1，导致高等级极效效果未生效。"
+    ],
+    "baseTiers": [
+      {
+        "level": 1,
+        "skillId": 50043001,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：0.09%，最多9层",
+        "raw": {
+          "id": 50043001,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014401
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014401,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 0.09%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 2,
+        "skillId": 50043002,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：0.17%，最多9层",
+        "raw": {
+          "id": 50043002,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014402
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014402,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 0.17%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 3,
+        "skillId": 50043003,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：0.26%，最多9层",
+        "raw": {
+          "id": 50043003,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014403
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014403,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 0.26%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 4,
+        "skillId": 50043004,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：0.34%，最多9层",
+        "raw": {
+          "id": 50043004,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014404
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014404,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 0.34%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 5,
+        "skillId": 50043005,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：0.43%，最多9层",
+        "raw": {
+          "id": 50043005,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014405
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014405,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 0.43%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 6,
+        "skillId": 50043006,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：0.51%，最多9层",
+        "raw": {
+          "id": 50043006,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014406
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014406,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 0.51%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 7,
+        "skillId": 50043007,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：0.6%，最多9层",
+        "raw": {
+          "id": 50043007,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014407
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014407,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 0.6%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 8,
+        "skillId": 50043008,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：0.68%，最多9层",
+        "raw": {
+          "id": 50043008,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014408
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014408,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 0.68%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 9,
+        "skillId": 50043009,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：0.77%，最多9层",
+        "raw": {
+          "id": 50043009,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014409
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014409,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 0.77%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 10,
+        "skillId": 50043010,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：0.86%，最多9层",
+        "raw": {
+          "id": 50043010,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014410
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014410,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 0.86%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 11,
+        "skillId": 50043011,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：0.94%，最多9层",
+        "raw": {
+          "id": 50043011,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014411
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014411,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 0.94%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 12,
+        "skillId": 50043012,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：1.03%，最多9层",
+        "raw": {
+          "id": 50043012,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014412
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014412,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 1.03%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 13,
+        "skillId": 50043013,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：1.11%，最多9层",
+        "raw": {
+          "id": 50043013,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014413
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014413,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 1.11%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 14,
+        "skillId": 50043014,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：1.2%，最多9层",
+        "raw": {
+          "id": 50043014,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014414
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014414,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 1.2%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 15,
+        "skillId": 50043015,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：1.28%，最多9层",
+        "raw": {
+          "id": 50043015,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014415
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014415,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 1.28%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 16,
+        "skillId": 50043016,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：1.37%，最多9层",
+        "raw": {
+          "id": 50043016,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014416
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014416,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 1.37%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 17,
+        "skillId": 50043017,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：1.45%，最多9层",
+        "raw": {
+          "id": 50043017,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014417
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014417,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 1.45%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 18,
+        "skillId": 50043018,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：1.54%，最多9层",
+        "raw": {
+          "id": 50043018,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014418
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014418,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 1.54%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 19,
+        "skillId": 50043019,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：1.63%，最多9层",
+        "raw": {
+          "id": 50043019,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014419
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014419,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 1.63%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 20,
+        "skillId": 50043020,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：1.71%，最多9层",
+        "raw": {
+          "id": 50043020,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014420
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014420,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 1.71%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 21,
+        "skillId": 50043021,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：1.8%，最多9层",
+        "raw": {
+          "id": 50043021,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014421
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014421,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 1.8%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 22,
+        "skillId": 50043022,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：1.88%，最多9层",
+        "raw": {
+          "id": 50043022,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014422
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014422,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 1.88%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 23,
+        "skillId": 50043023,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：1.97%，最多9层",
+        "raw": {
+          "id": 50043023,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014423
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014423,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 1.97%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 24,
+        "skillId": 50043024,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：2.05%，最多9层",
+        "raw": {
+          "id": 50043024,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014424
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014424,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 2.05%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 25,
+        "skillId": 50043025,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：2.14%，最多9层",
+        "raw": {
+          "id": 50043025,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014425
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014425,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 2.14%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 26,
+        "skillId": 50043026,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：2.22%，最多9层",
+        "raw": {
+          "id": 50043026,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014426
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014426,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 2.22%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 27,
+        "skillId": 50043027,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：2.31%，最多9层",
+        "raw": {
+          "id": 50043027,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014427
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014427,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 2.31%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 28,
+        "skillId": 50043028,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：2.4%，最多9层",
+        "raw": {
+          "id": 50043028,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014428
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014428,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 2.4%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 29,
+        "skillId": 50043029,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：2.48%，最多9层",
+        "raw": {
+          "id": 50043029,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014429
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014429,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 2.48%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 30,
+        "skillId": 50043030,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：2.57%，最多9层",
+        "raw": {
+          "id": 50043030,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014430
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014430,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 2.57%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 31,
+        "skillId": 50043031,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：2.65%，最多9层",
+        "raw": {
+          "id": 50043031,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014431
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014431,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 2.65%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 32,
+        "skillId": 50043032,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：2.74%，最多9层",
+        "raw": {
+          "id": 50043032,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014432
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014432,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 2.74%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 33,
+        "skillId": 50043033,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：2.82%，最多9层",
+        "raw": {
+          "id": 50043033,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014433
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014433,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 2.82%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 34,
+        "skillId": 50043034,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：2.91%，最多9层",
+        "raw": {
+          "id": 50043034,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014434
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014434,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 2.91%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 35,
+        "skillId": 50043035,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：2.99%，最多9层",
+        "raw": {
+          "id": 50043035,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014435
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014435,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 2.99%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 36,
+        "skillId": 50043036,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：3.08%，最多9层",
+        "raw": {
+          "id": 50043036,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014436
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014436,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 3.08%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 37,
+        "skillId": 50043037,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：3.17%，最多9层",
+        "raw": {
+          "id": 50043037,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014437
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014437,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 3.17%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 38,
+        "skillId": 50043038,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：3.25%，最多9层",
+        "raw": {
+          "id": 50043038,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014438
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014438,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 3.25%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 39,
+        "skillId": 50043039,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：3.34%，最多9层",
+        "raw": {
+          "id": 50043039,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014439
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014439,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 3.34%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 40,
+        "skillId": 50043040,
+        "effect": "每3秒未受击叠加攻击强化，受击清除",
+        "value": "每层攻击强化：3.42%，最多9层",
+        "raw": {
+          "id": 50043040,
+          "label": "frameNoHurtDeal",
+          "scope": null,
+          "attribute": {
+            "frame": 90,
+            "buffIds": [
+              452000101,
+              5014440
+            ]
+          },
+          "rate": 1,
+          "cd": 1,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 5014440,
+            "name": "攻击强化",
+            "text": "提高微量攻击力",
+            "value": "每层 3.42%，最多9层"
+          }
+        ]
+      }
+    ],
+    "extremeTiers": [
+      {
+        "level": 1,
+        "unlockLevel": 10,
+        "skillIds": [
+          50043501
+        ],
+        "effect": "每3秒未受击叠加穿透强化，受击清除",
+        "value": "每层穿透强化：1.43%，最多9层",
+        "raw": [
+          {
+            "id": 50043501,
+            "label": "frameNoHurtDeal",
+            "scope": null,
+            "attribute": {
+              "frame": 90,
+              "buffIds": [
+                452000101,
+                70001601
+              ]
+            },
+            "rate": 1,
+            "cd": 1,
+            "chargedCd": null,
+            "chargedNumber": null
+          }
+        ],
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 70001601,
+            "name": "穿透强化",
+            "text": "增加自身穿透",
+            "value": "每层 1.43%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 2,
+        "unlockLevel": 20,
+        "skillIds": [
+          50043501
+        ],
+        "effect": "每3秒未受击叠加穿透强化，受击清除",
+        "value": "每层穿透强化：1.43%，最多9层",
+        "raw": [
+          {
+            "id": 50043501,
+            "label": "frameNoHurtDeal",
+            "scope": null,
+            "attribute": {
+              "frame": 90,
+              "buffIds": [
+                452000101,
+                70001601
+              ]
+            },
+            "rate": 1,
+            "cd": 1,
+            "chargedCd": null,
+            "chargedNumber": null
+          }
+        ],
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 70001601,
+            "name": "穿透强化",
+            "text": "增加自身穿透",
+            "value": "每层 1.43%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 3,
+        "unlockLevel": 30,
+        "skillIds": [
+          50043501
+        ],
+        "effect": "每3秒未受击叠加穿透强化，受击清除",
+        "value": "每层穿透强化：1.43%，最多9层",
+        "raw": [
+          {
+            "id": 50043501,
+            "label": "frameNoHurtDeal",
+            "scope": null,
+            "attribute": {
+              "frame": 90,
+              "buffIds": [
+                452000101,
+                70001601
+              ]
+            },
+            "rate": 1,
+            "cd": 1,
+            "chargedCd": null,
+            "chargedNumber": null
+          }
+        ],
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 70001601,
+            "name": "穿透强化",
+            "text": "增加自身穿透",
+            "value": "每层 1.43%，最多9层"
+          }
+        ]
+      },
+      {
+        "level": 4,
+        "unlockLevel": 40,
+        "skillIds": [
+          50043501
+        ],
+        "effect": "每3秒未受击叠加穿透强化，受击清除",
+        "value": "每层穿透强化：1.43%，最多9层",
+        "raw": [
+          {
+            "id": 50043501,
+            "label": "frameNoHurtDeal",
+            "scope": null,
+            "attribute": {
+              "frame": 90,
+              "buffIds": [
+                452000101,
+                70001601
+              ]
+            },
+            "rate": 1,
+            "cd": 1,
+            "chargedCd": null,
+            "chargedNumber": null
+          }
+        ],
+        "linkedBuffs": [
+          {
+            "id": 452000101,
+            "name": "删除BUFF组",
+            "text": "删除BUFF组",
+            "value": "受击后清除武圣攻击/穿透层数"
+          },
+          {
+            "id": 70001601,
+            "name": "穿透强化",
+            "text": "增加自身穿透",
+            "value": "每层 1.43%，最多9层"
+          }
+        ]
+      }
+    ]
+  },
+  "45": {
+    "mechanismExplanation": "普通效果在释放基础技能前检查技能序列：带有排除标记的技能不会参与。游戏按当前词条记录最近最多 4 次基础技能标识，并从最新一次向前统计连续相邻不重复的步数，最多得到 3 层；如果当前与上一项重复导致步数为 0，就移除该效果。普通效果提供 15 秒命中强化，层数会被调整到当前连续不同步数，最多 3 层；升级只提高每层命中强化比例，Lv.1 到 Lv.40 为每层 0.05% 到 2%。极效使用同样的序列规则，提供 15 秒暴击强化；由于当前普通极效解锁行都引用同一个极效技能，所以各极效等级实际都是每层暴击 0.25%，最多 3 层。配置中虽然存在更高的极效技能数据，但当前普通词条规则没有引用它们。",
+    "review": {
+      "status": "verified",
+      "batch": "041-045",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "归属链路命中武曲星池 -> 专属武曲星池",
+        "普通 skillId 50044001-50044040 为 preReleaseSkill/releaseNoSameSkillDeal，attribute.addBuffIds=70061xx",
+        "运行时 releaseNoSameSkillDeal 会跳过 otherData.isNoIndepenConnect 的技能，并按 beskill id 保存最近最多4次技能标识",
+        "运行时从最新一次向前统计连续相邻不同技能步数 s，最大3；s=0 时 removeBuffsByLv，s>0 时把 buff 层数调到 s",
+        "buff 7006101-7006140 为命中强化，time=450帧=15秒，maxPiles=3，value[0]=0.0005 到 0.02",
+        "极效普通 skillId 在 Lv.10/Lv.20/Lv.30/Lv.40 均引用 50044501，linked buff 9005501 为暴击强化，time=450帧=15秒，maxPiles=3，value[0]=0.0025",
+        "配置中 50044502/50044503/50044504 分别关联 9005502/9005503/9005504，但当前普通 skillId 未引用"
+      ]
+    },
+    "summary": "普通效果：连续释放不同基础技能时按连续不同步数获得命中强化，最多3层，重复会移除。极效：当前四档均引用极效1，同规则获得暴击强化。",
+    "baseEffectName": "连续不同基础技能提高命中，重复移除",
+    "extremeEffectName": "连续不同基础技能提高暴击，重复移除",
+    "warnings": [
+      "武技在数据中定义了更高等级的极效效果，但当前极效等级 2/3/4 在配置上仍重复引用了极效等级 1，导致高等级极效效果未生效。"
+    ],
+    "baseTiers": [
+      {
+        "level": 1,
+        "skillId": 50044001,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：0.05%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044001,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006101
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006101,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 0.05%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 2,
+        "skillId": 50044002,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：0.1%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044002,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006102
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006102,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 0.1%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 3,
+        "skillId": 50044003,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：0.15%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044003,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006103
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006103,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 0.15%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 4,
+        "skillId": 50044004,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：0.2%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044004,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006104
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006104,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 0.2%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 5,
+        "skillId": 50044005,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：0.25%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044005,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006105
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006105,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 0.25%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 6,
+        "skillId": 50044006,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：0.3%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044006,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006106
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006106,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 0.3%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 7,
+        "skillId": 50044007,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：0.35%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044007,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006107
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006107,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 0.35%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 8,
+        "skillId": 50044008,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：0.4%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044008,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006108
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006108,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 0.4%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 9,
+        "skillId": 50044009,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：0.45%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044009,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006109
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006109,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 0.45%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 10,
+        "skillId": 50044010,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：0.5%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044010,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006110
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006110,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 0.5%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 11,
+        "skillId": 50044011,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：0.55%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044011,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006111
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006111,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 0.55%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 12,
+        "skillId": 50044012,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：0.6%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044012,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006112
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006112,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 0.6%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 13,
+        "skillId": 50044013,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：0.65%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044013,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006113
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006113,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 0.65%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 14,
+        "skillId": 50044014,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：0.7%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044014,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006114
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006114,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 0.7%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 15,
+        "skillId": 50044015,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：0.75%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044015,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006115
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006115,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 0.75%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 16,
+        "skillId": 50044016,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：0.8%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044016,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006116
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006116,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 0.8%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 17,
+        "skillId": 50044017,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：0.85%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044017,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006117
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006117,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 0.85%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 18,
+        "skillId": 50044018,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：0.9%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044018,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006118
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006118,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 0.9%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 19,
+        "skillId": 50044019,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：0.95%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044019,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006119
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006119,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 0.95%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 20,
+        "skillId": 50044020,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：1%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044020,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006120
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006120,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 1%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 21,
+        "skillId": 50044021,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：1.05%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044021,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006121
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006121,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 1.05%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 22,
+        "skillId": 50044022,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：1.1%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044022,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006122
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006122,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 1.1%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 23,
+        "skillId": 50044023,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：1.15%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044023,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006123
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006123,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 1.15%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 24,
+        "skillId": 50044024,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：1.2%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044024,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006124
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006124,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 1.2%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 25,
+        "skillId": 50044025,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：1.25%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044025,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006125
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006125,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 1.25%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 26,
+        "skillId": 50044026,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：1.3%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044026,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006126
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006126,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 1.3%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 27,
+        "skillId": 50044027,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：1.35%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044027,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006127
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006127,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 1.35%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 28,
+        "skillId": 50044028,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：1.4%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044028,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006128
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006128,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 1.4%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 29,
+        "skillId": 50044029,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：1.45%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044029,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006129
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006129,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 1.45%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 30,
+        "skillId": 50044030,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：1.5%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044030,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006130
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006130,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 1.5%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 31,
+        "skillId": 50044031,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：1.55%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044031,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006131
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006131,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 1.55%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 32,
+        "skillId": 50044032,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：1.6%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044032,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006132
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006132,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 1.6%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 33,
+        "skillId": 50044033,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：1.65%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044033,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006133
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006133,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 1.65%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 34,
+        "skillId": 50044034,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：1.7%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044034,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006134
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006134,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 1.7%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 35,
+        "skillId": 50044035,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：1.75%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044035,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006135
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006135,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 1.75%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 36,
+        "skillId": 50044036,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：1.8%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044036,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006136
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006136,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 1.8%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 37,
+        "skillId": 50044037,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：1.85%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044037,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006137
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006137,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 1.85%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 38,
+        "skillId": 50044038,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：1.9%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044038,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006138
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006138,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 1.9%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 39,
+        "skillId": 50044039,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：1.95%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044039,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006139
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006139,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 1.95%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 40,
+        "skillId": 50044040,
+        "effect": "连续不同基础技能提高命中，重复移除",
+        "value": "每层命中强化：2%，最多3层，持续15秒",
+        "raw": {
+          "id": 50044040,
+          "label": "releaseNoSameSkillDeal",
+          "scope": "preReleaseSkill",
+          "attribute": {
+            "addBuffIds": [
+              7006140
+            ]
+          },
+          "rate": 1,
+          "cd": 0,
+          "chargedCd": null,
+          "chargedNumber": null
+        },
+        "linkedBuffs": [
+          {
+            "id": 7006140,
+            "name": "命中强化",
+            "text": "增加命中",
+            "value": "每层 2%，最多3层，持续15秒"
+          }
+        ]
+      }
+    ],
+    "extremeTiers": [
+      {
+        "level": 1,
+        "unlockLevel": 10,
+        "skillIds": [
+          50044501
+        ],
+        "effect": "连续不同基础技能提高暴击，重复移除",
+        "value": "每层暴击强化：0.25%，最多3层，持续15秒",
+        "raw": [
+          {
+            "id": 50044501,
+            "label": "releaseNoSameSkillDeal",
+            "scope": "preReleaseSkill",
+            "attribute": {
+              "addBuffIds": [
+                9005501
+              ]
+            },
+            "rate": 1,
+            "cd": 0,
+            "chargedCd": null,
+            "chargedNumber": null
+          }
+        ],
+        "linkedBuffs": [
+          {
+            "id": 9005501,
+            "name": "暴击强化",
+            "text": "增加暴击",
+            "value": "每层 0.25%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 2,
+        "unlockLevel": 20,
+        "skillIds": [
+          50044501
+        ],
+        "effect": "连续不同基础技能提高暴击，重复移除",
+        "value": "每层暴击强化：0.25%，最多3层，持续15秒",
+        "raw": [
+          {
+            "id": 50044501,
+            "label": "releaseNoSameSkillDeal",
+            "scope": "preReleaseSkill",
+            "attribute": {
+              "addBuffIds": [
+                9005501
+              ]
+            },
+            "rate": 1,
+            "cd": 0,
+            "chargedCd": null,
+            "chargedNumber": null
+          }
+        ],
+        "linkedBuffs": [
+          {
+            "id": 9005501,
+            "name": "暴击强化",
+            "text": "增加暴击",
+            "value": "每层 0.25%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 3,
+        "unlockLevel": 30,
+        "skillIds": [
+          50044501
+        ],
+        "effect": "连续不同基础技能提高暴击，重复移除",
+        "value": "每层暴击强化：0.25%，最多3层，持续15秒",
+        "raw": [
+          {
+            "id": 50044501,
+            "label": "releaseNoSameSkillDeal",
+            "scope": "preReleaseSkill",
+            "attribute": {
+              "addBuffIds": [
+                9005501
+              ]
+            },
+            "rate": 1,
+            "cd": 0,
+            "chargedCd": null,
+            "chargedNumber": null
+          }
+        ],
+        "linkedBuffs": [
+          {
+            "id": 9005501,
+            "name": "暴击强化",
+            "text": "增加暴击",
+            "value": "每层 0.25%，最多3层，持续15秒"
+          }
+        ]
+      },
+      {
+        "level": 4,
+        "unlockLevel": 40,
+        "skillIds": [
+          50044501
+        ],
+        "effect": "连续不同基础技能提高暴击，重复移除",
+        "value": "每层暴击强化：0.25%，最多3层，持续15秒",
+        "raw": [
+          {
+            "id": 50044501,
+            "label": "releaseNoSameSkillDeal",
+            "scope": "preReleaseSkill",
+            "attribute": {
+              "addBuffIds": [
+                9005501
+              ]
+            },
+            "rate": 1,
+            "cd": 0,
+            "chargedCd": null,
+            "chargedNumber": null
+          }
+        ],
+        "linkedBuffs": [
+          {
+            "id": 9005501,
+            "name": "暴击强化",
+            "text": "增加暴击",
+            "value": "每层 0.25%，最多3层，持续15秒"
+          }
+        ]
+      }
+    ]
+  },
+  "46": {
+    "mechanismExplanation": "释放基础技能前，游戏会按当前词条记录最近最多 4 次基础技能标识；带有排除标记的技能不会参与。当前技能与前面的技能连续不重复时，会按连续不同的步数给自己调整层数，最多 3 层；如果重复导致步数为 0，就移除该效果。普通效果提供 15 秒韧性强化，升级只提高每层韧性值，Lv.1 到 Lv.40 为每层 0.15% 到 6%。极效使用同一套基础技能序列规则，额外提供 15 秒闪避强化；由于当前普通极效解锁行都引用同一个极效技能，所以各极效等级实际都是每层闪避 0.75%，最多 3 层。配置中虽然存在更高的极效技能数据，但当前普通词条规则没有引用它们。",
+    "summary": "普通效果：连续释放不同基础技能获得15秒韧性强化，重复会移除。极效：同条件获得15秒闪避强化。",
+    "baseEffectName": "连续不同基础技能提高韧性，重复移除",
+    "extremeEffectName": "连续不同基础技能提高闪避，重复移除",
+    "warnings": [
+      "武艺在数据中定义了更高等级的极效效果，但当前极效等级 2/3/4 在配置上仍重复引用了极效等级 1，导致高等级极效效果未生效。"
+    ],
+    "review": {
+      "status": "verified",
+      "batch": "046-050",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "rewardGroup 800021/800022 -> 武曲星池专属",
+        "普通 skillId 50045001-50045040 为 preReleaseSkill/releaseNoSameSkillDeal，attribute.addBuffIds=100050xx",
+        "buff 10005001-10005040 为韧性强化，time=450帧=15秒，maxPiles=3，value[0]=0.0015 到 0.06",
+        "极效普通 skillId 在 Lv.10/Lv.20/Lv.30/Lv.40 均引用 50045501，linked buff 8006701 为闪避强化，time=450帧=15秒，maxPiles=3，value[0]=0.0075",
+        "运行时 releaseNoSameSkillDeal 记录最近最多 4 次基础技能，连续相邻不重复最多得到 3 层，s=0 时移除 buff，s>0 时调层"
+      ]
+    }
+  },
+  "47": {
+    "mechanismExplanation": "普通效果是常驻属性读取修正，不是战斗中触发的临时 buff。读取防御时，按当前词条等级把一部分面板攻击力加到防御；同时读取攻击时，按同等级配置扣掉一部分面板攻击力，所以它是真正带代价的“以攻为守”。升级同时提高加到防御的比例和扣掉攻击的比例，Lv.1 到 Lv.40 为防御增加面板攻击力 0.22% 到 8.8%，攻击扣减面板攻击力 0.05% 到 1.85%。极效从词条 Lv.10 开始出现，额外在读取防御时再增加面板攻击力的 1%；由于当前极效各等级均额外增加相同的额外比例，所以四个极效行的额外防御比例相同。",
+    "summary": "普通效果：按面板攻击力增加防御，同时扣减一部分攻击。极效：额外把面板攻击力 1% 加到防御。",
+    "baseEffectName": "攻击转防御，并扣减攻击",
+    "extremeEffectName": "额外攻击转防御",
+    "warnings": [
+      "以攻为守在数据中定义了更高等级的极效效果，但当前极效等级 2/3/4 在配置上仍重复引用了极效等级 1，导致高等级极效效果未生效。"
+    ],
+    "review": {
+      "status": "verified",
+      "batch": "046-050",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "rewardGroup 800021/800022 -> 武曲星池专属",
+        "普通 Lv.1 起 skillId 同时包含 500460xx(getDef, propName=atk, 正值) 与 500462xx(getAtk, propName=atk, 负值)，因此第二个 skillId 属于普通转换代价，不是极效",
+        "极效从 Lv.10 起新增 50046501，scope=getDef，propName=atk，propPer=0.01",
+        "运行时 getPropBasePerAndVal 返回当前实体基础属性 * propPer + propVal，作为属性读取时的加值或扣值"
+      ]
+    }
+  },
+  "48": {
+    "mechanismExplanation": "普通效果是常驻属性读取修正，不是战斗中触发的临时 buff。读取攻击时，按当前词条等级把一部分面板防御力加到攻击；同时读取防御时，按同等级配置扣掉一部分面板防御力，所以它是真正带代价的“以守为攻”。升级同时提高加到攻击的比例和扣掉防御的比例，Lv.1 到 Lv.40 为攻击增加面板防御力 0.32% 到 12.67%，防御扣减面板防御力 0.03% 到 1.33%。极效从词条 Lv.10 开始出现，额外在读取攻击时再增加面板防御力的 1.5%；由于当前极效各等级均额外增加相同的额外比例，所以四个极效行的额外攻击比例相同。",
+    "summary": "普通效果：按面板防御力增加攻击，同时扣减一部分防御。极效：额外把面板防御力 1.5% 加到攻击。",
+    "baseEffectName": "防御转攻击，并扣减防御",
+    "extremeEffectName": "额外防御转攻击",
+    "warnings": [
+      "以守为攻在数据中定义了更高等级的极效效果，但当前极效等级 2/3/4 在配置上仍重复引用了极效等级 1，导致高等级极效效果未生效。"
+    ],
+    "review": {
+      "status": "verified",
+      "batch": "046-050",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "rewardGroup 800021/800022 -> 武曲星池专属",
+        "普通 Lv.1 起 skillId 同时包含 500470xx(getAtk, propName=def, 正值) 与 500472xx(getDef, propName=def, 负值)，因此第二个 skillId 属于普通转换代价，不是极效",
+        "极效从 Lv.10 起新增 50047501，scope=getAtk，propName=def，propPer=0.015",
+        "运行时 getPropBasePerAndVal 返回当前实体基础属性 * propPer + propVal，作为属性读取时的加值或扣值"
+      ]
+    }
+  },
+  "50": {
+    "mechanismExplanation": "普通效果只在释放普通攻击或跳跃攻击前触发：在普攻/跳攻进入实际释放前，给自己添加本次攻击使用的攻击强化效果。普通效果的持续时间配置为负帧哨兵值，导出按“随来源状态持续”展示，可理解为只服务于这次攻击释放窗口，不是常驻永久加攻。升级只提高攻击强化比例，Lv.1 到 Lv.40 为 0.23% 到 9.26%。极效同样只在普通攻击或跳跃攻击释放前触发，额外给自己添加暴击强化；由于当前普通极效解锁行都引用同一个极效技能，所以各极效等级实际都是暴击强化 1.65%，随来源状态持续。配置中虽然存在更高的极效技能数据，但当前普通词条规则没有引用它们。",
+    "summary": "普通效果：普通攻击和跳跃攻击释放前获得本次攻击的攻击强化。极效：同条件获得暴击强化。",
+    "baseEffectName": "普攻/跳攻释放前提高攻击",
+    "extremeEffectName": "普攻/跳攻释放前提高暴击",
+    "warnings": [
+      "体术在数据中定义了更高等级的极效效果，但当前极效等级 2/3/4 在配置上仍重复引用了极效等级 1，导致高等级极效效果未生效。"
+    ],
+    "review": {
+      "status": "verified",
+      "batch": "046-050",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "rewardGroup 800021/800022 -> 武曲星池专属",
+        "普通 skillId 50049001-50049040 为 preReleaseAtk/buff，attribute=50160xx",
+        "buff 5016001-5016040 为攻击强化，time=-1，value[0]=0.0023 到 0.0926",
+        "极效普通 skillId 在 Lv.10/Lv.20/Lv.30/Lv.40 均引用 50049501，linked buff 9005601 为暴击强化，time=-1，value[0]=0.0165",
+        "运行时 doValAttack 在实际释放普攻/跳攻前调用 dealInXXX(\"preReleaseAtk\")；buff handler 对 this.mEntity 添加配置 buff"
+      ]
+    }
+  },
+  "51": {
+    "mechanismExplanation": "普通效果只对近身攻击生效，判定范围来自运行时距离条件：自己造成的攻击伤害命中该近身范围时，按当前词条等级提高本次伤害。升级只提高近身伤害加成，Lv.1 到 Lv.40 为 0.2% 到 8%。极效在同一近身条件下提高暴击；由于当前普通极效解锁行都引用同一个极效技能，所以各极效等级实际都是近身条件下暴击提高 1.65%。配置中虽然存在更高的极效技能数据，但当前普通词条规则没有引用它们。",
+    "summary": "普通效果：近身攻击造成伤害时提高本次伤害。极效：同一近身条件下提高暴击。",
+    "baseEffectName": "近身攻击伤害提高",
+    "extremeEffectName": "近身攻击暴击提高",
+    "warnings": [
+      "寸劲在数据中定义了更高等级的极效效果，但当前极效等级 2/3/4 在配置上仍重复引用了极效等级 1，导致高等级极效效果未生效。"
+    ],
+    "review": {
+      "status": "verified",
+      "batch": "051-055",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=1 -> 攻伐",
+        "rewardGroup 800021/800022 -> 武曲星池专属",
+        "普通 skillId 50050001-50050040 为 countGiveDamage/addDamage，scopeParam.judgeHurtEnityCondition=isRange [-200,-100,400,300]，attribute.per=0.002 到 0.08",
+        "运行时 addDamage 对造成伤害聚合值 t.per/t.val 加成，负值时走减伤换算；本词条普通为正值增伤",
+        "极效普通 skillId 在 Lv.10/Lv.20/Lv.30/Lv.40 均引用 50050501，scope=getCrit，attribute.rate=0.0165",
+        "运行时 valueAddWithBeskillLv 返回 Math.ceil(rate * 传入基础值) + fixVal"
+      ]
+    }
+  },
+  "52": {
+    "mechanismExplanation": "普通效果只对自己受到的近身攻击生效，判定范围来自运行时距离条件：敌方攻击落在该近身范围时，按当前词条等级降低本次受到的伤害。升级只提高近身受击减伤比例，Lv.1 到 Lv.40 为 0.22% 到 8.09%。极效在同一近身受击条件下提高韧性；由于当前普通极效解锁行都引用同一个极效技能，所以各极效等级实际都是近身受击条件下韧性提高 1.65%。配置中虽然存在更高的极效技能数据，但当前普通词条规则没有引用它们。",
+    "summary": "普通效果：受到近身攻击时降低本次伤害。极效：同一近身受击条件下提高韧性。",
+    "baseEffectName": "近身受击伤害降低",
+    "extremeEffectName": "近身受击韧性提高",
+    "warnings": [
+      "架势在数据中定义了更高等级的极效效果，但当前极效等级 2/3/4 在配置上仍重复引用了极效等级 1，导致高等级极效效果未生效。"
+    ],
+    "review": {
+      "status": "verified",
+      "batch": "051-055",
+      "reviewedAt": "2026-06-16",
+      "evidence": [
+        "starStone.type=2 -> 守御",
+        "rewardGroup 800021/800022 -> 武曲星池专属",
+        "普通 skillId 50051001-50051040 为 countDamage/addDamage，scopeParam.judgeHurtEnityCondition=isRange [-200,-100,400,300]，attribute.per=-0.0022 到 -0.0809",
+        "运行时 addDamage 对负 per 使用 t.per -= -n * r / Math.max(1 + r, .001)，对应受击减伤口径",
+        "极效普通 skillId 在 Lv.10/Lv.20/Lv.30/Lv.40 均引用 50051501，scope=getTenacity，attribute.rate=0.0165",
+        "运行时 valueAddWithBeskillLv 返回 Math.ceil(rate * 传入基础值) + fixVal"
+      ]
+    }
+  }
+}

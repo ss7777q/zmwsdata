@@ -4,13 +4,14 @@ import SideNav from './components/layout/SideNav';
 import TopBar from './components/layout/TopBar';
 import SearchResults from './components/ui/SearchResults';
 import { useGameData } from './hooks/useGameData';
-import { useVisitorStats } from './hooks/useVisitorStats';
 import { searchDataSources } from './lib/search';
 import { apiUrl } from './lib/api';
+import { useVisitorStats } from './hooks/useVisitorStats';
 
 const RoleWiki = lazy(() => import('./pages/RoleWiki'));
 const RoleEquip = lazy(() => import('./pages/RoleEquip'));
 const RoleSpiritual = lazy(() => import('./pages/RoleSpiritual'));
+const RoleStarStone = lazy(() => import('./pages/RoleStarStone'));
 const RoleWing = lazy(() => import('./pages/RoleWing'));
 const RoleCultivate = lazy(() => import('./pages/RoleCultivate'));
 const RolePet = lazy(() => import('./pages/RolePet'));
@@ -28,6 +29,7 @@ const SYSTEM_META: Record<string, { title: string; description: string }> = {
   role_wiki: { title: '角色技能', description: '查看角色各技能的伤害、段数、释放时间与等级成长。' },
   role_equip: { title: '角色装备', description: '查看装备打造、升级、熔炼等展示数据。' },
   role_spiritual: { title: '灵宝系统', description: '聚合法宝、神器与阵法等产出数据。' },
+  role_starstone: { title: '星石系统', description: '查看星石词条属性、极效解锁等级与等级模拟。' },
   role_fashion: { title: '角色时装', description: '展示时装与时装球养成配置。' },
   role_wing: { title: '翅膀系统', description: '查看翅膀培养与羽毛相关配置。' },
   role_cultivate: { title: '修炼系统', description: '聚合经脉、修心、丹气、丹元与仙魄配置。' },
@@ -42,11 +44,24 @@ const SYSTEM_META: Record<string, { title: string; description: string }> = {
   ops: { title: '资源运维', description: '仅在使用专用启动命令后开放，用于手动同步资源、更新数据与查看日志。' },
 };
 
-const DEFAULT_SYSTEM = 'role_equip';
+function NoticeBanner() {
+  return (
+    <div className="border-b border-amber-300/60 bg-amber-50 px-4 py-2 text-sm leading-relaxed text-amber-900 lg:px-8 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100">
+      <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="font-semibold">数值效果为测试性功能，甚至可能存在错误</span>
+        <span className="text-amber-700/70 dark:text-amber-200/60">|</span>
+        <span>当前仍有大量未完成调整内容，仅供参考。如遇问题或有任何建言，欢迎加入交流反馈QQ群：681321644。</span>
+      </div>
+    </div>
+  );
+}
+
+const DEFAULT_SYSTEM = 'role_wiki';
 const SYSTEM_PATHS: Record<string, string> = {
   role_wiki: '/role_wiki',
   role_equip: '/user_equip',
   role_spiritual: '/user_spiritual',
+  role_starstone: '/user_starstone',
   role_fashion: '/user_fashion',
   role_wing: '/user_wing',
   role_cultivate: '/user_cultivate',
@@ -67,8 +82,8 @@ const PATH_TO_SYSTEM = Object.fromEntries(Object.entries(SYSTEM_PATHS).map(([sys
 const OPS_SYSTEM = 'ops';
 const PLAYER_LOOKUP_SYSTEM = 'player_lookup';
 const HELP_SYSTEM = 'help';
-const NO_DATA_SYSTEMS = [OPS_SYSTEM, PLAYER_LOOKUP_SYSTEM, HELP_SYSTEM] as const;
-const KNOWN_SYSTEMS = ['role_wiki', 'role_equip', 'role_spiritual', 'role_wing', 'role_cultivate', 'pet', 'beast_stats', 'ride', 'role_fashion', 'call_god', 'boss', 'resist', 'player_lookup', 'help', 'ops'] as const;
+const NO_DATA_SYSTEMS = [PLAYER_LOOKUP_SYSTEM, HELP_SYSTEM] as const;
+const KNOWN_SYSTEMS = ['role_wiki', 'role_equip', 'role_spiritual', 'role_starstone', 'role_wing', 'role_cultivate', 'pet', 'beast_stats', 'ride', 'role_fashion', 'call_god', 'boss', 'resist', 'player_lookup', 'help', 'ops'] as const;
 
 function PageFallback() {
   return (
@@ -243,63 +258,66 @@ function App() {
           visitorStats={visitorStats}
         />
 
-        <div className="border-b border-amber-300/60 bg-amber-50 px-4 py-2 text-sm leading-relaxed text-amber-900 lg:px-8 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100">
-          <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="font-semibold">数值效果为测试性功能，甚至可能存在错误</span>
-            <span className="text-amber-700/70 dark:text-amber-200/60">|</span>
-            <span>当前仍有大量未完成调整内容，仅供参考。如遇问题或有任何建言，欢迎加入交流反馈QQ群：681321644。</span>
-          </div>
+        <div className="hidden lg:block">
+          <NoticeBanner />
         </div>
 
         <main className="flex-1 overflow-x-hidden p-4 lg:p-8 relative scroll-smooth min-h-0">
+          <div className="block lg:hidden mb-4 -mx-4 -mt-4">
+            <NoticeBanner />
+          </div>
+
           <div className="max-w-[1600px] mx-auto pb-12">
             {activeSystem !== 'beast_stats' ? (
-              <div className="mb-6 flex items-end justify-between gap-4">
+              <div key={`${activeSystem}-heading`} className="module-heading mb-6 flex items-end justify-between gap-4">
                 <div>
                   <h1 className="text-3xl font-bold font-sans text-textMain">{currentMeta.title}</h1>
                 </div>
               </div>
             ) : null}
 
-            {loading && shouldLoadBulkGameData && activeSystem !== 'call_god' ? (
-              <div className="flex flex-col items-center justify-center py-20">
-                <div className="w-12 h-12 border-4 border-primary/20 border-t-cta rounded-full animate-spin"></div>
-                <div className="mt-4 text-textSub font-mono animate-pulse">Loading Game JSON Data...</div>
-              </div>
-            ) : isSearching ? (
-              <SearchResults
-                currentLabel={currentMeta.title}
-                query={searchQuery.trim()}
-                results={searchResults}
-              />
-            ) : (
-              <>
-                <Suspense fallback={<PageFallback />}>
-                  {activeSystem === 'role_wiki' && <RoleWiki />}
-                  {activeSystem === 'role_equip' && <RoleEquip dataSources={dataSources} />}
-                  {activeSystem === 'role_spiritual' && <RoleSpiritual dataSources={dataSources} />}
-                  {activeSystem === 'role_wing' && <RoleWing dataSources={dataSources} />}
-                  {activeSystem === 'role_cultivate' && <RoleCultivate dataSources={dataSources} loading={loading} />}
-                  {activeSystem === 'pet' && <RolePet dataSources={dataSources} />}
-                  {activeSystem === 'beast_stats' && <BeastStats detailSource={dataSources.beast_detail?.data as any} lineupSource={dataSources.beast_lineup_analysis?.data as any} playerSource={dataSources.beast_player_analysis?.data as any} loading={loading} />}
-                  {activeSystem === 'ride' && <RoleRide dataSources={dataSources} />}
-                  {activeSystem === 'role_fashion' && <RoleFashion dataSources={dataSources} />}
-                  {activeSystem === 'call_god' && <CallGodStats dataSources={dataSources} />}
-                  {activeSystem === 'boss' && <BossStats dataSources={dataSources} searchQuery={searchQuery} />}
-                  {activeSystem === 'resist' && <ResistStats dataSources={dataSources} />}
-                  {activeSystem === PLAYER_LOOKUP_SYSTEM && <PlayerLookup />}
-                  {activeSystem === HELP_SYSTEM && <HelpCenter />}
-                  {activeSystem === OPS_SYSTEM && <OpsDashboard />}
-                </Suspense>
+            <section key={`${activeSystem}-${isSearching ? 'search' : 'view'}`} className="module-view">
+              {loading && shouldLoadBulkGameData && activeSystem !== 'call_god' ? (
+                <div className="flex flex-col items-center justify-center py-20">
+                  <div className="w-12 h-12 border-4 border-primary/20 border-t-cta rounded-full animate-spin"></div>
+                  <div className="mt-4 text-textSub font-mono animate-pulse">Loading Game JSON Data...</div>
+                </div>
+              ) : isSearching ? (
+                <SearchResults
+                  currentLabel={currentMeta.title}
+                  query={searchQuery.trim()}
+                  results={searchResults}
+                />
+              ) : (
+                <>
+                  <Suspense fallback={<PageFallback />}>
+                    {activeSystem === 'role_wiki' && <RoleWiki />}
+                    {activeSystem === 'role_equip' && <RoleEquip dataSources={dataSources} />}
+                    {activeSystem === 'role_spiritual' && <RoleSpiritual dataSources={dataSources} />}
+                    {activeSystem === 'role_starstone' && <RoleStarStone />}
+                    {activeSystem === 'role_wing' && <RoleWing dataSources={dataSources} />}
+                    {activeSystem === 'role_cultivate' && <RoleCultivate dataSources={dataSources} loading={loading} />}
+                    {activeSystem === 'pet' && <RolePet dataSources={dataSources} />}
+                    {activeSystem === 'beast_stats' && <BeastStats detailSource={dataSources.beast_detail?.data as any} lineupSource={dataSources.beast_lineup_analysis?.data as any} playerSource={dataSources.beast_player_analysis?.data as any} loading={loading} />}
+                    {activeSystem === 'ride' && <RoleRide dataSources={dataSources} />}
+                    {activeSystem === 'role_fashion' && <RoleFashion dataSources={dataSources} />}
+                    {activeSystem === 'call_god' && <CallGodStats dataSources={dataSources} />}
+                    {activeSystem === 'boss' && <BossStats dataSources={dataSources} searchQuery={searchQuery} />}
+                    {activeSystem === 'resist' && <ResistStats dataSources={dataSources} />}
+                    {activeSystem === PLAYER_LOOKUP_SYSTEM && <PlayerLookup />}
+                    {activeSystem === HELP_SYSTEM && <HelpCenter />}
+                    {activeSystem === OPS_SYSTEM && <OpsDashboard />}
+                  </Suspense>
 
-                {!knownSystems.includes(activeSystem) && (
-                  <div className="card text-center py-20 border border-dashed border-border bg-transparent">
-                    <h3 className="text-xl text-textSub font-medium">该模块前端视图组件研发中...</h3>
-                    <p className="text-textSub mt-2">可在左侧切回已完成模块查看实际效果。</p>
-                  </div>
-                )}
-              </>
-            )}
+                  {!knownSystems.includes(activeSystem) && (
+                    <div className="card text-center py-20 border border-dashed border-border bg-transparent">
+                      <h3 className="text-xl text-textSub font-medium">该模块前端视图组件研发中...</h3>
+                      <p className="text-textSub mt-2">可在左侧切回已完成模块查看实际效果。</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </section>
           </div>
         </main>
       </div>

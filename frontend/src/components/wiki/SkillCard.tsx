@@ -415,7 +415,7 @@ function BuffRow({ buff }: { buff: BuffInfo }) {
           <span className="shrink-0 rounded bg-surface px-1 text-[10px] text-textSub">{buff.bindLabel}</span>
           <span className="text-xs font-semibold text-textMain">{cleanBuffName(buff.name)}</span>
         </div>
-        <div className="text-xs text-cta leading-relaxed pl-[4px] break-words">
+        <div className="whitespace-pre-line text-xs text-cta leading-relaxed pl-[4px] break-words">
           {buff.displayText}
         </div>
       </div>
@@ -746,7 +746,7 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
 
       {card.header.note && (
         <div className="border-t border-border px-5 py-3">
-          <div className="rounded-lg bg-surface px-3 py-2 text-xs leading-relaxed text-textSub">
+          <div className="rounded-lg bg-surface px-3 py-2 text-xs leading-relaxed text-textSub whitespace-pre-line">
             {card.header.note}
           </div>
         </div>

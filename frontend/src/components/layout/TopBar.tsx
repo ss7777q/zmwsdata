@@ -54,7 +54,7 @@ export default function TopBar({
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3 lg:h-full lg:flex-nowrap">
         <div className="order-1 flex items-center gap-4 min-w-0 flex-1 lg:flex-none">
           <button
-            className="p-2 -ml-2 rounded-lg text-textSub hover:bg-surface lg:hidden"
+            className="icon-button p-2 -ml-2 rounded-lg text-textSub hover:bg-surface lg:hidden"
             onClick={onMenuClick}
           >
             <Menu className="w-5 h-5" />
@@ -80,7 +80,7 @@ export default function TopBar({
               {searchValue ? (
                 <button
                   onClick={() => onSearchChange('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-textSub hover:text-textMain"
+                  className="icon-button absolute right-3 top-1/2 -translate-y-1/2 text-textSub hover:text-textMain"
                   title="清空搜索"
                 >
                   <X className="w-4 h-4" />
@@ -112,7 +112,7 @@ export default function TopBar({
 
           <button
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className="p-2 rounded-full hover:bg-surface text-textSub hover:text-primary transition-colors cursor-pointer"
+            className="icon-button p-2 rounded-full hover:bg-surface text-textSub hover:text-primary cursor-pointer"
             title="切换白天/夜间模式"
           >
             {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}

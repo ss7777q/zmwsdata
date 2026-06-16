@@ -1,4 +1,4 @@
-import { Box, CircleHelp, ChevronLeft, ChevronRight, Dog, Flame, Search, ServerCog, Shield, Skull, Star, Trophy, User, Zap } from 'lucide-react';
+import { Box, CircleHelp, ChevronLeft, ChevronRight, Dog, Flame, Search, ServerCog, Shield, Skull, Star, Trophy, User, Zap, Sliders } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface SideNavProps {
@@ -14,6 +14,7 @@ const menuItems = [
   { id: 'role_wiki', label: '角色技能', icon: Flame },
   { id: 'role_equip', label: '角色装备', icon: User },
   { id: 'role_spiritual', label: '灵宝系统', icon: Zap },
+  { id: 'role_starstone', label: '星石系统', icon: Sliders },
   { id: 'role_fashion', label: '角色时装', icon: Star },
   { id: 'role_wing', label: '翅膀系统', icon: Box },
   { id: 'role_cultivate', label: '修炼系统', icon: User },
@@ -47,7 +48,7 @@ export default function SideNav({
           </span>
           <button 
             onClick={onToggleCollapse} 
-            className="hidden lg:block p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-textSub hover:text-textMain cursor-pointer transition-colors shrink-0"
+            className="icon-button hidden lg:block p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-textSub hover:text-textMain cursor-pointer shrink-0"
             title={isSidebarCollapsed ? "展开侧边栏" : "折叠侧边栏"}
           >
             {isSidebarCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
@@ -63,7 +64,7 @@ export default function SideNav({
               key={item.id}
               onClick={() => onSelectSystem(item.id)}
               className={clsx(
-                'w-full flex items-center rounded-lg text-sm font-medium transition-all duration-200 text-left cursor-pointer',
+                'nav-item w-full flex items-center rounded-lg text-sm font-medium text-left cursor-pointer',
                 isSidebarCollapsed ? 'px-4 py-3 gap-3 lg:p-3 lg:justify-center lg:gap-0' : 'px-4 py-3 gap-3',
                 active
                   ? 'bg-primary text-white shadow-md shadow-primary/20'
