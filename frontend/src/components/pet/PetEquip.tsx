@@ -9,6 +9,13 @@ export default function PetEquip({ dataSources }: Props) {
     const makeData = (dataSources['pet_equip_make'] as any)?.data || [];
     const upgradeData = (dataSources['pet_equip_upgrade'] as any)?.data || [];
 
+    const formatRecastStage = (stage: any, index: number) => {
+        if (stage.stageLabel) return stage.stageLabel;
+        const fromWeight = typeof stage.fromWeight === 'number' ? stage.fromWeight : index;
+        const toWeight = typeof stage.toWeight === 'number' ? stage.toWeight : fromWeight + 1;
+        return `${fromWeight}重 → ${toWeight}重`;
+    };
+
     const groupedMake = useMemo(() => {
         const result: Record<number, any[]> = {};
         for (const item of makeData) {
@@ -67,7 +74,7 @@ export default function PetEquip({ dataSources }: Props) {
                                         {items[0].recastUpgrade.map((stage: any, stageIdx: number) => (
                                             <div key={stageIdx} className="bg-textMain/5 rounded-md p-2 flex flex-col gap-2 border border-border/50 flex-1 min-w-[150px]">
                                                 <div className="text-[11px] text-textSub font-mono bg-background w-max px-1.5 py-0.5 rounded border border-border/30">
-                                                    {stageIdx + 1}重 → {stageIdx + 2}重
+                                                    {formatRecastStage(stage, stageIdx)}
                                                 </div>
                                                 <div className="flex gap-1.5 flex-wrap">
                                                     {stage.cost?.map((c: any, cIdx: number) => (

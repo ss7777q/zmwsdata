@@ -222,7 +222,7 @@ export default function HelpCenter() {
           <div className="max-w-5xl min-w-0 space-y-4">
             <h2 className="text-3xl font-bold tracking-tight text-textMain">这个网站能做什么</h2>
             <p className="max-w-4xl text-base leading-8 text-textSub break-words">
-              《造梦无双资源消耗》是一个面向普通使用者的查询站，把分散的养成消耗、阶段配置、数值结果和记录查询整合在一起。
+              《造梦无双全系统数值展示》是一个面向普通使用者的查询站，把分散的养成消耗、阶段配置、数值结果和记录查询整合在一起。
               你不用反复翻表或对照文件，就能更快找到自己想看的内容。
             </p>
           </div>

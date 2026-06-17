@@ -37,8 +37,21 @@
   --shadow-md: var(--shadow-md-val);
   --shadow-lg: var(--shadow-lg-val);
   --shadow-xl: var(--shadow-xl-val);
-}
 
+  --animate-pulse-slow: pulse-slow 3s ease-in-out infinite;
+  --animate-spin-slow: spin 4s linear infinite;
+  --animate-spin-reverse: spin-reverse 3s linear infinite;
+
+  @keyframes pulse-slow {
+    0%, 100% { transform: scale(1); opacity: 0.25; }
+    50% { transform: scale(1.25); opacity: 0.75; }
+  }
+
+  @keyframes spin-reverse {
+    from { transform: rotate(360deg); }
+    to { transform: rotate(0deg); }
+  }
+}
 @layer base {
   :root {
     --primary: #6366F1;             /* 靛蓝色 */
@@ -339,6 +352,17 @@
     .icon-button {
       transform: none !important;
       scale: 1 !important;
+    }
+  }
+
+  .no-transition,
+  .no-transition * {
+    transition: none !important;
+  }
+
+  @media (min-width: 1024px) {
+    .sidebar-resizable:not(.sidebar-collapsed) {
+      width: var(--sidebar-width, 16rem) !important;
     }
   }
 }

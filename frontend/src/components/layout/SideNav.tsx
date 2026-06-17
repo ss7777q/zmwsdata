@@ -1,4 +1,4 @@
-import { Box, CircleHelp, ChevronLeft, ChevronRight, Dog, Flame, Search, ServerCog, Shield, Skull, Star, Trophy, User, Zap, Sliders } from 'lucide-react';
+import { Award, Box, CircleHelp, ChevronLeft, ChevronRight, Dog, Flame, Search, ServerCog, Shield, Skull, Star, Trophy, User, Zap, Sliders } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface SideNavProps {
@@ -16,6 +16,7 @@ const menuItems = [
   { id: 'role_spiritual', label: '灵宝系统', icon: Zap },
   { id: 'role_starstone', label: '星石系统', icon: Sliders },
   { id: 'role_fashion', label: '角色时装', icon: Star },
+  { id: 'role_honor', label: '称号系统', icon: Award },
   { id: 'role_wing', label: '翅膀系统', icon: Box },
   { id: 'role_cultivate', label: '修炼系统', icon: User },
   { id: 'pet', label: '宠物系统', icon: Dog },
@@ -40,11 +41,11 @@ export default function SideNav({
   const visibleItems = showOps ? menuItems : menuItems.filter((item) => item.id !== 'ops');
 
   return (
-    <aside className={clsx('bg-surface border-r border-border flex flex-col transition-all duration-300', compactHeader ? 'h-[calc(100vh-4rem)] w-full' : (isSidebarCollapsed ? 'h-screen w-64 lg:w-20' : 'h-screen w-64 lg:w-64'))}>
+    <aside className={clsx('bg-surface border-r border-border flex flex-col transition-all duration-300 w-full', compactHeader ? 'h-[calc(100vh-4rem)]' : 'h-screen')}>
       {!compactHeader ? (
         <div className={clsx("h-16 flex items-center border-b border-border transition-all duration-300 justify-between px-6 lg:px-6", isSidebarCollapsed && "lg:justify-center lg:px-2")}>
           <span className={clsx("text-xl font-bold font-mono text-primary flex items-center truncate", isSidebarCollapsed && "lg:hidden")}>
-            <span className="truncate">造梦无双资源消耗</span>
+            <span className="truncate">造梦无双全系统数值展示</span>
           </span>
           <button 
             onClick={onToggleCollapse} 

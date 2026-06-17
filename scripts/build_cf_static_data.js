@@ -97,7 +97,7 @@ function applyMaxLevel(value, maxLevel) {
 }
 
 function shouldSkipMaxLevelFilter(name) {
-  return name === 'boss_stage_stats' || name.startsWith('boss_type_');
+  return name === 'role_honor' || name === 'boss_stage_stats' || name.startsWith('boss_type_');
 }
 
 function withAppliedFilter(name, content, maxLevel) {

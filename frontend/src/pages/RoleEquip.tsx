@@ -23,15 +23,11 @@ export default function RoleEquip({ dataSources }: RoleEquipProps) {
         }));
     };
 
-    const numToChinese = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
-    const formatAffixLevel = (level: number | string) => {
-        const str = String(level);
-        const lastDigit = str.slice(-1);
-        const num = parseInt(lastDigit, 10);
-        if (!isNaN(num) && numToChinese[num]) {
-            return `目标${numToChinese[num]}重`;
-        }
-        return `目标重铸重数: ${level}`;
+    const formatAffixStage = (stage: any, index: number) => {
+        if (stage.stageLabel) return stage.stageLabel;
+        const fromWeight = typeof stage.fromWeight === 'number' ? stage.fromWeight : index;
+        const toWeight = typeof stage.toWeight === 'number' ? stage.toWeight : fromWeight + 1;
+        return `${fromWeight}重 → ${toWeight}重`;
     };
 
     // 简单的解析与展示
@@ -151,7 +147,7 @@ export default function RoleEquip({ dataSources }: RoleEquipProps) {
                                             <div className="bg-slate-500/[0.01] dark:bg-white/[0.01] p-3.5 rounded-xl border border-border/40 space-y-3 mt-4 border-l-2 border-l-indigo-500/50">
                                                 <div className="flex justify-between items-center cursor-pointer select-none" onClick={() => toggleExpand(idx)}>
                                                     <div className="text-[10px] font-bold text-textMain/80 flex flex-row items-center gap-1.5 opacity-90 uppercase tracking-wider">
-                                                        升重总计 (共{item.recastUpgrade.length}重)
+                                                        升重总计 (共{item.recastUpgrade.length}段)
                                                     </div>
                                                     <button className="text-textSub hover:text-indigo-500 transition-colors p-0.5 rounded-md hover:bg-slate-200/50 dark:hover:bg-white/5 cursor-pointer">
                                                         {expandedCards[idx] ? <ChevronUp className="w-4.5 h-4.5" /> : <ChevronDown className="w-4.5 h-4.5" />}
@@ -173,7 +169,7 @@ export default function RoleEquip({ dataSources }: RoleEquipProps) {
                                                     {item.recastUpgrade.map((stage: any, stageIdx: number) => (
                                                         <div key={`stage-${stageIdx}`} className="flex flex-col gap-2 bg-slate-500/[0.04] dark:bg-black/20 rounded-lg p-2.5 border border-border/10">
                                                             <span className="text-[10px] text-textSub uppercase font-mono bg-black/5 dark:bg-white/5 w-max px-2 py-0.5 rounded">
-                                                                {formatAffixLevel(stage.toAffixLevel)} 消耗:
+                                                                {formatAffixStage(stage, stageIdx)} 消耗:
                                                             </span>
                                                             <div className="flex flex-wrap items-center gap-1.5">
                                                                 {stage.cost.map((c: any, cIdx: number) => (

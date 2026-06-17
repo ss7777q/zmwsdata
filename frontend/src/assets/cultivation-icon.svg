@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 122 147" role="img" aria-labelledby="title desc">
+  <title id="title">修炼图标</title>
+  <desc id="desc">手绘风格的修炼道具图标，包含青绿色叶片、橙色丹炉和三瓣火焰。</desc>
+  <defs>
+    <linearGradient id="bg" x1="10" y1="10" x2="116" y2="141" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d6d48f"/>
+      <stop offset="0.55" stop-color="#83ad68"/>
+      <stop offset="1" stop-color="#4f7a44"/>
+    </linearGradient>
+    <radialGradient id="aura" cx="63" cy="57" r="46" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#35fff0" stop-opacity="0.75"/>
+      <stop offset="0.5" stop-color="#2bc6b7" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#12352f" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="leaf" x1="18" y1="68" x2="104" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0f6f66"/>
+      <stop offset="0.55" stop-color="#23c0a5"/>
+      <stop offset="1" stop-color="#0a6d65"/>
+    </linearGradient>
+    <linearGradient id="bowl" x1="35" y1="74" x2="86" y2="113" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffb33f"/>
+      <stop offset="0.48" stop-color="#ff8131"/>
+      <stop offset="1" stop-color="#c94b21"/>
+    </linearGradient>
+    <linearGradient id="flameLeft" x1="28" y1="22" x2="44" y2="68" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff077"/>
+      <stop offset="0.55" stop-color="#ff9b45"/>
+      <stop offset="1" stop-color="#e15125"/>
+    </linearGradient>
+    <linearGradient id="flameCenter" x1="45" y1="12" x2="78" y2="72" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff58d"/>
+      <stop offset="0.38" stop-color="#ffb64c"/>
+      <stop offset="0.72" stop-color="#ff7040"/>
+      <stop offset="1" stop-color="#0ec3c4"/>
+    </linearGradient>
+    <linearGradient id="flameRight" x1="69" y1="18" x2="93" y2="68" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff184"/>
+      <stop offset="0.45" stop-color="#ffb148"/>
+      <stop offset="0.72" stop-color="#2bd6c9"/>
+      <stop offset="1" stop-color="#089a9a"/>
+    </linearGradient>
+    <filter id="softShadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="4" stdDeviation="2.2" flood-color="#1c1715" flood-opacity="0.55"/>
+    </filter>
+    <filter id="ink" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="1" flood-color="#120f0e" flood-opacity="0.8"/>
+    </filter>
+    <filter id="textLift" x="-20%" y="-40%" width="140%" height="170%">
+      <feDropShadow dx="0" dy="3" stdDeviation="1" flood-color="#0c1713" flood-opacity="0.95"/>
+    </filter>
+  </defs>
+
+  <rect width="122" height="147" rx="8" fill="url(#bg)"/>
+  <path d="M-9 35C15 16 31 38 54 30c25-8 41-26 72-15v132H-9Z" fill="#274f35" opacity="0.24"/>
+  <path d="M0 118c20-16 34-4 52-13 24-12 44-25 70-8v50H0Z" fill="#2d6a43" opacity="0.35"/>
+  <circle cx="63" cy="60" r="47" fill="url(#aura)"/>
+
+  <g filter="url(#softShadow)">
+    <path d="M17 83c-9-4-12-13-7-20 5-8 18-12 29-7 11 4 16 14 11 22-5 9-22 11-33 5Z" fill="#1d1a18"/>
+    <path d="M85 80c-3-10 5-20 17-21 10-1 18 6 18 16 0 11-10 21-22 20-7 0-11-6-13-15Z" fill="#1d1a18"/>
+  </g>
+
+  <g stroke="#211715" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" filter="url(#ink)">
+    <path d="M16 90c2-16 18-24 36-18-6 15-20 23-36 18Z" fill="url(#leaf)"/>
+    <path d="M106 89c-13 8-31 2-39-13 18-7 35-2 39 13Z" fill="url(#leaf)"/>
+    <path d="M31 94c7-17 22-22 38-15-8 18-21 25-38 15Z" fill="#19a98e"/>
+    <path d="M91 94c-17 10-33 3-40-15 19-4 33 1 40 15Z" fill="#18a78e"/>
+    <path d="M21 84c10 2 18 0 27-7" fill="none" stroke="#53e0c1" stroke-width="2.2"/>
+    <path d="M75 78c8 7 17 10 27 8" fill="none" stroke="#54dfc0" stroke-width="2.2"/>
+  </g>
+
+  <g stroke="#211715" stroke-linecap="round" stroke-linejoin="round" filter="url(#ink)">
+    <path d="M51 77c-14-15-22-25-15-41 5-11 17-16 26-9 9 8 5 23-11 50Z" fill="url(#flameLeft)" stroke-width="5"/>
+    <path d="M62 78c-21-17-31-34-20-51 7-12 23-13 31-2 11 14 6 31-11 53Z" fill="url(#flameCenter)" stroke-width="5.5"/>
+    <path d="M71 76c-8-25-2-43 11-48 12-4 22 7 20 20-3 15-15 23-31 28Z" fill="url(#flameRight)" stroke-width="5"/>
+    <path d="M47 33c-6 6-8 15-5 24" fill="none" stroke="#ffe77e" stroke-width="3" opacity="0.9"/>
+    <path d="M64 24c8 6 11 16 8 29" fill="none" stroke="#ffe785" stroke-width="3" opacity="0.88"/>
+    <path d="M85 33c8 7 8 17 1 28" fill="none" stroke="#ffe37a" stroke-width="3" opacity="0.85"/>
+  </g>
+
+  <g stroke="#211715" stroke-linejoin="round" filter="url(#ink)">
+    <path d="M35 78c9-6 42-6 51 0l-6 29c-4 7-34 7-39 0Z" fill="url(#bowl)" stroke-width="5"/>
+    <ellipse cx="60.5" cy="80" rx="28.5" ry="10" fill="#ff9a37" stroke-width="5"/>
+    <ellipse cx="60.5" cy="78" rx="21" ry="5.5" fill="#ffd36b" stroke="none" opacity="0.65"/>
+    <path d="M39 91c12 6 34 6 44 0" fill="none" stroke="#ffca61" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
+  </g>
+
+  <g aria-label="修炼" filter="url(#textLift)" font-family="'Microsoft YaHei UI','Microsoft YaHei','PingFang SC','Noto Sans CJK SC',sans-serif" font-size="34" font-weight="900" letter-spacing="-1">
+    <text x="61" y="134" text-anchor="middle" stroke="#1e1514" stroke-width="9" stroke-linejoin="round" paint-order="stroke fill" fill="#1e1514">修炼</text>
+    <text x="61" y="134" text-anchor="middle" stroke="#2d6c52" stroke-width="5" stroke-linejoin="round" paint-order="stroke fill" fill="#fff2c5">修炼</text>
+    <text x="61" y="134" text-anchor="middle" fill="#fff6d4">修炼</text>
+  </g>
+</svg>

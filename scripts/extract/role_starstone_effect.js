@@ -354,6 +354,55 @@ function buildRewardGroupUsage(context) {
   return usage;
 }
 
+function collectPondAffixGroups(pond, context) {
+  const affixGroups = new Set();
+  const rewardGroupIds = [];
+  for (const rewardGroupId of flattenIds(pond.reward)) {
+    const groupRows = context.dropGroup.filter((row) => Number(row.groupID) === rewardGroupId);
+    let hasStarStoneDrop = false;
+    for (const dropGroupRow of groupRows) {
+      const dropRows = context.drop.filter((row) => Number(row.dropID) === Number(dropGroupRow.dropID));
+      for (const dropRow of dropRows) {
+        for (const itemPair of Array.isArray(dropRow.items) ? dropRow.items : []) {
+          const itemId = Number(Array.isArray(itemPair) ? itemPair[0] : itemPair);
+          const item = context.itemById.get(itemId);
+          const starStone = context.starStoneById.get(itemId);
+          if (!item || item.type !== 'starStone' || !starStone || !Array.isArray(starStone.affixRandom)) continue;
+          hasStarStoneDrop = true;
+          for (const affixGroup of starStone.affixRandom) {
+            affixGroups.add(Number(affixGroup));
+          }
+        }
+      }
+    }
+    if (hasStarStoneDrop) rewardGroupIds.push(rewardGroupId);
+  }
+  return {
+    affixGroups,
+    rewardGroupIds: [...new Set(rewardGroupIds)].sort((a, b) => a - b)
+  };
+}
+
+function buildDisplayStarPools(context) {
+  const seenAffixSets = new Set();
+  const pools = [];
+  for (const pond of context.starHavocPond.slice().sort((a, b) => Number(a.id) - Number(b.id))) {
+    const { affixGroups, rewardGroupIds } = collectPondAffixGroups(pond, context);
+    if (affixGroups.size === 0) continue;
+    const signature = [...affixGroups].sort((a, b) => a - b).join(',');
+    if (seenAffixSets.has(signature)) continue;
+    seenAffixSets.add(signature);
+    pools.push({
+      id: Number(pond.id),
+      name: pond.name,
+      starHavoc: Number(pond.starHavoc),
+      rewardGroupIds,
+      affixGroups
+    });
+  }
+  return pools;
+}
+
 function collectPondMatches(group, context, rewardGroupUsage) {
   const matches = [];
   for (const pond of context.starHavocPond) {
@@ -387,45 +436,41 @@ function collectPondMatches(group, context, rewardGroupUsage) {
   return matches;
 }
 
-function resolveOwnership(group, context, rewardGroupUsage, warnings) {
+function resolveOwnership(group, context, rewardGroupUsage, displayStarPools, warnings) {
   const matches = collectPondMatches(group, context, rewardGroupUsage);
-  const commonMatches = matches.filter((match) => match.isCommonRewardGroup);
-  const exclusiveMatches = matches.filter((match) => !match.isCommonRewardGroup);
+  const displayMatches = displayStarPools.filter((pool) => pool.affixGroups.has(Number(group)));
   const typeEntries = uniqueBy(matches.map((match) => ({
     type: match.type,
     name: match.typeName
   })), (entry) => entry.type).sort((a, b) => a.type - b.type);
 
-  if (commonMatches.length > 0) {
+  if (displayMatches.length > 1) {
     return {
       ownership: {
         kind: '通用',
         name: '通用',
-        rewardGroupIds: [...new Set(commonMatches.map((match) => match.rewardGroupId))].sort((a, b) => a - b)
+        rewardGroupIds: [...new Set(displayMatches.flatMap((match) => match.rewardGroupIds))].sort((a, b) => a - b)
       },
       typeEntries,
-      evidence: uniqueBy(commonMatches, (match) => `${match.pondId}:${match.rewardGroupId}:${match.dropItemId}`)
+      evidence: matches.filter((match) => displayMatches.some((pool) => pool.id === Number(match.pondId)))
     };
   }
 
-  const exclusivePonds = uniqueBy(exclusiveMatches.map((match) => ({
-    id: match.pondId,
-    name: match.pondName
-  })), (entry) => entry.id);
-  if (matches.length === 0) {
+  if (displayMatches.length === 0) {
     warnings.push(`词条组 ${group} 未命中任何星石掉落链路`);
   }
-  if (exclusivePonds.length > 1) {
-    warnings.push(`词条组 ${group} 命中多个专属星池: ${exclusivePonds.map((pond) => pond.name).join(', ')}`);
-  }
+  const exclusivePool = displayMatches[0] || null;
 
   return {
     ownership: {
-      kind: exclusivePonds.length === 1 ? '专属' : '未知',
-      name: exclusivePonds.length === 1 ? exclusivePonds[0].name : '未知'
+      kind: exclusivePool ? '专属' : '未知',
+      name: exclusivePool ? exclusivePool.name : '未知',
+      rewardGroupIds: exclusivePool?.rewardGroupIds || []
     },
     typeEntries,
-    evidence: exclusiveMatches
+    evidence: exclusivePool
+      ? matches.filter((match) => Number(match.pondId) === exclusivePool.id)
+      : matches
   };
 }
 
@@ -676,11 +721,12 @@ function extractRoleStarstoneEffect(options = {}) {
     outputName = 'role_starstone_effect',
     includeOwnershipKinds = ['通用'],
     system = '角色 → 星石系统 → 通用词条效果',
-    ownershipRule = '命中被多个星池复用的星石掉落组时归为通用；本文件仅导出通用词条。'
+    ownershipRule = '命中多个当前展示星池时归为通用；仅命中一个当前展示星池时归为该星池专属。'
   } = options;
   const context = buildContext();
   const overrides = loadOverrides();
   const rewardGroupUsage = buildRewardGroupUsage(context);
+  const displayStarPools = buildDisplayStarPools(context);
   const groups = [...new Set(context.starStoneAffix.map((row) => Number(row.group)))].sort((a, b) => a - b);
   const data = [];
   const warnings = [];
@@ -688,7 +734,7 @@ function extractRoleStarstoneEffect(options = {}) {
 
   for (const group of groups) {
     const ownershipWarnings = [];
-    const ownershipInfo = resolveOwnership(group, context, rewardGroupUsage, ownershipWarnings);
+    const ownershipInfo = resolveOwnership(group, context, rewardGroupUsage, displayStarPools, ownershipWarnings);
     warnings.push(...ownershipWarnings);
     if (!allowedOwnershipKinds.has(ownershipInfo.ownership.kind)) continue;
     const rows = getAffixRows(group, context);

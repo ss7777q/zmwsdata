@@ -71,23 +71,25 @@ export default function RoleStarStone() {
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [selectedType, setSelectedType] = useState<'all' | 'attack' | 'defense'>('all');
-    const [selectedOwnership, setSelectedOwnership] = useState<string>('all');
+    const [selectedPool, setSelectedPool] = useState<string>('all');
     const [pickedLevels, setPickedLevels] = useState<number[] | null>(null);
 
-    const ownershipOptions = useMemo(() => {
-        const names = new Set<string>();
+    const poolOptions = useMemo(() => {
+        const pools = new Map<string, { value: string; label: string; order: number }>();
         starStones.forEach((stone) => {
-            if (stone.ownership?.name) {
-                names.add(stone.ownership.name);
-            }
+            const name = stone.ownership?.name;
+            if (!name || name === '未知') return;
+            const order = stone.ownership.kind === '通用' ? 0 : stone.ownership.rewardGroupIds?.[0] ?? Number.MAX_SAFE_INTEGER;
+            pools.set(name, {
+                value: name,
+                label: name.replace('星池', ''),
+                order
+            });
         });
-        const list = Array.from(names).sort();
+        const list = Array.from(pools.values()).sort((left, right) => left.order - right.order);
         return [
             { value: 'all', label: '全部' },
-            ...list.map((name) => ({
-                value: name,
-                label: name.replace('星池', '')
-            }))
+            ...list
         ];
     }, [starStones]);
 
@@ -110,11 +112,11 @@ export default function RoleStarStone() {
             const matchesType = selectedType === 'all'
                 || (selectedType === 'attack' && stone.type === 1)
                 || (selectedType === 'defense' && stone.type === 2);
-            const matchesOwnership = selectedOwnership === 'all'
-                || stone.ownership?.name === selectedOwnership;
-            return matchesSearch && matchesType && matchesOwnership;
+            const matchesPool = selectedPool === 'all'
+                || stone.ownership?.name === selectedPool;
+            return matchesSearch && matchesType && matchesPool;
         });
-    }, [searchQuery, selectedType, selectedOwnership, starStones]);
+    }, [searchQuery, selectedType, selectedPool, starStones]);
 
     useEffect(() => {
         if (filteredStones.length === 0) return;
@@ -291,15 +293,15 @@ export default function RoleStarStone() {
                             </button>
                         ))}
                     </div>
-                    {ownershipOptions.length > 2 && (
+                    {poolOptions.length > 2 && (
                         <div className="flex flex-wrap gap-1 p-0.5 bg-slate-500/[0.06] dark:bg-white/[0.03] rounded-lg text-[10px] font-bold">
-                            {ownershipOptions.map((option) => (
+                            {poolOptions.map((option) => (
                                 <button
                                     key={option.value}
-                                    onClick={() => setSelectedOwnership(option.value)}
+                                    onClick={() => setSelectedPool(option.value)}
                                     className={clsx(
                                         'flex-1 min-w-[50px] py-1 rounded-md text-center transition-all cursor-pointer border focus:outline-none',
-                                        selectedOwnership === option.value
+                                        selectedPool === option.value
                                             ? 'bg-card text-textMain shadow-sm border-border/40'
                                             : 'text-textSub hover:text-textMain border-transparent'
                                     )}

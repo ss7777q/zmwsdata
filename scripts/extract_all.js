@@ -26,6 +26,7 @@ const MODULES = [
   { key: 'callgod',   file: 'role_callgod.js',   label: '神魔属性' },
   { key: 'exp',       file: 'exp.js',            label: '抗值标准' },
   { key: 'title',     file: 'role_title.js',     label: '角色 → 称号系统' },
+  { key: 'honor',     file: 'role_honor.js',     label: '角色 → 称号系统 → 称号属性' },
   { key: 'starcore',  file: 'role_starcore.js',  label: '角色 → 星核系统' },
   { key: 'starstone', file: 'role_starstone_effect.js', label: '角色 → 星石系统 → 通用词条效果' },
   { key: 'starstone_all', file: 'role_starstone_effect_all.js', label: '角色 → 星石系统 → 全部词条效果' },

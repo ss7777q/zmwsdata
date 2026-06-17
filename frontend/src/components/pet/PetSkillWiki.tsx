@@ -51,6 +51,7 @@ const GROUPS = [
   { key: 'pet_wiki_zhuque', name: '朱雀炎皇', type: '神兽' },
   { key: 'pet_wiki_qinglong', name: '青龙妖圣', type: '神兽' },
   { key: 'pet_wiki_tianshe', name: '天蛇元君', type: '神兽' },
+  { key: 'pet_wiki_qilin', name: '麒麟', type: '神兽' },
   { key: 'pet_wiki_hou', name: '炽焰/极光猴王', type: '灵兽' },
   { key: 'pet_wiki_wangshe', name: '圣木/圣砂王蛇', type: '灵兽' },
   { key: 'pet_wiki_niuxueren', name: '圣力神牛/圣雪圆圆', type: '灵兽' },

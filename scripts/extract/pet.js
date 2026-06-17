@@ -235,10 +235,19 @@ function extractPetEquipMake() {
   const equipById = new Map(petEquip.map(e => [e.id, e]));
   function parseInjectCost(inject) {
     if (!Array.isArray(inject)) return null;
-    return inject.map(it => ({
-      toAffixLevel: it[0],
-      cost: u.parseCost(it[1])
-    }));
+    return inject.map((it, index) => {
+      const toAffixLevel = it[0];
+      const toWeight = Number.parseInt(String(toAffixLevel).slice(-1), 10);
+      const targetWeight = Number.isFinite(toWeight) && toWeight > 0 ? toWeight : index + 1;
+      const fromWeight = targetWeight - 1;
+      return {
+        fromWeight,
+        toWeight: targetWeight,
+        stageLabel: `${fromWeight}重 → ${targetWeight}重`,
+        toAffixLevel,
+        cost: u.parseCost(it[1])
+      };
+    });
   }
 
   const result = raw.filter(r => r.cost).map(r => {

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import SideNav from './components/layout/SideNav';
 import TopBar from './components/layout/TopBar';
 import SearchResults from './components/ui/SearchResults';
+import LoadingSpinner from './components/ui/LoadingSpinner';
 import { useGameData } from './hooks/useGameData';
 import { searchDataSources } from './lib/search';
 import { apiUrl } from './lib/api';
@@ -17,6 +18,7 @@ const RoleCultivate = lazy(() => import('./pages/RoleCultivate'));
 const RolePet = lazy(() => import('./pages/RolePet'));
 const RoleRide = lazy(() => import('./pages/RoleRide'));
 const RoleFashion = lazy(() => import('./pages/RoleFashion'));
+const RoleHonor = lazy(() => import('./pages/RoleHonor'));
 const BossStats = lazy(() => import('./pages/BossStats'));
 const CallGodStats = lazy(() => import('./pages/CallGodStats'));
 const ResistStats = lazy(() => import('./pages/ResistStats'));
@@ -31,6 +33,7 @@ const SYSTEM_META: Record<string, { title: string; description: string }> = {
   role_spiritual: { title: '灵宝系统', description: '聚合法宝、神器与阵法等产出数据。' },
   role_starstone: { title: '星石系统', description: '查看星石词条属性、极效解锁等级与等级模拟。' },
   role_fashion: { title: '角色时装', description: '展示时装与时装球养成配置。' },
+  role_honor: { title: '称号系统', description: '查看称号升级需求与称号附带属性。' },
   role_wing: { title: '翅膀系统', description: '查看翅膀培养与羽毛相关配置。' },
   role_cultivate: { title: '修炼系统', description: '聚合经脉、修心、丹气、丹元与仙魄配置。' },
   pet: { title: '宠物系统', description: '查看宠物技能、装备与升星数据。' },
@@ -63,6 +66,7 @@ const SYSTEM_PATHS: Record<string, string> = {
   role_spiritual: '/user_spiritual',
   role_starstone: '/user_starstone',
   role_fashion: '/user_fashion',
+  role_honor: '/title',
   role_wing: '/user_wing',
   role_cultivate: '/user_cultivate',
   pet: '/pet',
@@ -82,16 +86,11 @@ const PATH_TO_SYSTEM = Object.fromEntries(Object.entries(SYSTEM_PATHS).map(([sys
 const OPS_SYSTEM = 'ops';
 const PLAYER_LOOKUP_SYSTEM = 'player_lookup';
 const HELP_SYSTEM = 'help';
-const NO_DATA_SYSTEMS = [PLAYER_LOOKUP_SYSTEM, HELP_SYSTEM] as const;
-const KNOWN_SYSTEMS = ['role_wiki', 'role_equip', 'role_spiritual', 'role_starstone', 'role_wing', 'role_cultivate', 'pet', 'beast_stats', 'ride', 'role_fashion', 'call_god', 'boss', 'resist', 'player_lookup', 'help', 'ops'] as const;
+const NO_DATA_SYSTEMS = [OPS_SYSTEM, PLAYER_LOOKUP_SYSTEM, HELP_SYSTEM] as const;
+const KNOWN_SYSTEMS = ['role_wiki', 'role_equip', 'role_spiritual', 'role_starstone', 'role_wing', 'role_cultivate', 'pet', 'beast_stats', 'ride', 'role_fashion', 'role_honor', 'call_god', 'boss', 'resist', 'player_lookup', 'help', 'ops'] as const;
 
 function PageFallback() {
-  return (
-    <div className="flex flex-col items-center justify-center py-20">
-      <div className="w-12 h-12 border-4 border-primary/20 border-t-cta rounded-full animate-spin"></div>
-      <div className="mt-4 text-textSub font-mono animate-pulse">Loading System View...</div>
-    </div>
-  );
+  return <LoadingSpinner message="正在载入系统视图..." />;
 }
 
 const WATERMARK_SVG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' opacity='0.1' viewBox='0 0 400 300'%3E%3Ctext x='50%25' y='50%25' transform='rotate(-30 200 150)' font-family='system-ui, sans-serif' font-size='24' font-weight='bold' fill='%23888888' text-anchor='middle' dominant-baseline='middle'%3Edata.zmwsrank.top%3C/text%3E%3C/svg%3E`;
@@ -110,6 +109,17 @@ function App() {
       return false;
     }
   });
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sidebar_width');
+      if (saved) {
+        const val = parseInt(saved, 10);
+        if (!isNaN(val) && val >= 200 && val <= 480) return val;
+      }
+    } catch {}
+    return 256;
+  });
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleToggleSidebar = () => {
     setIsSidebarCollapsed((prev) => {
@@ -120,6 +130,34 @@ function App() {
       return next;
     });
   };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    setIsDragging(true);
+    const startX = e.clientX;
+    const startWidth = sidebarWidth;
+    let currentWidth = startWidth;
+
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      const deltaX = moveEvent.clientX - startX;
+      currentWidth = Math.max(200, Math.min(480, startWidth + deltaX));
+      setSidebarWidth(currentWidth);
+    };
+
+    const handlePointerUp = () => {
+      setIsDragging(false);
+      try {
+        localStorage.setItem('sidebar_width', String(currentWidth));
+      } catch {}
+      document.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('pointerup', handlePointerUp);
+    };
+
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
+  };
+
   const activeSystem = !showOps && currentSystem === OPS_SYSTEM ? DEFAULT_SYSTEM : currentSystem;
   const shouldLoadGameData = !NO_DATA_SYSTEMS.includes(activeSystem as typeof NO_DATA_SYSTEMS[number]);
   const shouldLoadBulkGameData = shouldLoadGameData && activeSystem !== 'role_wiki';
@@ -212,7 +250,7 @@ function App() {
   }, [activeSystem, location.pathname, navigate]);
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className={`min-h-screen bg-background flex ${isDragging ? 'no-transition' : ''}`}>
       {/* 全局范围静默水印 */}
       <div
         className="fixed inset-0 pointer-events-none z-[9999]"
@@ -226,7 +264,10 @@ function App() {
         />
       )}
 
-      <div className={`fixed lg:sticky top-0 h-screen z-50 transform transition-transform duration-300 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} shrink-0 w-64 ${isSidebarCollapsed ? 'lg:w-20' : 'lg:w-64'}`}>
+      <div
+        className={`fixed lg:sticky top-0 h-screen z-50 transform transition-transform duration-300 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} shrink-0 w-64 ${isSidebarCollapsed ? 'lg:w-20 sidebar-collapsed' : 'lg:w-64'} sidebar-resizable`}
+        style={{ '--sidebar-width': `${sidebarWidth}px` } as React.CSSProperties}
+      >
         <SideNav
           currentSystem={activeSystem}
           showOps={showOps}
@@ -244,6 +285,18 @@ function App() {
             }
           }}
         />
+
+        {!isSidebarCollapsed && (
+          <div
+            onPointerDown={handlePointerDown}
+            className={`hidden lg:block absolute top-0 -right-1 w-2 h-full cursor-col-resize select-none z-50 transition-colors duration-200 ${
+              isDragging
+                ? 'bg-primary shadow-[0_0_8px_rgba(99,102,241,0.5)]'
+                : 'hover:bg-primary/30'
+            }`}
+            title="拖动调整侧边栏宽度"
+          />
+        )}
       </div>
 
       <div className="flex-1 flex flex-col h-screen overflow-hidden min-w-0">
@@ -278,10 +331,7 @@ function App() {
 
             <section key={`${activeSystem}-${isSearching ? 'search' : 'view'}`} className="module-view">
               {loading && shouldLoadBulkGameData && activeSystem !== 'call_god' ? (
-                <div className="flex flex-col items-center justify-center py-20">
-                  <div className="w-12 h-12 border-4 border-primary/20 border-t-cta rounded-full animate-spin"></div>
-                  <div className="mt-4 text-textSub font-mono animate-pulse">Loading Game JSON Data...</div>
-                </div>
+                <LoadingSpinner message="正在载入游戏配置文件..." />
               ) : isSearching ? (
                 <SearchResults
                   currentLabel={currentMeta.title}
@@ -301,6 +351,7 @@ function App() {
                     {activeSystem === 'beast_stats' && <BeastStats detailSource={dataSources.beast_detail?.data as any} lineupSource={dataSources.beast_lineup_analysis?.data as any} playerSource={dataSources.beast_player_analysis?.data as any} loading={loading} />}
                     {activeSystem === 'ride' && <RoleRide dataSources={dataSources} />}
                     {activeSystem === 'role_fashion' && <RoleFashion dataSources={dataSources} />}
+                    {activeSystem === 'role_honor' && <RoleHonor dataSources={dataSources} />}
                     {activeSystem === 'call_god' && <CallGodStats dataSources={dataSources} />}
                     {activeSystem === 'boss' && <BossStats dataSources={dataSources} searchQuery={searchQuery} />}
                     {activeSystem === 'resist' && <ResistStats dataSources={dataSources} />}
