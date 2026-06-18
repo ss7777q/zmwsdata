@@ -721,7 +721,7 @@
       "tags": ["受伤触发", "随机丹药", "回复", "霸体护盾"],
       "summary": "受到一定伤害时获得随机丹药效果，可能立即回血、持续回血或获得霸体护盾。",
       "detail": [
-        "白鹿丹元会累计自己受到的伤害；累计伤害达到该品质要求的最大生命比例后，消耗1次触发机会并随机获得一种丹药效果。触发机会按品质提高，恢复间隔固定为90秒。",
+        "白鹿丹元会累计自己受到的伤害；累计伤害达到该品质要求的最大生命比例后，消耗1次触发机会并随机获得一种丹药效果。触发机会按品质提高，消耗后每90秒直接补满到该品质上限。",
         "随机不是完全平均不变。当前生命高于50%时，红色/绿色/金色丹药权重为100/100/100；生命在30%到50%时，权重变为50/200/50，更偏向绿色持续回复；生命低于30%时，权重变为200/50/50，更偏向红色单次回血。",
         "红色丹药是单次回血，数值为等级固定值 + 2.67%最大生命；绿色丹药是持续5秒恢复，配置回复值为等级固定值 + 0.67%最大生命；金色丹药提供霸体和持续5秒的生命护盾，护盾为等级固定值 + 2.22%最大生命。",
         "红色回复固定值、绿色回复固定值和护盾固定值随等级成长；这些固定值在同等级下不随品质改变。升品质主要改变受伤触发阈值、可存触发次数和霸体持续时间。"
@@ -738,10 +738,10 @@
           { "key": "superArmorDuration", "label": "金丹霸体持续" }
         ],
         "rows": [
-          { "quality": "精良", "triggerDamage": "45.2%最大生命", "chargeRecovery": "最多3次，每90秒恢复1次", "superArmorDuration": "0.8秒" },
-          { "quality": "史诗", "triggerDamage": "39.2%最大生命", "chargeRecovery": "最多4次，每90秒恢复1次", "superArmorDuration": "0.867秒" },
-          { "quality": "传说", "triggerDamage": "33.3%最大生命", "chargeRecovery": "最多5次，每90秒恢复1次", "superArmorDuration": "1秒" },
-          { "quality": "先天", "triggerDamage": "28.4%最大生命", "chargeRecovery": "最多6次，每90秒恢复1次", "superArmorDuration": "1.2秒" }
+          { "quality": "精良", "triggerDamage": "45.2%最大生命", "chargeRecovery": "最多3次，每90秒补满到上限", "superArmorDuration": "0.8秒" },
+          { "quality": "史诗", "triggerDamage": "39.2%最大生命", "chargeRecovery": "最多4次，每90秒补满到上限", "superArmorDuration": "0.867秒" },
+          { "quality": "传说", "triggerDamage": "33.3%最大生命", "chargeRecovery": "最多5次，每90秒补满到上限", "superArmorDuration": "1秒" },
+          { "quality": "先天", "triggerDamage": "28.4%最大生命", "chargeRecovery": "最多6次，每90秒补满到上限", "superArmorDuration": "1.2秒" }
         ]
       },
       "levelGrowth": "升级提升红色丹药回血固定值、绿色丹药回复固定值和金色丹药护盾固定值。",

@@ -29,6 +29,7 @@ const ROLE_ID = 7;
 const BATTLE_FRAMES_PER_SECOND = 30;
 const PLACEHOLDER_DAMAGE_PER = 0.01;
 const PLACEHOLDER_DAMAGE_VAL = 1;
+const STONE_TAUNT_COM_MISSING = "XIAOYAN_STONE_TAUNT_COM_MISSING";
 const GUIDE_DAMAGE_OVERRIDES = new Map([
   [7001070, { per: 0.01, val: 0, source: "guide:xiaoyanWiki:仙山古灵强攻0.01*atk" }],
   [7001071, { per: 0.01, val: 0, source: "guide:xiaoyanWiki:仙山古灵令御强攻0.01*atk" }],
@@ -38,43 +39,39 @@ const FORCE_DISTINCT_AWAKENS = new Set([
   7001031, // 叶佑之灵·坚毅: 护盾值/分担比例/剩余盾转血机制不同
   7001036, // 叶佑之灵·震颤: 超级霸体护盾与护盾爆炸机制不同
   7001041, // 御风之灵·逆风: 直伤同基础,但附加逆风减速降伤
-  7001061, // 山岩之灵·刚石: 直伤同基础口径,但石灵被动机制不同
   7001071, // 仙山古灵·令御: 强攻同基础,但古灵增伤机制不同
   7001076, // 仙山古灵·乘御: 强攻同基础,但切换乘御技能组与增伤/减伤不同
   7001451, // 水之护盾(乘御版): 护盾值同指令版,但释放用时和模式不同
 ]);
 const STONE_MECHANIC_EXAMPLE_LEVEL = 12;
 const STONE_MECHANIC_SEGMENT_MISSING = "XIAOYAN_STONE_MECHANIC_SEGMENT_MISSING";
-const STONE_MECHANIC_EXTRA_DAMAGE_MISSING = "XIAOYAN_STONE_MECHANIC_EXTRA_DAMAGE_MISSING";
 const STONE_FORMS = new Map([
   [7001060, {
+    formName: "石灵",
     formulaGroups: [
       { label: "滚动", skillIds: [7177000] },
-      { label: "碎岩爪击", skillIds: [7177010] },
     ],
-    normalAttackSkillId: 7177011,
-    chargedSkillName: "碎岩爪击",
   }],
   [7001061, {
+    formName: "刚石灵",
     formulaGroups: [
       { label: "滚动", skillIds: [7178000] },
-      { label: "碎岩爪击", skillIds: [7178010] },
     ],
-    normalAttackSkillId: 7178011,
-    chargedSkillName: "碎岩爪击",
-    tauntSkillId: 7178020,
   }],
   [7001066, {
+    formName: "云岩灵",
     formulaGroups: [
       { label: "滚动", skillIds: [7179000] },
-      { label: "碎岩爪击", skillIds: [7179010] },
-      { label: "巨石岩弹", skillIds: [7179020] },
     ],
-    normalAttackSkillId: 7179011,
-    chargedSkillName: "碎岩爪击/巨石岩弹",
-    extraRockSkillId: 7179021,
   }],
 ]);
+const STONE_ATTACK_CARDS = [
+  { slot: "skill4_stone_normal", slotLabel: "技能4 · 石灵普攻", skillId: 7177011, equivalentSkillIds: [7178011, 7179011], name: "石灵/刚石灵/云岩灵普攻", note: "三种石灵的驻场普攻数值完全相同；配置只有 1 级，不消耗萧嫣魔法，也不随技能等级成长。" },
+  { slot: "skill4_stone_claw", slotLabel: "技能4 · 碎岩爪击", skillId: 7177010, equivalentSkillIds: [7178010, 7179010], name: "石灵/刚石灵/云岩灵碎岩爪击", note: "三种石灵的碎岩爪击数值完全相同；本卡按单次碎岩爪击计算，由石灵 AI 自行选择释放，触发次数不固定。" },
+  { slot: "skill4_cloud_rock", slotLabel: "技能4 · 云岩灵巨石岩弹", skillId: 7179020, name: "云岩灵巨石岩弹", note: "云岩灵驻场后解锁的耗蓝远程技能；本卡按单次岩弹计算，由石灵 AI 自行选择释放，触发次数不固定。" },
+  { slot: "skill4_cloud_rock_free", slotLabel: "技能4 · 云岩灵巨石岩弹", skillId: 7179021, name: "云岩灵巨石岩弹（不耗蓝版）", note: "云岩灵驻场后的不耗蓝岩弹动作；配置只有 1 级，不消耗萧嫣魔法，也不随技能等级成长。" },
+  { slot: "skill4_gangshi_taunt", slotLabel: "技能4 · 刚石灵嘲讽", skillId: 7178020, name: "刚石灵嘲讽", utility: "taunt", note: "刚石灵驻场后解锁的功能技能；本卡只展示嘲讽机制，本身不造成直接伤害。" },
+];
 const SLOTS = [
   { key: "skill1", label: "技能1" },
   { key: "skill2", label: "技能2" },
@@ -125,9 +122,9 @@ function resolveXiaoyanConcreteSkills(displaySkillId, skillById, warnings) {
   if (displaySkillId === 7001056) return [7176011];
 
   // S4 山岩之灵
-  if (displaySkillId === 7001060) return [7177000, 7177010];
-  if (displaySkillId === 7001061) return [7178000, 7178010];
-  if (displaySkillId === 7001066) return [7179000, 7179010, 7179020];
+  if (displaySkillId === 7001060) return [7177000];
+  if (displaySkillId === 7001061) return [7178000];
+  if (displaySkillId === 7001066) return [7179000];
 
   // transSkill 1~4 Base (指令版)
   if (displaySkillId === 7001230) return [7001331];
@@ -167,9 +164,9 @@ function resolveXiaoyanCfgFile(skill, slot, roleId, monsterById, warnings) {
   else if (id === 7174011) targetMonsterId = 174;
   else if (id === 7175011) targetMonsterId = 175;
   else if (id === 7176011) targetMonsterId = 176;
-  else if ([7177000, 7177010].includes(id)) targetMonsterId = 177;
-  else if ([7178000, 7178010, 7178020].includes(id)) targetMonsterId = 178;
-  else if ([7179000, 7179010, 7179020].includes(id)) targetMonsterId = 179;
+  else if ([7177000, 7177010, 7177011].includes(id)) targetMonsterId = 177;
+  else if ([7178000, 7178010, 7178011, 7178020].includes(id)) targetMonsterId = 178;
+  else if ([7179000, 7179010, 7179011, 7179020, 7179021].includes(id)) targetMonsterId = 179;
   else if ([7001230, 7001240, 7001250, 7001260].includes(id)) targetMonsterId = 107;
   else if ([7001331, 7001341, 7001351, 7001361, 7001362].includes(id)) targetMonsterId = 108;
   else if ([7001431, 7001441, 7001451, 7001461].includes(id)) targetMonsterId = 109;
@@ -415,39 +412,6 @@ function stoneGroupSummary(levelRow, group, warnings, cardName) {
   return { label: group.label, hits, totalPer, totalVal, coefficient, fixed };
 }
 
-function summarizeConcreteSkillDamage(skillId, ctx, warnings) {
-  const skill = ctx.skillById.get(skillId);
-  if (!skill) {
-    warnings.push({
-      code: STONE_MECHANIC_EXTRA_DAMAGE_MISSING,
-      detail: `石灵说明缺少技能 ${skillId}`,
-    });
-    return null;
-  }
-
-  const row = queryXiaoyanLevelRow(skill, 1, ctx, warnings);
-  if (!row) return null;
-  const cfg = resolveXiaoyanCfgFile(skill, null, ROLE_ID, ctx.monsterById, warnings);
-  const damage = eng.computeDamageSegments(skill, row, cfg.actionCfg, warnings);
-  const realSegments = (damage.segments || []).filter((segment) => !isXiaoyanPlaceholderDamageSegment(segment));
-  if (!realSegments.length) return null;
-
-  const hits = realSegments.reduce((sum, segment) => sum + (segment.maxHit || 1), 0);
-  const totalPer = round3(realSegments.reduce((sum, segment) => sum + (segment.per || 0) * (segment.maxHit || 1), 0));
-  const totalVal = round3(realSegments.reduce((sum, segment) => sum + (segment.val || 0) * (segment.maxHit || 1), 0));
-  const perValues = uniqueNumbers(realSegments.map((segment) => segment.per));
-  const valValues = uniqueNumbers(realSegments.map((segment) => segment.val));
-
-  return {
-    name: skill.desName || skill.Name || `技能${skillId}`,
-    hits,
-    totalPer,
-    totalVal,
-    unitPer: perValues.length === 1 ? perValues[0] : null,
-    unitVal: valValues.length === 1 ? valValues[0] : null,
-  };
-}
-
 function stoneSkillLevelRowValue(skillId, level, ctx, warnings, field) {
   const skill = ctx.skillById.get(skillId);
   if (!skill) return null;
@@ -484,58 +448,20 @@ function buildXiaoyanStoneMechanics(displaySkillId, cardName, levels, ctx, warni
   if (summaries.length === form.formulaGroups.length) {
     mechanics.push({
       label: "总固伤口径",
-      value: `本卡只统计本次释放能确定次数的伤害，不等于石灵完整驻场循环。Lv.${exampleLevel.level} 固伤 = ${fixedFormula} = ${fmtNumber(exampleLevel.totalVal)}；总系数 = ${coefficientFormula} = ×${fmtNumber(exampleLevel.totalPer)}。`,
+      value: `本体伤害只统计召唤或召回时必定触发的滚动，不并入石灵驻场攻击。Lv.${exampleLevel.level} 固伤 = ${fixedFormula} = ${fmtNumber(exampleLevel.totalVal)}；总系数 = ${coefficientFormula} = ×${fmtNumber(exampleLevel.totalPer)}。`,
     });
   }
 
   const summonMp = exampleLevel.consumeMp;
   const recallSkillId = stoneRecallConsumeSkillId(displaySkillId, ctx);
   const recallMp = recallSkillId ? stoneSkillLevelRowValue(recallSkillId, exampleLevel.level, ctx, warnings, "consumeMp") : null;
-  const chargedSkillIds = form.formulaGroups.flatMap((group) => group.skillIds).filter((skillId) => skillId !== recallSkillId);
-  const chargedCosts = chargedSkillIds
-    .map((skillId) => {
-      const skill = ctx.skillById.get(skillId);
-      const mp = stoneSkillLevelRowValue(skillId, exampleLevel.level, ctx, warnings, "consumeMp");
-      if (typeof mp !== "number") return null;
-      return `${skill?.desName || skill?.Name || `技能${skillId}`} ${fmtNumber(mp)}`;
-    })
-    .filter(Boolean);
   const consumeParts = [];
-  if (typeof summonMp === "number") consumeParts.push(`首次召唤按技能入口消耗，Lv.${exampleLevel.level} 为 ${fmtNumber(summonMp)} 蓝`);
-  if (typeof recallMp === "number") consumeParts.push(`场上已有石灵时会改为召回滚动，Lv.${exampleLevel.level} 为 ${fmtNumber(recallMp)} 蓝`);
-  if (chargedCosts.length) consumeParts.push(`石灵后续耗蓝技能单独扣萧嫣魔法，Lv.${exampleLevel.level}：${chargedCosts.join("，")}`);
+  if (typeof summonMp === "number") consumeParts.push(`首次召唤按技能4入口消耗，Lv.${exampleLevel.level} 为 ${fmtNumber(summonMp)} 蓝`);
+  if (typeof recallMp === "number") consumeParts.push(`场上已有${form.formName}时会改为召回滚动，Lv.${exampleLevel.level} 为 ${fmtNumber(recallMp)} 蓝`);
   if (consumeParts.length) {
     mechanics.push({
       label: "耗蓝机制",
       value: consumeParts.join("；") + "。",
-    });
-  }
-
-  const normalAttack = summarizeConcreteSkillDamage(form.normalAttackSkillId, ctx, warnings);
-  const attackText = normalAttack
-    ? `驻场普攻为 ${normalAttack.hits} 段 ×${fmtNumber(normalAttack.unitPer ?? normalAttack.totalPer)}，固定伤害每段 ${fmtNumber(normalAttack.unitVal ?? normalAttack.totalVal)}；`
-    : "";
-  mechanics.push({
-    label: "驻场攻击方式",
-    value: `${attackText}${form.chargedSkillName} 是耗蓝强化攻击，后续由石灵 AI 按模式和萧嫣剩余魔法自动选择。因为触发次数没有固定值，驻场普攻和后续 AI 行为不并入上方总固伤。`,
-  });
-
-  if (form.tauntSkillId) {
-    const tauntSkill = ctx.skillById.get(form.tauntSkillId);
-    mechanics.push({
-      label: "刚石嘲讽",
-      value: `刚石额外解锁嘲讽，冷却 ${fmtNumber(tauntSkill?.cd ?? null)} 秒；嘲讽会吸引周围敌人攻击石灵，本身没有直接伤害，所以不计入总固伤。`,
-    });
-  }
-
-  if (form.extraRockSkillId) {
-    const rock = summarizeConcreteSkillDamage(form.extraRockSkillId, ctx, warnings);
-    const rockText = rock
-      ? `云岩还有不耗蓝、不成长的岩弹动作，${rock.hits} 段 ×${fmtNumber(rock.unitPer ?? rock.totalPer)}，无成长固伤每段 ${fmtNumber(rock.unitVal ?? rock.totalVal)}；`
-      : "";
-    mechanics.push({
-      label: "云岩岩弹",
-      value: `${rockText}成长表已经把带耗蓝成长的巨石岩弹按 1 次计入。云岩的 10% 增伤是战斗增益，表格里的段数和系数仍按技能基础值展示。`,
     });
   }
 
@@ -749,6 +675,136 @@ function buildSkillCard(displaySkillId, slot, ctx) {
   return card;
 }
 
+function findStoneTauntCom(actionCfg) {
+  if (!actionCfg || !Array.isArray(actionCfg.com)) return null;
+  return actionCfg.com.find((com) => com.type === 117 && com.constData === "stoneLingTaunt") ||
+    actionCfg.com.find((com) => com.type === 117) ||
+    null;
+}
+
+function stoneTauntMechanics(tauntCom, warnings) {
+  if (!tauntCom) {
+    warnings.push({
+      code: STONE_TAUNT_COM_MISSING,
+      detail: "刚石灵嘲讽动作缺少 type=117 组件，无法生成嘲讽机制说明",
+    });
+    return [];
+  }
+
+  const mechanics = [];
+  const rangeParts = [];
+  if (typeof tauntCom.w === "number" && typeof tauntCom.h === "number") {
+    rangeParts.push(`矩形范围 ${fmtNumber(tauntCom.w)}×${fmtNumber(tauntCom.h)}`);
+  }
+  if (typeof tauntCom.x === "number" && typeof tauntCom.y === "number") {
+    rangeParts.push(`偏移 x=${fmtNumber(tauntCom.x)}、y=${fmtNumber(tauntCom.y)}`);
+  }
+  if (typeof tauntCom.dealFrame === "number") {
+    rangeParts.push(`持续 ${fmtNumber(tauntCom.dealFrame)} 帧（${fmtNumber(tauntCom.dealFrame / BATTLE_FRAMES_PER_SECOND)}s）`);
+  }
+  if (typeof tauntCom.tauntValue === "number") {
+    rangeParts.push(`嘲讽值 ${fmtNumber(tauntCom.tauntValue)}`);
+  }
+  if (rangeParts.length) {
+    mechanics.push({
+      label: "嘲讽范围",
+      value: `${rangeParts.join("；")}。范围内敌人会优先攻击刚石灵。`,
+    });
+  }
+
+  if (Array.isArray(tauntCom.atkNoTauntDamage) && typeof tauntCom.atkNoTauntDamage[0] === "number") {
+    const raw = tauntCom.atkNoTauntDamage.filter((value) => typeof value === "number").map((value) => fmtNumber(value)).join(", ");
+    mechanics.push({
+      label: "伤害压制",
+      value: `被嘲讽目标没有攻击刚石灵时，可确认比例项为造成伤害降低 ${fmtNumber(Math.abs(tauntCom.atkNoTauntDamage[0]) * 100)}%（原配置 [${raw}]）。`,
+    });
+  }
+
+  return mechanics;
+}
+
+function buildStoneUtilityCard(def, ctx) {
+  const warnings = [];
+  const skill = ctx.skillById.get(def.skillId);
+  if (!skill) {
+    return { skillId: def.skillId, error: "skill 不存在", warnings: [{ code: eng.WARN.MISSING_SKILL }] };
+  }
+
+  const cfg = resolveXiaoyanCfgFile(skill, def.slot, ROLE_ID, ctx.monsterById, warnings);
+  const maxLevel = eng.detectMaxLevel(skill, ctx.skillLevelById);
+  const rel = resolveXiaoyanReleaseTime(def.skillId, cfg, skill, warnings);
+  const { fixedBuffs } = collectXiaoyanBuffs([def.skillId], def.slot, ctx, maxLevel, warnings);
+  const tauntCom = findStoneTauntCom(cfg.actionCfg);
+  const row = queryXiaoyanLevelRow(skill, 1, ctx, warnings);
+  const levels = row ? [{
+    level: 1,
+    roleLevel: row.roleLevel ?? null,
+    consumeMp: row.consumeMp ?? null,
+    segmentVals: [],
+    totalPer: null,
+    totalVal: null,
+    growthBuffs: [],
+    metrics: [],
+  }] : [];
+
+  return {
+    skillId: def.skillId,
+    name: def.name,
+    icon: skill.icon || null,
+    attribute: skill.attribute ?? null,
+    entityAction: skill.entityAction || null,
+    concreteSkillIds: [def.skillId],
+    desIntro: skill.desIntro || null,
+    header: {
+      kind: "utility",
+      segments: [],
+      segCount: 0,
+      totalPer: null,
+      releaseFrames: rel.releaseFrames,
+      releaseSeconds: rel.releaseSeconds,
+      releaseTimeSource: rel.releaseTimeSource,
+      cd: skill.cd ?? null,
+      addDefendVal: skill.addDefendVal ?? null,
+      cfgFileResolved: cfg.cfgFileResolved,
+      cfgResolveSource: cfg.cfgResolveSource,
+      fixedBuffs,
+      mechanics: stoneTauntMechanics(tauntCom, warnings),
+      metrics: metrics.computeMetrics(
+        ctx.metricDefs, "header",
+        { skillId: def.skillId, totalPer: null, releaseSeconds: rel.releaseSeconds, segCount: 0 },
+        ctx.helpers, warnings,
+      ),
+      note: def.note,
+    },
+    maxLevel,
+    levels,
+    warnings,
+  };
+}
+
+function buildStoneAttackCard(def, ctx) {
+  if (def.utility === "taunt") return buildStoneUtilityCard(def, ctx);
+  const card = buildSkillCard(def.skillId, def.slot, ctx);
+  if (card.error) return card;
+  card.name = def.name;
+  if (Array.isArray(def.equivalentSkillIds) && def.equivalentSkillIds.length) {
+    card.concreteSkillIds = [def.skillId, ...def.equivalentSkillIds];
+  }
+  card.header.note = def.note;
+  return card;
+}
+
+function buildStoneAttackSlots(ctx) {
+  return STONE_ATTACK_CARDS.map((def) => ({
+    slot: def.slot,
+    slotLabel: def.slotLabel,
+    isTrans: false,
+    base: buildStoneAttackCard(def, ctx),
+    awakens: [],
+    allAwakenIdentical: false,
+  }));
+}
+
 function sameValues(a, b) {
   if (!a || !b || a.error || b.error) return false;
   if (FORCE_DISTINCT_AWAKENS.has(b.skillId)) return false;
@@ -823,6 +879,10 @@ function extract() {
       awakens: awakenCards,
       allAwakenIdentical: awakenCards.length > 0 && awakenCards.every((c) => c.identicalToBase),
     });
+
+    if (slot.key === "skill4") {
+      slots.push(...buildStoneAttackSlots(ctx));
+    }
   }
 
   if (EMIT_TEMPLATE) {

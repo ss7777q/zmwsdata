@@ -53,7 +53,7 @@ function cooldownText(be) {
   if (typeof be.cd === 'number' && be.cd > 0) parts.push(`冷却${framesText(be.cd)}`);
   if (typeof be.chargedNumber === 'number' && be.chargedNumber > 0) {
     const charged = typeof be.chargedCd === 'number' && be.chargedCd > 0
-      ? `最多${be.chargedNumber}次，每${framesText(be.chargedCd)}恢复1次`
+      ? `最多${be.chargedNumber}次，每${framesText(be.chargedCd)}补满到上限`
       : `最多${be.chargedNumber}次`;
     parts.push(charged);
   }
