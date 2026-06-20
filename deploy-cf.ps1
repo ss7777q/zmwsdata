@@ -66,9 +66,9 @@ function Invoke-NativeCommand {
     [string[]]$CommandArguments
   )
 
-  & $FilePath @CommandArguments
-  if ($LASTEXITCODE -ne 0) {
-    throw "Command failed with exit code ${LASTEXITCODE}: $FilePath $($CommandArguments -join ' ')"
+  $process = Start-Process -FilePath $FilePath -ArgumentList $CommandArguments -NoNewWindow -Wait -PassThru
+  if ($process.ExitCode -ne 0) {
+    throw "Command failed with exit code $($process.ExitCode): $FilePath $($CommandArguments -join ' ')"
   }
 }
 
