@@ -72,9 +72,12 @@ function Invoke-NativeCommand {
   }
 }
 
+$npmCommand = (Get-Command npm.cmd -ErrorAction Stop).Source
+$npxCommand = (Get-Command npx.cmd -ErrorAction Stop).Source
+
 Push-Location $Frontend
 try {
-  Invoke-NativeCommand npm run build:cf-data
+  Invoke-NativeCommand $npmCommand run build:cf-data
 
   $previousStaticDataBase = $env:VITE_STATIC_DATA_BASE
   $previousServerApiBase = $env:VITE_SERVER_API_BASE
@@ -85,7 +88,7 @@ try {
     $env:VITE_SERVER_API_BASE = $DataApiBase
     $env:VITE_DATA_API_BASE = $DataApiBase
     $env:VITE_VISITOR_API_BASE = $VisitorApiBase
-    Invoke-NativeCommand npm run build
+    Invoke-NativeCommand $npmCommand run build
   } finally {
     if ($null -eq $previousStaticDataBase) {
       Remove-Item Env:VITE_STATIC_DATA_BASE -ErrorAction SilentlyContinue
@@ -126,7 +129,7 @@ try {
   }
   Push-Location $Frontend
   try {
-    Invoke-NativeCommand npx wrangler pages deploy "dist" --project-name $ProjectName --branch $Branch --commit-dirty=true
+    Invoke-NativeCommand $npxCommand wrangler pages deploy "dist" --project-name $ProjectName --branch $Branch --commit-dirty=true
   } finally {
     Pop-Location
   }
