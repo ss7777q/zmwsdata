@@ -25,12 +25,14 @@ const MODULES = [
   { key: 'matrix',    file: 'role_matrix.js',    label: '角色 → 阵法系统' },
   { key: 'callgod',   file: 'role_callgod.js',   label: '神魔属性' },
   { key: 'callgod_boss', file: 'call_god_boss_analysis.js', label: '神魔相关 → 魔王解析' },
+  { key: 'rogue_item', file: 'rogue_item_analysis.js', label: '局内道具机制' },
   { key: 'exp',       file: 'exp.js',            label: '抗值标准' },
+  { key: 'honor',     file: 'role_honor.js',     label: '角色 → 称号系统' },
   { key: 'title',     file: 'role_title.js',     label: '角色 → 称号系统' },
-  { key: 'honor',     file: 'role_honor.js',     label: '角色 → 称号系统 → 称号属性' },
   { key: 'starcore',  file: 'role_starcore.js',  label: '角色 → 星核系统' },
   { key: 'starstone', file: 'role_starstone_effect.js', label: '角色 → 星石系统 → 通用词条效果' },
   { key: 'starstone_all', file: 'role_starstone_effect_all.js', label: '角色 → 星石系统 → 全部词条效果' },
+  { key: 'extreme_stats', file: 'role_extreme_stats.js', label: '角色 → 极限属性 source map' },
   { key: 'boss',      file: 'boss.js',           label: 'BOSS 属性' },
   { key: 'pet',       file: 'pet.js',            label: '宠物系统' },
   { key: 'ride',      file: 'ride.js',           label: '坐骑系统' },
@@ -43,6 +45,7 @@ const MODULES = [
   { key: 'role_wiki_aoxue',    file: 'role_wiki_aoxue.js',    label: '角色技能 Wiki → 敖雪' },
   { key: 'role_wiki_aolie',    file: 'role_wiki_aolie.js',    label: '角色技能 Wiki → 敖烈' },
   { key: 'role_wiki_xuannv',   file: 'role_wiki_xuannv.js',   label: '角色技能 Wiki → 玄女' },
+  { key: 'role_wiki_skill_extra', file: 'role_wiki_skill_extra.js', label: '角色技能 Wiki → 绝技无双' },
   { key: 'ride_wiki_diting', file: 'ride_wiki_diting.js', label: '坐骑技能 Wiki → 谛听' },
   { key: 'ride_wiki_pixiu', file: 'ride_wiki_pixiu.js', label: '坐骑技能 Wiki → 天禄/辟邪' },
   { key: 'ride_wiki_qingshi', file: 'ride_wiki_qingshi.js', label: '坐骑技能 Wiki → 青狮/青鬃狮王' },
@@ -66,6 +69,7 @@ const MODULES = [
   { key: 'pet_wiki_laoshu', file: 'pet_wiki_laoshu.js', label: '宠物技能 Wiki → 暗夜鼠王/冥甲鼠王' },
   { key: 'pet_skill_baseline', file: 'pet_skill_baseline.js', label: '宠物技能 Wiki → 基准值 X' },
   { key: 'beast',     file: 'beast_stats.js',    label: '万兽统计' },
+  { key: 'cold_knowledge', file: 'cold_knowledge.js', label: '冷知识机制文章' },
 ];
 
 // ━━━ 命令行参数解析 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

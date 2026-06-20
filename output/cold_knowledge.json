@@ -1,0 +1,9 @@
+{
+  "_meta": {
+    "name": "cold_knowledge",
+    "system": "cold_knowledge",
+    "extractedAt": "2026-06-20T04:01:52.420Z",
+    "source": "scripts/extract/cold_knowledge/*.md"
+  },
+  "data": []
+}

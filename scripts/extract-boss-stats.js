@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const utils = require('./lib/utils');
+const { loadAppSettings } = require('../server/app-config');
 
 const ROOT = path.resolve(__dirname, '..');
 const DOWNLOADER_PATH = path.join(__dirname, 'cocos_resource_downloader.mjs');
@@ -246,8 +247,28 @@ function isStarHavocStage(stage) {
   return toNumber(stage?.type) === 45;
 }
 
+function getMaxLevel() {
+  const settings = loadAppSettings();
+  const maxLevel = settings?.data?.maxLevel;
+  if (typeof maxLevel !== 'number') {
+    throw new Error('settings.js 中未配置有效的 data.maxLevel');
+  }
+  return maxLevel;
+}
+
 function shouldExportStage(stage, options) {
   if (!stage || stage.id == null) {
+    return false;
+  }
+
+  if (toNumber(stage.closeStage) === 1) {
+    return false;
+  }
+
+  const maxLevel = getMaxLevel();
+  const stageLv = toNumber(stage.lv, 0);
+  const stageLvOpen = toNumber(stage.lvOpen, 0);
+  if (stageLv > maxLevel && stageLvOpen > maxLevel) {
     return false;
   }
 

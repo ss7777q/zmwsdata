@@ -11,6 +11,7 @@ interface SkillSlot {
   allAwakenIdentical: boolean;
 }
 interface RoleWikiPayload {
+  kind?: 'skillExtra' | string;
   role: { id: number; name: string; text?: string };
   slots: SkillSlot[];
   passiveSlots?: SkillSlot[];
@@ -30,6 +31,7 @@ const ROLES = [
   { key: 'role_wiki_xiaoyan', name: '萧嫣' },
   { key: 'role_wiki_xuannv', name: '玄女' },
   { key: 'role_wiki_yangjian', name: '杨戬' },
+  { key: 'role_wiki_skill_extra', name: '绝技无双' },
 ];
 
 /** 去重升序 */
@@ -84,6 +86,7 @@ export default function RoleWiki() {
   const [filterType, setFilterType] = useState<'all' | 'active' | 'passive'>('all');
 
   const payload = payloadCache[activeRole] ?? null;
+  const isSkillExtra = payload?.kind === 'skillExtra';
 
   useEffect(() => {
     if (payload) {
@@ -144,6 +147,7 @@ export default function RoleWiki() {
   const switchRole = (key: string) => {
     setActiveRole(key);
     setPicked(null); // 切角色回到默认档位
+    setFilterType('all');
   };
 
   // 把每个槽展开成要展示的卡片列表(觉醒合并:相同的不重复出卡,只在基础卡加标记)
@@ -248,7 +252,7 @@ export default function RoleWiki() {
         </div>
 
         {/* 技能类型筛选 */}
-        <div className="flex flex-col gap-2 border-t border-border pt-3">
+        {!isSkillExtra && <div className="flex flex-col gap-2 border-t border-border pt-3">
           <div className="flex items-center justify-between">
             <span className="text-sm text-textSub">技能类型</span>
             <div className="flex gap-2 text-xs">
@@ -271,13 +275,13 @@ export default function RoleWiki() {
               ))}
             </div>
           </div>
-        </div>
+        </div>}
       </div>
 
       {activeCards.length > 0 && (
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-textMain">主动技能</h3>
+            <h3 className="text-sm font-semibold text-textMain">{isSkillExtra ? '绝技无双' : '主动技能'}</h3>
             <span className="text-xs text-textSub">{activeCards.length} 张</span>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">

@@ -128,6 +128,36 @@ export interface VisitorHistoryResponse {
   updatedAt: string;
 }
 
+export type ColdKnowledgeDifficulty = '入门' | '进阶';
+
+export interface ColdKnowledgeArticle {
+  id: string;
+  title: string;
+  category: string;
+  difficulty: ColdKnowledgeDifficulty;
+  readingMinutes: number;
+  sourceFile?: string;
+  summary: string;
+  playerQuestion: string;
+  quickAnswer: string[];
+  misconceptions: string[];
+  mechanism: string[];
+  playerTip: string;
+  sourceExcerpt: string[];
+}
+
+export interface ColdKnowledgeMeta {
+  name: string;
+  system: string;
+  extractedAt: string;
+  source: string;
+}
+
+export interface ColdKnowledgeResponse {
+  _meta: ColdKnowledgeMeta;
+  data: ColdKnowledgeArticle[];
+}
+
 export interface BeastPetEntry {
   petId: number;
   petNickname: string;
@@ -296,4 +326,12 @@ export async function fetchVisitorHistory(days = 30, signal?: AbortSignal) {
     signal,
   });
   return readJsonResponse<VisitorHistoryResponse>(response);
+}
+
+export async function fetchColdKnowledge(signal?: AbortSignal) {
+  const response = await fetch(
+    staticDataEnabled() ? dataFileUrl('cold_knowledge') : apiUrl('/api/data/cold_knowledge'),
+    { cache: 'no-store', signal }
+  );
+  return readJsonResponse<ColdKnowledgeResponse>(response);
 }

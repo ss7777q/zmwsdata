@@ -5,9 +5,9 @@ import TopBar from './components/layout/TopBar';
 import SearchResults from './components/ui/SearchResults';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import { useGameData } from './hooks/useGameData';
+import { useVisitorStats } from './hooks/useVisitorStats';
 import { searchDataSources } from './lib/search';
 import { apiUrl } from './lib/api';
-import { useVisitorStats } from './hooks/useVisitorStats';
 
 const RoleWiki = lazy(() => import('./pages/RoleWiki'));
 const RoleEquip = lazy(() => import('./pages/RoleEquip'));
@@ -19,13 +19,16 @@ const RolePet = lazy(() => import('./pages/RolePet'));
 const RoleRide = lazy(() => import('./pages/RoleRide'));
 const RoleFashion = lazy(() => import('./pages/RoleFashion'));
 const RoleHonor = lazy(() => import('./pages/RoleHonor'));
+const RoleExtremeStats = lazy(() => import('./pages/RoleExtremeStats'));
 const BossStats = lazy(() => import('./pages/BossStats'));
 const CallGodStats = lazy(() => import('./pages/CallGodStats'));
+const RogueItems = lazy(() => import('./pages/RogueItems'));
 const ResistStats = lazy(() => import('./pages/ResistStats'));
 const PlayerLookup = lazy(() => import('./pages/PlayerLookup'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter'));
 const OpsDashboard = lazy(() => import('./pages/OpsDashboard'));
 const BeastStats = lazy(() => import('./pages/BeastStats'));
+const ColdKnowledge = lazy(() => import('./pages/ColdKnowledge'));
 
 const SYSTEM_META: Record<string, { title: string; description: string }> = {
   role_wiki: { title: '角色技能', description: '查看角色各技能的伤害、段数、释放时间与等级成长。' },
@@ -34,15 +37,18 @@ const SYSTEM_META: Record<string, { title: string; description: string }> = {
   role_starstone: { title: '星石系统', description: '查看星石词条属性、极效解锁等级与等级模拟。' },
   role_fashion: { title: '角色时装', description: '展示时装与时装球养成配置。' },
   role_honor: { title: '称号系统', description: '查看称号升级需求与称号附带属性。' },
+  role_extreme_stats: { title: '极限属性', description: '按模块拆分各阶段满配属性、最高战力点与未完成链路。' },
   role_wing: { title: '翅膀系统', description: '查看翅膀培养与羽毛相关配置。' },
   role_cultivate: { title: '修炼系统', description: '聚合经脉、修心、丹气、丹元与仙魄配置。' },
   pet: { title: '宠物系统', description: '查看宠物技能、装备与升星数据。' },
   beast_stats: { title: '万兽统计', description: '查看赛季冠军详情、阵容趋势与兽王玩家统计。' },
   ride: { title: '坐骑系统', description: '查看坐骑技能、装备与升星数据。' },
   call_god: { title: '神魔属性/神石获取', description: '查看神魔模板属性、倍率规则与最终属性预览。' },
+  rogue_item: { title: '局内道具', description: '聚合局内道具阶段配置与已验证的人话机制说明。' },
   boss: { title: 'BOSS 属性', description: '按关卡 Type 分类展示各关卡 Boss 的属性数据。' },
   resist: { title: '抗值标准', description: '查看 exp.json 中的防御抗值和通用抗值标准值。' },
   player_lookup: { title: '玩家改名记录', description: '按 UID 查看历史名字记录。' },
+  cold_knowledge: { title: '冷知识', description: '把底层机制报告整理成玩家能直接理解的机制文章。' },
   help: { title: '帮助与反馈', description: '了解网站用途、模块说明和使用方式，也可以直接提交建议反馈。' },
   ops: { title: '资源运维', description: '仅在使用专用启动命令后开放，用于手动同步资源、更新数据与查看日志。' },
 };
@@ -67,15 +73,18 @@ const SYSTEM_PATHS: Record<string, string> = {
   role_starstone: '/user_starstone',
   role_fashion: '/user_fashion',
   role_honor: '/title',
+  role_extreme_stats: '/extreme_stats',
   role_wing: '/user_wing',
   role_cultivate: '/user_cultivate',
   pet: '/pet',
   beast_stats: '/pet_champion',
   ride: '/ride',
   call_god: '/call_god',
+  rogue_item: '/rogue_item',
   boss: '/boss',
   resist: '/resist',
   player_lookup: '/player_lookup',
+  cold_knowledge: '/cold_knowledge',
   help: '/help',
 };
 const OPS_ROUTE_PATH = '/ops';
@@ -84,10 +93,12 @@ const LEGACY_ROUTE_REDIRECTS: Record<string, string> = {
 };
 const PATH_TO_SYSTEM = Object.fromEntries(Object.entries(SYSTEM_PATHS).map(([system, routePath]) => [routePath, system]));
 const OPS_SYSTEM = 'ops';
+const EXTREME_STATS_SYSTEM = 'role_extreme_stats';
 const PLAYER_LOOKUP_SYSTEM = 'player_lookup';
 const HELP_SYSTEM = 'help';
-const NO_DATA_SYSTEMS = [OPS_SYSTEM, PLAYER_LOOKUP_SYSTEM, HELP_SYSTEM] as const;
-const KNOWN_SYSTEMS = ['role_wiki', 'role_equip', 'role_spiritual', 'role_starstone', 'role_wing', 'role_cultivate', 'pet', 'beast_stats', 'ride', 'role_fashion', 'role_honor', 'call_god', 'boss', 'resist', 'player_lookup', 'help', 'ops'] as const;
+const COLD_KNOWLEDGE_SYSTEM = 'cold_knowledge';
+const NO_DATA_SYSTEMS = [OPS_SYSTEM, PLAYER_LOOKUP_SYSTEM, HELP_SYSTEM, COLD_KNOWLEDGE_SYSTEM] as const;
+const KNOWN_SYSTEMS = ['role_wiki', 'role_equip', 'role_spiritual', 'role_starstone', 'role_wing', 'role_cultivate', 'pet', 'beast_stats', 'ride', 'role_fashion', 'role_honor', 'role_extreme_stats', 'call_god', 'rogue_item', 'boss', 'resist', 'player_lookup', 'cold_knowledge', 'help', 'ops'] as const;
 
 function PageFallback() {
   return <LoadingSpinner message="正在载入系统视图..." />;
@@ -114,7 +125,9 @@ function App() {
       const saved = localStorage.getItem('sidebar_width');
       if (saved) {
         const val = parseInt(saved, 10);
-        if (!isNaN(val) && val >= 200 && val <= 480) return val;
+        if (!isNaN(val) && val >= 200 && val <= 480) {
+          return val;
+        }
       }
     } catch {}
     return 256;
@@ -157,7 +170,6 @@ function App() {
     document.addEventListener('pointermove', handlePointerMove);
     document.addEventListener('pointerup', handlePointerUp);
   };
-
   const activeSystem = !showOps && currentSystem === OPS_SYSTEM ? DEFAULT_SYSTEM : currentSystem;
   const shouldLoadGameData = !NO_DATA_SYSTEMS.includes(activeSystem as typeof NO_DATA_SYSTEMS[number]);
   const shouldLoadBulkGameData = shouldLoadGameData && activeSystem !== 'role_wiki';
@@ -180,7 +192,9 @@ function App() {
       return;
     }
 
-    const matchedSystem = PATH_TO_SYSTEM[location.pathname];
+    const isExtremeStatsPath = location.pathname === SYSTEM_PATHS[EXTREME_STATS_SYSTEM]
+      || location.pathname.startsWith(`${SYSTEM_PATHS[EXTREME_STATS_SYSTEM]}/`);
+    const matchedSystem = isExtremeStatsPath ? EXTREME_STATS_SYSTEM : PATH_TO_SYSTEM[location.pathname];
     if (matchedSystem && matchedSystem !== currentSystem) {
       setCurrentSystem(matchedSystem);
       return;
@@ -240,11 +254,13 @@ function App() {
     }
 
     const expectedPath = SYSTEM_PATHS[activeSystem] || SYSTEM_PATHS[DEFAULT_SYSTEM];
+    const isExpectedNestedPath = activeSystem === EXTREME_STATS_SYSTEM
+      && location.pathname.startsWith(`${SYSTEM_PATHS[EXTREME_STATS_SYSTEM]}/`);
     if (location.pathname === '/' || location.pathname === '') {
       navigate(expectedPath, { replace: true });
       return;
     }
-    if (location.pathname !== expectedPath && PATH_TO_SYSTEM[location.pathname] == null) {
+    if (!isExpectedNestedPath && location.pathname !== expectedPath && PATH_TO_SYSTEM[location.pathname] == null) {
       navigate(expectedPath, { replace: true });
     }
   }, [activeSystem, location.pathname, navigate]);
@@ -286,6 +302,7 @@ function App() {
           }}
         />
 
+        {/* 拖拽调整宽度手柄 */}
         {!isSidebarCollapsed && (
           <div
             onPointerDown={handlePointerDown}
@@ -352,10 +369,13 @@ function App() {
                     {activeSystem === 'ride' && <RoleRide dataSources={dataSources} />}
                     {activeSystem === 'role_fashion' && <RoleFashion dataSources={dataSources} />}
                     {activeSystem === 'role_honor' && <RoleHonor dataSources={dataSources} />}
+                    {activeSystem === EXTREME_STATS_SYSTEM && <RoleExtremeStats dataSources={dataSources} />}
                     {activeSystem === 'call_god' && <CallGodStats dataSources={dataSources} />}
+                    {activeSystem === 'rogue_item' && <RogueItems dataSources={dataSources} />}
                     {activeSystem === 'boss' && <BossStats dataSources={dataSources} searchQuery={searchQuery} />}
                     {activeSystem === 'resist' && <ResistStats dataSources={dataSources} />}
                     {activeSystem === PLAYER_LOOKUP_SYSTEM && <PlayerLookup />}
+                    {activeSystem === COLD_KNOWLEDGE_SYSTEM && <ColdKnowledge />}
                     {activeSystem === HELP_SYSTEM && <HelpCenter />}
                     {activeSystem === OPS_SYSTEM && <OpsDashboard />}
                   </Suspense>

@@ -44,10 +44,14 @@ function matchesSystemFilter(name: string, systemFilter?: string) {
   if (systemFilter === 'role_spiritual') {
     return name.startsWith('role_magic') || name.startsWith('role_godweapon') || name.startsWith('role_matrix');
   }
+  if (systemFilter === 'role_extreme_stats') {
+    return name.startsWith('role_extreme_stats');
+  }
   if (systemFilter === 'role_wing') {
     return name.startsWith('role_wing') || name.startsWith('role_feather');
   }
   if (systemFilter === 'call_god') return name.startsWith('call_god');
+  if (systemFilter === 'rogue_item') return name.startsWith('rogue_item');
   if (systemFilter === 'role_honor') {
     return name === 'role_honor';
   }

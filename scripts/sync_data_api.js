@@ -7,6 +7,8 @@ const ROOT = path.resolve(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'dataApi');
 const CLIENT_URL = process.argv[2] || 'https://client-zmxyol.3304399.net/client/';
 const CONCURRENCY = 8;
+const ROGUE_ITEM_FILENAME_RE = /^rogueItem\./;
+const ROGUE_ITEM_OFFICIAL_DESCRIPTION_COLUMN_INDEX = 4;
 
 async function fetchText(url) {
   const res = await fetch(url);
@@ -69,8 +71,16 @@ function extractTable(jsCode, filename) {
   return table;
 }
 
-function tableToObjects(table) {
-  const headers = table[0];
+function normalizeHeaders(headers, filename) {
+  const normalized = [...headers];
+  if (ROGUE_ITEM_FILENAME_RE.test(filename) && !normalized[ROGUE_ITEM_OFFICIAL_DESCRIPTION_COLUMN_INDEX]) {
+    normalized[ROGUE_ITEM_OFFICIAL_DESCRIPTION_COLUMN_INDEX] = 'officialDescription';
+  }
+  return normalized;
+}
+
+function tableToObjects(table, filename) {
+  const headers = normalizeHeaders(table[0], filename);
   const rows = table.slice(1);
   return rows.map((row) => {
     const record = {};
@@ -124,7 +134,7 @@ async function main() {
 
     if (item.isConfig) {
       const table = extractTable(jsCode, item.filename);
-      const json = tableToObjects(table);
+      const json = tableToObjects(table, item.filename);
       const jsonPath = path.join(DATA_DIR, item.filename.replace(/\.js$/, '.json'));
       fs.writeFileSync(jsonPath, `${JSON.stringify(json, null, 2)}\n`, 'utf8');
     }

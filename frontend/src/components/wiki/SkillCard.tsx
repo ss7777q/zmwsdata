@@ -1,530 +1,10 @@
 import { useMemo } from 'react';
-import { AlertTriangle, ArrowRight } from 'lucide-react';
-
-export interface BuffValue {
-  per: number | null;
-  val: number | null;
-}
-export interface BuffInfo {
-  name: string;
-  bindLabel: string;
-  time: number | string | null;
-  value: BuffValue | null;
-  /** 覆盖机制产出的成文描述;存在时前端直接显示它,不再机械拼 per/val */
-  displayText?: string | null;
-}
-export interface FixedBuff extends BuffInfo {
-  baseBuffId: number;
-  text: string | null;
-}
-export interface SkillSegment {
-  per: number;
-  maxHit: number;
-  from?: string;
-}
-/** 派生指标(蓝转/攻转/闪避率/血蓝比…),提取阶段算好,前端纯渲染 */
-export interface SkillMetric {
-  key: string;
-  label: string;
-  value: number | null;
-  display: string | number | null;
-}
-export interface SkillMechanic {
-  label: string;
-  value: string;
-}
-export interface SkillBaselineLevel {
-  level: number;
-  xRaw: number;
-  x: number;
-  xNearestInteger: number;
-  fixedMultiplier: number;
-  correctionRatio: number;
-}
-export interface SkillBaselineStats {
-  min: number;
-  max: number;
-  median: number;
-  range: number;
-  relativeRange: number | null;
-}
-export interface SkillBaselineData {
-  fixedMultiplierMode: 'static' | 'growth';
-  fixedMultiplierStats: SkillBaselineStats;
-  correctionRatioStats: SkillBaselineStats;
-  medianFixedMultiplier: number;
-  medianCorrectionRatio: number;
-  levels: SkillBaselineLevel[];
-}
-export interface SkillChainNode {
-  label: string;
-  source: string;
-  per: number;
-  hits: number;
-  totalPer: number;
-}
-export interface SkillChainLane {
-  label: string;
-  role: string;
-  totalHits: number;
-  totalPer: number;
-  nodes: SkillChainNode[];
-}
-export interface SkillChainViz {
-  kind: string;
-  title: string;
-  source: string;
-  lanes: SkillChainLane[];
-}
-export interface SkillLevel {
-  level: number;
-  roleLevel: number | null;
-  consumeMp: number | null;
-  segmentVals: { val: number; maxHit: number }[];
-  totalPer: number | null;
-  totalVal: number | null;
-  growthBuffs: BuffInfo[];
-  metrics?: SkillMetric[];
-  passive?: PassiveLevelInfo;
-}
-export interface PassiveMetric {
-  label: string;
-  value: string | number | boolean | null;
-  raw?: unknown;
-}
-export interface PassiveBeskillInfo {
-  id: number;
-  source: string;
-  name: string;
-  label: string | null;
-  type: number | null;
-  attribute: unknown;
-  otherData: unknown;
-  text: string | null;
-  desc: string | null;
-  effects?: PassiveMetric[];
-}
-export interface PassiveCost {
-  itemId: number;
-  name: string;
-  count: number | string | Record<string, number> | null;
-}
-export interface PassiveLevelInfo {
-  id: number;
-  group: number;
-  passiveName: string;
-  text: string | null;
-  unlockType: number | null;
-  number: unknown;
-  rankCost: PassiveCost[] | null;
-  inherit: number | null;
-  label: number | null;
-  stageType: unknown;
-  stageTypeNo: unknown;
-  closeRankUp: unknown;
-  directBeskills: PassiveBeskillInfo[];
-  makeUpBeskills: PassiveBeskillInfo[];
-  initializeBeskills: PassiveBeskillInfo[];
-}
-export interface SkillWarning {
-  code: string;
-  detail?: string;
-}
-export interface SkillCardData {
-  skillId: number;
-  name: string;
-  icon: string | null;
-  attribute: number | null;
-  entityAction: string | null;
-  desIntro: string | null;
-  header: {
-    kind: string | null;
-    segments: SkillSegment[];
-    segCount: number;
-    totalPer: number | null;
-    releaseFrames: number | null;
-    releaseSeconds: number | null;
-    releaseTimeSource: string;
-    cd: number | null;
-    addDefendVal: number | null;
-    cfgFileResolved: string | null;
-    cfgResolveSource: string | null;
-    fixedBuffs: FixedBuff[];
-    metrics?: SkillMetric[];
-    mechanics?: SkillMechanic[];
-    chainViz?: SkillChainViz | null;
-    note?: string | null;
-  };
-  maxLevel: number;
-  levels: SkillLevel[];
-  warnings: SkillWarning[];
-  skillBaseline?: SkillBaselineData | null;
-  identicalToBase?: boolean;
-  passiveKind?: boolean;
-  error?: string;
-}
-
-function fmt(n: number | null | undefined) {
-  if (typeof n !== 'number' || Number.isNaN(n)) return '—';
-  return n.toLocaleString('zh-CN', { maximumFractionDigits: 3 });
-}
-
-function fmtX(n: number | null | undefined) {
-  if (typeof n !== 'number' || Number.isNaN(n)) return '—';
-  return `${n.toLocaleString('zh-CN', { maximumFractionDigits: 3 })}X`;
-}
-
-function fmtRatio(n: number | null | undefined) {
-  if (typeof n !== 'number' || Number.isNaN(n)) return '—';
-  return `${(n * 100).toLocaleString('zh-CN', { maximumFractionDigits: 2 })}%`;
-}
-
-/** 把段明细折叠成 "N段×系数" 的可读形式 */
-function describeSegments(segments: SkillSegment[]) {
-  const groups: { per: number; count: number }[] = [];
-  for (const s of segments) {
-    const last = groups[groups.length - 1];
-    if (last && last.per === s.per) last.count += s.maxHit;
-    else groups.push({ per: s.per, count: s.maxHit });
-  }
-  return groups;
-}
-
-/** 去掉 buff 名里的"等级N"后缀(成长 buff 各级共用一个名字) */
-function cleanBuffName(name: string) {
-  return name.replace(/等级\d+$/, '').replace(/[·\-_—]+$/, '').trim();
-}
-
-/** buff 持续时间:帧->秒;无可靠时间时前端不展示持续时间 */
-function buffDuration(time: number | string | null) {
-  if (typeof time !== 'number') return null;
-  if (time <= 0) return null;
-  return `${(time / 30).toFixed(time % 30 === 0 ? 0 : 1)}s`;
-}
-
-/** buff 数值描述:per 是百分比/系数,val 是固定值。负数表示减益 */
-function buffValueText(v: BuffValue | null) {
-  if (!v) return null;
-  const parts: string[] = [];
-  if (typeof v.per === 'number' && v.per !== 0) parts.push(`${(v.per * 100).toFixed(1)}%`);
-  if (typeof v.val === 'number' && v.val !== 0) parts.push(fmt(v.val));
-  return parts.length ? parts.join(' + ') : null;
-}
-
-function inferGrowthBuffValueLabel(buff: BuffInfo) {
-  const text = buff.displayText || cleanBuffName(buff.name);
-  if (/固伤/.test(text)) return '固伤';
-  if (/护盾|抵挡/.test(text)) return '护盾值';
-  if (/恢复.*生命|回血|回复.*生命/.test(text)) return /每秒/.test(text) ? '每秒回血' : '回血值';
-  if (/减伤/.test(text)) return /降低|扣减/.test(text) ? '减伤降低' : '减伤值';
-  if (/防御/.test(text)) return /降低|扣减/.test(text) ? '防御降低' : '防御值';
-  if (/守护/.test(text)) return /降低|扣减/.test(text) ? '守护降低' : '守护值';
-  if (/韧性/.test(text)) return /降低|扣减/.test(text) ? '韧性降低' : '韧性值';
-  if (/闪避/.test(text)) return /降低|下降|弱化/.test(text) ? '闪避降低' : '闪避值';
-  if (/命中/.test(text)) return /降低|下降|弱化/.test(text) ? '命中降低' : '命中值';
-  if (/暴击/.test(text)) return /降低|下降|弱化/.test(text) ? '暴击降低' : '暴击值';
-  if (/攻击/.test(text)) return /降低|下降|弱化/.test(text) ? '攻击降低' : '攻击值';
-  if (/伤害|灼烧|中毒|毒伤|真伤|固伤/.test(text)) return '伤害值';
-  return cleanBuffName(buff.name);
-}
-
-function fmtPercent(n: number | null | undefined) {
-  if (typeof n !== 'number' || Number.isNaN(n)) return '—';
-  return `${(Math.abs(n) * 100).toLocaleString('zh-CN', { maximumFractionDigits: 3 })}%`;
-}
-
-function fmtBuffVal(n: number | null | undefined, semanticText?: string | null) {
-  if (typeof n !== 'number' || Number.isNaN(n)) return '—';
-  return fmt(semanticText ? Math.abs(n) : n);
-}
-
-function meaningfulValue(v: number | null | undefined) {
-  return typeof v === 'number' && !Number.isNaN(v) && v !== 0 ? v : null;
-}
-
-function numericTokens(text: string) {
-  const tokens = text.match(/-?\d+(?:,\d{3})*(?:\.\d+)?%?/g) || [];
-  return new Set(tokens.map((token) => token.replace(/,/g, '')));
-}
-
-function intersectSets(sets: Set<string>[]) {
-  if (!sets.length) return new Set<string>();
-  const common = new Set(sets[0]);
-  for (const set of sets.slice(1)) {
-    for (const token of [...common]) if (!set.has(token)) common.delete(token);
-  }
-  return common;
-}
-
-function compactEffectText(text: string, commonNumbers: Set<string>) {
-  return text
-    .replace(/-?\d+(?:,\d{3})*(?:\.\d+)?%?/g, (token) => {
-      const normalized = token.replace(/,/g, '');
-      return commonNumbers.has(normalized) ? token : '';
-    })
-    .replace(/\s+点/g, '点')
-    .replace(/(^|[^X\d])点(?=(生命|护盾|防御|守护|韧性|闪避|命中|攻击|伤害|固伤|减伤|生命值|护盾值))/g, '$1')
-    .replace(/\+\s*(?=(固伤|生命|护盾|伤害))/g, '+ ')
-    .replace(/\s+/g, ' ')
-    .replace(/：\s+/g, '：')
-    .replace(/，\s+/g, '，')
-    .trim();
-}
-
-function effectTemplate(buff: BuffInfo, commonNumbers: Set<string>, dynamicVal: boolean, dynamicPer: boolean) {
-  const text = buff.displayText?.trim();
-  if (!text) return null;
-  const valCandidates = new Set(
-    [buff.value?.val, Math.abs(buff.value?.val ?? Number.NaN)]
-      .filter((v): v is number => typeof v === 'number' && !Number.isNaN(v) && v !== 0)
-      .map(String)
-  );
-  const perCandidates = new Set(
-    [buff.value?.per, Math.abs(buff.value?.per ?? Number.NaN), Math.abs(buff.value?.per ?? Number.NaN) * 100]
-      .filter((v): v is number => typeof v === 'number' && !Number.isNaN(v) && v !== 0)
-      .map((v) => String(Number(v.toFixed(6))))
-  );
-  const templated = text.replace(/-?\d+(?:,\d{3})*(?:\.\d+)?%?/g, (token, offset) => {
-    const normalized = token.replace(/,/g, '').replace(/%$/, '');
-    const after = text.slice(offset + token.length, offset + token.length + 1);
-    if (commonNumbers.has(normalized) && /[s秒帧]/.test(after)) return token;
-    if (dynamicVal && valCandidates.has(normalized)) return 'X';
-    if (dynamicPer && perCandidates.has(normalized)) return 'X';
-    return commonNumbers.has(normalized) || commonNumbers.has(`${normalized}%`) ? token : '__DROP_NUM__';
-  })
-    .replace(/，[^，；。]*__DROP_NUM__[^，；。]*(?=，|；|。|$)/g, '')
-    .replace(/；[^，；。]*__DROP_NUM__[^，；。]*(?=，|；|。|$)/g, '')
-    .replace(/__DROP_NUM__/g, '');
-  return compactEffectText(templated, new Set([...commonNumbers, 'X']));
-}
-
-function valuesDiffer(values: (number | null | undefined)[]) {
-  const meaningful = values.map(meaningfulValue).filter((v): v is number => v != null);
-  return new Set(meaningful.map(String)).size > 1;
-}
-
-function fixedMeaningfulValue(values: (number | null | undefined)[]) {
-  const meaningful = values.map(meaningfulValue).filter((v): v is number => v != null);
-  if (!meaningful.length) return null;
-  const unique = new Set(meaningful.map(String));
-  return unique.size === 1 ? meaningful[0] : null;
-}
-
-function growthBuffGroupKey(buff: BuffInfo) {
-  const shape = buff.displayText ? buff.displayText.replace(/-?\d+(?:,\d{3})*(?:\.\d+)?%?/g, '#') : '';
-  return `${cleanBuffName(buff.name)}::${buff.bindLabel}::${buff.time ?? 'null'}::${shape}`;
-}
-
-function growthBuffColumnLabel(effectName: string, valueLabel: string, cardName: string) {
-  return effectName === cardName || effectName.startsWith(cardName) ? valueLabel : effectName;
-}
-
-interface GrowthBuffGroup {
-  key: string;
-  effectName: string;
-  valueLabel: string;
-  bindLabel: string;
-  sample: BuffInfo;
-  commonNumbers: Set<string>;
-  dynamicPer: boolean;
-  dynamicVal: boolean;
-  fixedPer: number | null;
-  fixedVal: number | null;
-  template: string | null;
-}
-
-interface GrowthBuffColumn {
-  key: string;
-  label: string;
-  subLabel: string | null;
-  perLevel: Map<number, string[]>;
-}
-
-interface GrowthBuffEffectInfo {
-  key: string;
-  title: string;
-  meta: string;
-  detail: string | null;
-  formulaNote: string | null;
-  fixedParts: string[];
-}
-
-function buildGrowthBuffGroups(levels: SkillLevel[]) {
-  const byKey = new Map<string, { key: string; effectName: string; bindLabel: string; sample: BuffInfo; buffs: BuffInfo[] }>();
-  for (const lv of levels) {
-    for (const buff of lv.growthBuffs || []) {
-      const key = growthBuffGroupKey(buff);
-      if (!byKey.has(key)) {
-        byKey.set(key, {
-          key,
-          effectName: cleanBuffName(buff.name),
-          bindLabel: buff.bindLabel,
-          sample: buff,
-          buffs: [],
-        });
-      }
-      byKey.get(key)!.buffs.push(buff);
-    }
-  }
-
-  return [...byKey.values()].map<GrowthBuffGroup>((group) => {
-    const displayTexts = group.buffs.map((buff) => buff.displayText?.trim()).filter((text): text is string => Boolean(text));
-    const commonNumbers = intersectSets(displayTexts.map(numericTokens));
-    const dynamicVal = valuesDiffer(group.buffs.map((buff) => buff.value?.val));
-    const dynamicPer = valuesDiffer(group.buffs.map((buff) => buff.value?.per));
-    return {
-      key: group.key,
-      effectName: group.effectName,
-      valueLabel: inferGrowthBuffValueLabel(group.sample),
-      bindLabel: group.bindLabel,
-      sample: group.sample,
-      commonNumbers,
-      dynamicPer,
-      dynamicVal,
-      fixedPer: fixedMeaningfulValue(group.buffs.map((buff) => buff.value?.per)),
-      fixedVal: fixedMeaningfulValue(group.buffs.map((buff) => buff.value?.val)),
-      template: effectTemplate(group.sample, commonNumbers, dynamicVal, dynamicPer),
-    };
-  });
-}
-
-/** 取某级某指标的展示值 */
-function metricText(lv: SkillLevel | undefined, key: string) {
-  const m = lv?.metrics?.find((x) => x.key === key);
-  if (!m || m.display == null) return '—';
-  return String(m.display);
-}
-
-function effectFormulaNote(group: GrowthBuffGroup, levels: SkillLevel[]) {
-  const hasMetric = (key: string) => levels.some((lv) => lv.metrics?.some((metric) => metric.key === key));
-  const text = [group.effectName, group.valueLabel, group.template, group.sample.displayText]
-    .filter((part): part is string => Boolean(part))
-    .join(' ');
-  if (/闪避/.test(text) && hasMetric('dodgeRate')) return '闪避率 = 闪避值 /（闪避值 + 当前等级对应角色等级的通用抗值）';
-  return null;
-}
-
-function BuffRow({ buff }: { buff: BuffInfo }) {
-  const dur = buffDuration(buff.time);
-  const valTxt = buffValueText(buff.value);
-
-  if (buff.displayText) {
-    return (
-      <div className="flex flex-col gap-1 rounded-lg bg-card px-2.5 py-2">
-        <div className="flex items-center gap-1.5">
-          <span className="shrink-0 rounded bg-surface px-1 text-[10px] text-textSub">{buff.bindLabel}</span>
-          <span className="text-xs font-semibold text-textMain">{cleanBuffName(buff.name)}</span>
-        </div>
-        <div className="whitespace-pre-line text-xs text-cta leading-relaxed pl-[4px] break-words">
-          {buff.displayText}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center justify-between gap-2 rounded-lg bg-card px-2.5 py-1.5">
-      <div className="flex min-w-0 items-center gap-1.5">
-        <span className="shrink-0 rounded bg-surface px-1 text-[10px] text-textSub">{buff.bindLabel}</span>
-        <span className="truncate text-xs text-textMain">{cleanBuffName(buff.name)}</span>
-      </div>
-      <div className="flex shrink-0 items-center gap-1.5 font-mono text-[11px]">
-        {valTxt && <span className="text-cta">{valTxt}</span>}
-        {dur && <span className="text-textSub">{dur}</span>}
-      </div>
-    </div>
-  );
-}
-
-function valueToText(value: unknown) {
-  if (value == null) return '—';
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
-  return JSON.stringify(value);
-}
-
-function costText(cost: PassiveCost[] | null) {
-  if (!cost?.length) return '—';
-  return cost.map((item) => `${item.name}×${valueToText(item.count)}`).join(' / ');
-}
-
-function PassiveLevelBlock({ level }: { level: SkillLevel }) {
-  const passive = level.passive;
-  if (!passive) return null;
-  const allBeskills = [
-    ...passive.directBeskills,
-    ...passive.initializeBeskills,
-    ...passive.makeUpBeskills,
-  ];
-  const effectRows = allBeskills.flatMap((be) => be.effects || []);
-  const uniqueEffects = effectRows.filter((effect, index) => {
-    const key = `${effect.label}::${valueToText(effect.value)}`;
-    return effectRows.findIndex((item) => `${item.label}::${valueToText(item.value)}` === key) === index;
-  });
-
-  return (
-    <div className="rounded-lg bg-surface px-3 py-3 border-l-2 border-purple-500/40">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded bg-card px-2 py-0.5 font-mono text-[11px] font-semibold text-primary">Lv.{level.level}</span>
-        {level.roleLevel != null && <span className="rounded bg-card px-2 py-0.5 text-[11px] text-textSub">角色等级 {level.roleLevel}</span>}
-        <span className="rounded bg-card px-2 py-0.5 text-[11px] text-textSub">升级消耗 {costText(passive.rankCost)}</span>
-      </div>
-      {passive.text && <div className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-textMain">{passive.text}</div>}
-      <div className="mt-3 grid gap-1.5">
-        {uniqueEffects.map((effect, index) => (
-          <div key={`${effect.label}-${index}`} className="rounded-md border border-border bg-card px-3 py-2">
-            <div className="flex items-start gap-2">
-              <div className="min-w-0 flex-1">
-                <div className="text-[11px] font-semibold text-textSub">{effect.label}</div>
-                <div className="mt-1 break-words text-xs leading-relaxed text-textMain">{valueToText(effect.value)}</div>
-              </div>
-            </div>
-          </div>
-        ))}
-        {!uniqueEffects.length && (
-          <div className="rounded-md border border-border bg-card px-3 py-2 text-xs text-textSub">
-            当前等级没有可展示的额外数值。
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function ChainViz({ viz }: { viz: SkillChainViz }) {
-  return (
-    <div className="border-t border-border px-5 py-3">
-      <div className="mb-2 flex items-center justify-between gap-3 text-[11px] text-textSub">
-        <span>{viz.title}</span>
-        <span className="hidden truncate font-mono sm:block">{viz.source}</span>
-      </div>
-      <div className="space-y-2 overflow-x-auto pb-1">
-        {viz.lanes.map((lane) => (
-          <div key={`${viz.kind}-${lane.role}-${lane.label}`} className="min-w-[21rem] rounded-lg bg-surface px-3 py-2">
-            <div className="mb-2 flex items-center justify-between gap-3">
-              <span className="text-xs font-semibold text-textMain">{lane.label}</span>
-              <span className="font-mono text-[11px] text-cta">
-                {lane.totalHits}段 ×{fmt(lane.totalPer)}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              {lane.nodes.map((node, index) => (
-                <div key={`${node.source}-${index}`} className="flex min-w-0 items-center gap-1.5">
-                  {index > 0 && <ArrowRight className="h-3.5 w-3.5 shrink-0 text-textSub/60" />}
-                  <div className="min-w-[6.8rem] rounded-md border border-border bg-card px-2 py-1.5">
-                    <div className="truncate text-[11px] font-medium text-textMain">{node.label}</div>
-                    <div className="mt-0.5 font-mono text-[11px] text-textSub">
-                      {node.hits}段 ×{fmt(node.per)} = ×{fmt(node.totalPer)}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+import { AlertTriangle } from 'lucide-react';
+import type { SkillCardData, SkillLevel } from './skillCard/SkillCardTypes';
+import type { GrowthBuffColumn, GrowthBuffEffectInfo } from './skillCard/SkillCardUtils';
+import { buffDuration, buildGrowthBuffGroups, describeSegments, effectFormulaNote, fmt, fmtBuffVal, fmtPercent, fmtRatio, fmtX, growthBuffColumnLabel, growthBuffGroupKey, metricText } from './skillCard/SkillCardUtils';
+import { BuffRow, ChainViz, PassiveLevelBlock, Stat, Td, Th } from './skillCard/SkillCardParts';
+export type { SkillBaselineData, SkillCardData } from './skillCard/SkillCardTypes';
 
 interface Props {
   card: SkillCardData;
@@ -654,7 +134,9 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
     return cols;
   }, [card.name, growthBuffGroups, rows]);
 
-  const hasGrowthTable = cols.mp || cols.per || cols.val || cols.baselineMultiplier || cols.baselineCorrection || cols.metrics.length > 0 || growthBuffCols.length > 0;
+  const isSkillExtraCard = card.extraKind === 'skillExtra' || card.header.kind === 'skillExtra';
+  const hasSkillExtraVal = isSkillExtraCard && rows.some((row) => row.totalVal != null);
+  const hasGrowthTable = cols.mp || cols.per || cols.val || hasSkillExtraVal || cols.baselineMultiplier || cols.baselineCorrection || cols.metrics.length > 0 || growthBuffCols.length > 0;
   const lastRow = rows[rows.length - 1];
 
   if (card.error) {
@@ -671,9 +153,23 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
   const segGroups = describeSegments(card.header.segments);
   const headerMetrics = card.header.metrics ?? [];
   const officialDescription = card.desIntro?.trim();
-  const showDamageSummary = (card.header.segCount ?? 0) !== 0 || (card.header.totalPer ?? 0) !== 0;
+  const showSegmentCount = !isSkillExtraCard && (card.header.segCount ?? 0) !== 0;
+  const showTotalCoefficient = isSkillExtraCard || (card.header.totalPer ?? 0) !== 0;
   const passiveRows = rows.filter((row) => row.passive);
   const isPassiveCard = Boolean(card.passiveKind || passiveRows.length);
+  const showReleaseTime = card.header.releaseSeconds != null;
+  const showCooldown = card.header.cd != null;
+  const showHeaderStats = !isPassiveCard && (
+    showSegmentCount
+    || showTotalCoefficient
+    || showReleaseTime
+    || showCooldown
+    || headerMetrics.length > 0
+    || cols.staticMetrics.length > 0
+    || card.skillBaseline?.fixedMultiplierMode === 'static'
+    || (!isSkillExtraCard && cols.staticVal)
+    || cols.staticMp
+  );
 
   return (
     <div className="flex flex-col rounded-[20px] border border-border bg-card shadow-sm overflow-hidden">
@@ -693,15 +189,15 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
       </div>
 
       {/* 表头区:不随等级变 */}
-      {!isPassiveCard && <div className="grid grid-cols-2 gap-px bg-border/40 text-sm">
-        {showDamageSummary && <Stat label="段数" value={`${card.header.segCount} 段`} />}
-        {showDamageSummary && <Stat label="总系数" value={`×${fmt(card.header.totalPer)}`} accent />}
-        <Stat
+      {showHeaderStats && <div className="grid grid-cols-2 gap-px bg-border/40 text-sm">
+        {showSegmentCount && <Stat label="段数" value={`${card.header.segCount} 段`} />}
+        {showTotalCoefficient && <Stat label="总系数" value={`×${fmt(card.header.totalPer)}`} accent />}
+        {showReleaseTime && <Stat
           label="释放用时"
           value={card.header.releaseSeconds != null ? `${card.header.releaseSeconds.toFixed(3)}s` : '—'}
           hint={card.header.releaseTimeSource === 'sourceDefault30' ? '源码默认30帧' : undefined}
-        />
-        <Stat label="冷却" value={card.header.cd != null ? `${fmt(card.header.cd)}s` : '—'} />
+        />}
+        {showCooldown && <Stat label="冷却" value={card.header.cd != null ? `${fmt(card.header.cd)}s` : '—'} />}
         {/* 静态派生指标(若配置了 header scope 指标,如攻转概览) */}
         {headerMetrics.map((m) => (
           <Stat key={m.key} label={m.label} value={m.display == null ? '—' : String(m.display)} accent />
@@ -716,7 +212,7 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
         {card.skillBaseline?.fixedMultiplierMode === 'static' && (
           <Stat label="固伤修正" value={fmtRatio(card.skillBaseline.correctionRatioStats?.median ?? card.skillBaseline.medianCorrectionRatio)} accent />
         )}
-        {cols.staticVal && <Stat label="总固伤" value={fmt(lastRow?.totalVal)} />}
+        {!isSkillExtraCard && cols.staticVal && <Stat label="总固伤" value={fmt(lastRow?.totalVal)} />}
         {cols.staticMp && <Stat label="耗蓝" value={fmt(lastRow?.consumeMp)} />}
       </div>}
 
@@ -811,7 +307,7 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
                   <Th sticky>等级</Th>
                   {cols.mp && <Th>耗蓝</Th>}
                   {cols.per && <Th>总系数</Th>}
-                  {cols.val && <Th>总固伤</Th>}
+                  {(cols.val || hasSkillExtraVal) && <Th>{isSkillExtraCard ? '技能固伤' : '总固伤'}</Th>}
                   {cols.baselineMultiplier && <Th>固伤倍率</Th>}
                   {cols.baselineCorrection && <Th>固伤修正</Th>}
                   {growthBuffCols.map((c) => (
@@ -833,11 +329,11 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
                       <Td accent sticky>Lv.{lv.level}</Td>
                       {cols.mp && <Td>{fmt(lv.consumeMp)}</Td>}
                       {cols.per && <Td>×{fmt(lv.totalPer)}</Td>}
-                      {cols.val && <Td>{fmt(lv.totalVal)}</Td>}
+                      {(cols.val || hasSkillExtraVal) && <Td>{fmt(lv.totalVal)}</Td>}
                       {cols.baselineMultiplier && <Td cta>{fmtX(baseline?.fixedMultiplier)}</Td>}
                       {cols.baselineCorrection && <Td cta>{fmtRatio(baseline?.correctionRatio)}</Td>}
                       {growthBuffCols.map((c) => <Td key={c.key} cta>{(c.perLevel.get(lv.level) || ['—']).join(' / ')}</Td>)}
-                      {cols.metrics.map((c) => <Td key={c.key} cta>{metricText(lv, c.key)}</Td>)}
+                      {cols.metrics.map((c) => <Td key={c.key} cta wrap>{metricText(lv, c.key)}</Td>)}
                     </tr>
                   );
                 })}
@@ -846,7 +342,7 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
           </div>
         ) : (
           <div className="rounded-lg bg-card px-2.5 py-2 text-[11px] italic text-textSub/80">
-            本技能数值不随等级成长
+            当前没有可展示的等级数值
           </div>
         )}
       </div>}
@@ -866,25 +362,4 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
       )}
     </div>
   );
-}
-
-function Stat({ icon, label, value, accent, hint }: { icon?: React.ReactNode; label: string; value: string; accent?: boolean; hint?: string }) {
-  return (
-    <div className="bg-card px-4 py-2.5">
-      <div className="flex items-center gap-1 text-[11px] text-textSub">{icon}{label}</div>
-      <div className={`mt-0.5 font-mono text-sm font-semibold ${accent ? 'text-primary' : 'text-textMain'}`}>{value}</div>
-      {hint && <div className="text-[10px] text-amber-500">{hint}</div>}
-    </div>
-  );
-}
-
-function Th({ children, sticky }: { children: React.ReactNode; sticky?: boolean }) {
-  const pin = sticky ? 'sticky left-0 z-20 bg-card shadow-[4px_0_10px_rgba(15,23,42,0.08)] w-20 min-w-[5rem]' : '';
-  return <th className={`px-2 py-1 text-center font-medium whitespace-nowrap ${pin}`}>{children}</th>;
-}
-function Td({ children, accent, cta, wrap, sticky }: { children: React.ReactNode; accent?: boolean; cta?: boolean; wrap?: boolean; sticky?: boolean }) {
-  const tone = accent ? 'text-textMain font-semibold' : cta ? 'text-cta' : 'text-textSub';
-  const flow = wrap ? 'min-w-[8rem] max-w-[18rem] whitespace-normal break-words leading-relaxed text-left' : 'whitespace-nowrap text-center';
-  const pin = sticky ? 'sticky left-0 z-10 bg-card shadow-[4px_0_10px_rgba(15,23,42,0.08)] w-20 min-w-[5rem]' : '';
-  return <td className={`px-2 py-1 align-top ${flow} ${tone} ${pin}`}>{children}</td>;
 }

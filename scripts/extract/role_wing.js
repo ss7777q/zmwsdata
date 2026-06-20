@@ -584,27 +584,37 @@ function extractWingUpgrade() {
     }
   }
 
+  const rowsByButeId = new Map();
   for (const r of raw) {
     if (inactiveWingButeIds.has(r.buteId)) continue;
-    const wingName = activeWingNameByButeId.get(r.buteId);
+    if (!rowsByButeId.has(r.buteId)) rowsByButeId.set(r.buteId, []);
+    rowsByButeId.get(r.buteId).push(r);
+  }
+
+  for (const [buteId, rows] of rowsByButeId.entries()) {
+    const wingName = activeWingNameByButeId.get(buteId);
     if (!wingName) {
-      throw new Error(`wingAttribute references missing active wing buteId ${r.buteId}`);
+      throw new Error(`wingAttribute references missing active wing buteId ${buteId}`);
     }
-    if (!wings[r.buteId]) {
-      wings[r.buteId] = { buteId: r.buteId, wingName, levels: [] };
-    }
-    wings[r.buteId].levels.push({
-      wingLevel: r.wingLevel,
-      quality: r.quality,
-      consume: r.consume ? {
-        itemId: r.consume[0],
-        name: u.itemName(r.consume[0]),
-        count: r.consume[1]
-      } : null,
-      roleLevelRequired: roleLevelRequired(r.upLimit),
-      upLimit: parseUpLimit(r.upLimit),
-      attribute: r.attribute,
-      attributeValue: r.attributeValue
+    rows.sort((left, right) => left.wingLevel - right.wingLevel);
+    wings[buteId] = { buteId, wingName, levels: [] };
+    rows.forEach((r, index) => {
+      const previousRow = rows[index - 1];
+      const currentLevelRequired = previousRow ? roleLevelRequired(previousRow.upLimit) : null;
+      wings[buteId].levels.push({
+        wingLevel: r.wingLevel,
+        quality: r.quality,
+        consume: r.consume ? {
+          itemId: r.consume[0],
+          name: u.itemName(r.consume[0]),
+          count: r.consume[1]
+        } : null,
+        roleLevelRequired: currentLevelRequired,
+        nextLevelRoleLevelRequired: roleLevelRequired(r.upLimit),
+        nextLevelLimit: parseUpLimit(r.upLimit),
+        attribute: r.attribute,
+        attributeValue: r.attributeValue
+      });
     });
   }
   u.saveOutput('role_wing_upgrade', Object.values(wings), {
@@ -612,7 +622,7 @@ function extractWingUpgrade() {
     source: 'wingAttribute.*.json',
     costType: '专属翅膀道具 consume:[itemId, count]',
     dedup: '有效翅膀主表对应的升级配置, 不导出 close/cancel 翅膀',
-    note: 'roleLevelRequired 来自 upLimit 中 type=1 条件'
+    note: 'wingAttribute.upLimit 表示从当前等级升到下一等级的条件；roleLevelRequired 为当前等级可达门槛，nextLevelRoleLevelRequired 为升下一级门槛。'
   });
 }
 

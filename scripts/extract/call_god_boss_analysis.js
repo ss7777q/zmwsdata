@@ -6,6 +6,7 @@ const BATTLE_CONFIG_DIR = path.join(u.ROOT, 'file', 'battle-config');
 const ENTITY_CTG_DIR = path.join(BATTLE_CONFIG_DIR, 'entityCtg');
 const BULLETS_PATH = path.join(BATTLE_CONFIG_DIR, 'bullets.json');
 const OVERRIDES_PATH = path.join(__dirname, 'call_god_boss_overrides.json');
+const JIAOCHONG_POISON_BUFF_ID = 1042401;
 
 const SKILL_SOURCE_GROUPS = [
   { key: 'normal', label: '普攻', fields: ['atkIds'], showAsSkillCard: true },
@@ -52,6 +53,23 @@ function formatCoefficient(value) {
   return text ? `${text}系数` : '未配置系数';
 }
 
+function formatSecondsFromFrames(frames) {
+  if (typeof frames !== 'number' || !Number.isFinite(frames)) return null;
+  const seconds = frames / 30;
+  return Number.isInteger(seconds) ? String(seconds) : String(Number(seconds.toFixed(3)));
+}
+
+function formatFramesWithSeconds(frames) {
+  const seconds = formatSecondsFromFrames(frames);
+  return seconds ? `${frames}帧（${seconds}秒）` : `${frames}帧`;
+}
+
+function formatPercentFromRatio(value) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null;
+  const percent = Math.abs(value) * 100;
+  return Number.isInteger(percent) ? String(percent) : String(Number(percent.toFixed(3)));
+}
+
 function buildBuffPlayerText(buff) {
   const text = cleanText(buff?.text) || cleanText(buff?.name);
   if (!text) return '';
@@ -72,6 +90,93 @@ function buildBeSkillPlayerText(row) {
   if (typeof row?.chargedCd === 'number' && row.chargedCd > 0) parts.push(`每${row.chargedCd}帧恢复1次`);
   if (typeof row?.cd === 'number' && row.cd > 0) parts.push(`触发间隔${row.cd}帧`);
   return parts.join('，');
+}
+
+function buffValuePercent(buff) {
+  return Array.isArray(buff?.value) && typeof buff.value[0] === 'number'
+    ? formatPercentFromRatio(buff.value[0])
+    : null;
+}
+
+function attachedBuffs(buff, buffById) {
+  return uniqueNumbers(buff?.attachBuff || []).map((id) => buffById?.get(id)).filter(Boolean);
+}
+
+function buildBuffAssembleEffectText(buff, buffById) {
+  const text = cleanText(buff?.text) || cleanText(buff?.name);
+  const parts = [];
+  const attach = attachedBuffs(buff, buffById);
+
+  if (typeof buff?.time === 'number' && buff.time > 0) parts.push(`持续${formatFramesWithSeconds(buff.time)}`);
+  if (typeof buff?.interval === 'number' && buff.interval > 0) parts.push(`每${formatFramesWithSeconds(buff.interval)}触发1次`);
+  if (typeof buff?.maxPiles === 'number' && buff.maxPiles > 0) parts.push(`最高${buff.maxPiles}层`);
+
+  if (buff?.type === 114 && /僵直/.test(text)) {
+    parts.push('触发身体僵直');
+  } else if (buff?.type === 35 || /冻结/.test(buff?.name || '')) {
+    parts.push('期间无法移动、无法攻击和使用技能、禁止使用法宝');
+  } else if (buff?.type === 155 && typeof buff?.value?.atkPer === 'number') {
+    parts.push(`每次触发造成${coefficientNumber(buff.value.atkPer)}系数生命损失`);
+    if (buff.value.unShield === 1) parts.push('无视护盾');
+    if (attach.some((item) => /治疗|回血|恢复生命/.test(`${item.name || ''}${item.text || ''}`))) {
+      parts.push('期间治疗无效并无法恢复生命值');
+    }
+  } else if (buff?.type === 16 && typeof buff?.value?.param?.[3] === 'number') {
+    parts.push(`每次触发扣除${coefficientNumber(Math.abs(buff.value.param[3]))}系数魔法值`);
+    if (attach.some((item) => /回魔|回蓝|魔法/.test(`${item.name || ''}${item.text || ''}`))) {
+      parts.push('期间无法恢复魔法值');
+    }
+  } else if (buff?.type === 4 && buffValuePercent(buff)) {
+    parts.push(`移速降低${buffValuePercent(buff)}%`);
+    const jumpBuff = attach.find((item) => /跳跃/.test(`${item.name || ''}${item.text || ''}`));
+    const jumpPercent = jumpBuff ? buffValuePercent(jumpBuff) : null;
+    if (jumpPercent) parts.push(`跳跃力降低${jumpPercent}%`);
+    if (attach.some((item) => /禁止召唤坐骑/.test(`${item.name || ''}${item.text || ''}`))) parts.push('禁止召唤坐骑');
+  } else if (buff?.type === 7 && buffValuePercent(buff)) {
+    parts.push(`命中率降低${buffValuePercent(buff)}%`);
+    if (attach.some((item) => /能见度|小地图/.test(`${item.name || ''}${item.text || ''}`))) {
+      parts.push('能见度下降，且无法在小地图看到魔王和队友');
+    }
+  } else if (text) {
+    parts.push(text);
+  }
+
+  return parts.join('，');
+}
+
+function formatBuffAssembleListeners(ids, buffById) {
+  const counts = new Map();
+  for (const id of ids || []) {
+    if (typeof id !== 'number' || !Number.isFinite(id)) continue;
+    counts.set(id, (counts.get(id) || 0) + 1);
+  }
+  return [...counts.entries()].map(([id, count]) => {
+    const name = cleanText(buffById.get(id)?.name) || `BUFF ${id}`;
+    return count > 1 ? `${count}个${name}` : name;
+  }).join(' + ');
+}
+
+function buildBuffAssembleText(row, buffById) {
+  if (row?.label !== 'buffAssemble' || !buffById) return '';
+  const rawLsnBuffs = Array.isArray(row.attribute?.lsnBuffs) ? row.attribute.lsnBuffs : [];
+  const lsnBuffs = uniqueNumbers(rawLsnBuffs);
+  const detBuffs = uniqueNumbers(row.attribute?.detBuffs || []);
+  if (!lsnBuffs.length || !detBuffs.length) return '';
+
+  const rowName = cleanText(row.name);
+  const comboText = rowName.match(/：(.+?)=/)?.[1] || lsnBuffs
+    .map((id) => cleanText(buffById.get(id)?.name) || `BUFF ${id}`)
+    .join('+');
+  const listenerText = formatBuffAssembleListeners(rawLsnBuffs, buffById);
+  const effectNameHints = rowName.match(/=(.+)$/)?.[1]?.split(/[+、，,]/).map((item) => cleanText(item)).filter(Boolean) || [];
+  const effectTexts = detBuffs.map((id, index) => {
+    const buff = buffById.get(id);
+    if (!buff) return `缺少组合效果 BUFF ${id}`;
+    const detail = buildBuffAssembleEffectText(buff, buffById);
+    return `【${effectNameHints[index] || cleanText(buff.name) || id}】${detail ? `：${detail}` : ''}`;
+  });
+
+  return `${comboText} 元素组合触发${effectTexts.join('；')}。目标身上凑齐 ${listenerText} 时触发。`;
 }
 
 function mechanismEntry(type, text, source) {
@@ -151,8 +256,15 @@ function collectBulletHitFacts(bullet, spawnFrame, skillLevelRow) {
     .filter((entry) => entry && entry.type === 1)
     .map((entry, hitIndex) => {
       const hitBuffIds = [];
+      const hitBuffCounts = {};
       for (const subEntry of entry.com || []) {
-        if (Array.isArray(subEntry.hitBuff)) hitBuffIds.push(...uniqueNumbers(subEntry.hitBuff));
+        if (Array.isArray(subEntry.hitBuff)) {
+          hitBuffIds.push(...uniqueNumbers(subEntry.hitBuff));
+          for (const buffId of subEntry.hitBuff) {
+            if (typeof buffId !== 'number') continue;
+            hitBuffCounts[buffId] = (hitBuffCounts[buffId] || 0) + 1;
+          }
+        }
       }
       const coefficient = skillLevelCoefficient(skillLevelRow, bullet.id, hitIndex);
 
@@ -169,8 +281,145 @@ function collectBulletHitFacts(bullet, spawnFrame, skillLevelRow) {
           fixedDamage: 0,
         },
         hitBuffIds: [...new Set(hitBuffIds)],
+        hitBuffCounts,
       };
     });
+}
+
+function buildJiaochongPoisonMechanism(skillName, damageSegments, buffById, warnings) {
+  const poisonBuff = buffById.get(JIAOCHONG_POISON_BUFF_ID);
+  const poisonSegments = (damageSegments || [])
+    .filter((segment) => segment.damage && segment.hitBuffCounts?.[JIAOCHONG_POISON_BUFF_ID])
+    .map((segment, index) => ({
+      index,
+      stacksPerHit: segment.hitBuffCounts[JIAOCHONG_POISON_BUFF_ID],
+      hitCount: isConfirmedHitCount(segment.maxHit) ? segment.maxHit : null,
+    }));
+  if (!poisonSegments.length) return null;
+  if (!poisonBuff) {
+    warnings.push(`${skillName} 命中会附加毒素 buff ${JIAOCHONG_POISON_BUFF_ID}，但找不到 buff 配置`);
+    return null;
+  }
+
+  const perTick = Math.abs(Number(poisonBuff.value?.[0]?.[0]));
+  const durationFrames = typeof poisonBuff.time === 'number' ? poisonBuff.time : null;
+  const intervalFrames = typeof poisonBuff.interval === 'number' ? poisonBuff.interval : null;
+  const tickCount = durationFrames && intervalFrames ? Math.floor(durationFrames / intervalFrames) : null;
+  const totalPerLayer = typeof perTick === 'number' && Number.isFinite(perTick) && tickCount ? perTick * tickCount : null;
+  const maxStacks = typeof poisonBuff.maxPiles === 'number' ? poisonBuff.maxPiles : null;
+
+  const parts = poisonSegments.map((segment) => {
+    const base = poisonSegments.length > 1 ? `第${segment.index + 1}段` : '命中';
+    const stackText = segment.hitCount && segment.hitCount > 1
+      ? `${segment.stacksPerHit}层×${segment.hitCount}次`
+      : `${segment.stacksPerHit}层`;
+    return `${base}${stackText}`;
+  });
+  const confirmedTotalStacks = poisonSegments.every((segment) => segment.hitCount != null)
+    ? poisonSegments.reduce((sum, segment) => sum + segment.stacksPerHit * segment.hitCount, 0)
+    : null;
+
+  const timingText = durationFrames && intervalFrames
+    ? `每层持续${durationFrames}帧（${formatSecondsFromFrames(durationFrames)}秒），每${intervalFrames}帧（${formatSecondsFromFrames(intervalFrames)}秒）触发1次`
+    : '毒素持续和触发间隔未完整解析';
+  const damageText = Number.isFinite(perTick)
+    ? `每层每次触发造成${coefficientNumber(perTick)}系数持续伤害${totalPerLayer != null ? `；单层完整持续共${coefficientNumber(totalPerLayer)}系数` : ''}`
+    : '毒素单跳伤害未解析';
+  const stackText = confirmedTotalStacks != null
+    ? `本技能完整命中叠${confirmedTotalStacks}层毒素（${parts.join('，')}）`
+    : `本技能命中会叠毒素（${parts.join('，')}，存在未确认命中次数）`;
+  const maxText = maxStacks ? `，最高${maxStacks}层` : '';
+
+  return mechanismEntry(
+    '毒素机制',
+    `${stackText}。${timingText}${maxText}；${damageText}。目标处于【疯幻】状态时，骄虫常驻被动会让毒素伤害额外扣除魔法值。`,
+    {
+      id: poisonBuff.id,
+      name: poisonBuff.name,
+      durationFrames,
+      intervalFrames,
+      maxStacks,
+      value: poisonBuff.value,
+      stacksPerFullHit: confirmedTotalStacks,
+    }
+  );
+}
+
+function isConfirmedHitCount(value) {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 && value <= 50;
+}
+
+function coefficientText(value) {
+  return coefficientNumber(value) || '未配置系数';
+}
+
+function hitCountText(value) {
+  return isConfirmedHitCount(value) ? String(value) : '未确认';
+}
+
+function damageSegmentText(segment) {
+  return `${coefficientText(segment?.damage?.coefficient)}×${hitCountText(segment?.maxHit)}连击`;
+}
+
+function groupDamageSegments(segments) {
+  const groups = [];
+  for (const segment of (segments || []).filter((item) => item.damage)) {
+    const coefficient = typeof segment.damage?.coefficient === 'number' ? segment.damage.coefficient : null;
+    const group = groups.find((item) => item.coefficient === coefficient) || { coefficient, hits: 0, unknownHits: false };
+    if (isConfirmedHitCount(segment.maxHit)) group.hits += segment.maxHit;
+    else group.unknownHits = true;
+    if (!groups.includes(group)) groups.push(group);
+  }
+  return groups;
+}
+
+function damageGroupText(group) {
+  const hitText = group.unknownHits ? (group.hits > 0 ? `${group.hits}+未确认` : '未确认') : String(group.hits);
+  return `${coefficientText(group.coefficient)}×${hitText}连击`;
+}
+
+function buildConfigDamageDisplay(skill) {
+  const groups = groupDamageSegments(skill.damageSegments || []);
+  return {
+    formula: groups.length ? groups.map(damageGroupText).join(' + ') : '无直接伤害',
+    total: groups.length && typeof skill.totalCoefficient === 'number' && Number.isFinite(skill.totalCoefficient)
+      ? coefficientText(skill.totalCoefficient)
+      : '—',
+  };
+}
+
+function applyDamageDisplayHints(skill, override, warnings) {
+  const base = buildConfigDamageDisplay(skill);
+  const displayOverride = override?.damageDisplay && typeof override.damageDisplay === 'object' ? override.damageDisplay : null;
+  if (!displayOverride) return { display: base, ignoredFields: [] };
+
+  const result = { ...base };
+  const ignoredFields = [];
+  const label = `${skill.name || skill.id} damageDisplay`;
+  for (const key of ['formula', 'total']) {
+    if (Object.prototype.hasOwnProperty.call(displayOverride, key)) {
+      ignoredFields.push(`damageDisplay.${key}`);
+    }
+  }
+  if (typeof displayOverride.timing === 'string') result.timing = displayOverride.timing;
+  if (typeof displayOverride.hideAutoBreakdown === 'boolean') result.hideAutoBreakdown = displayOverride.hideAutoBreakdown;
+
+  if (Array.isArray(displayOverride.breakdown)) {
+    const sourceSegments = (skill.damageSegments || []).filter((item) => item.damage);
+    result.breakdown = displayOverride.breakdown.map((item, index) => {
+      if (item && Object.prototype.hasOwnProperty.call(item, 'text')) {
+        ignoredFields.push(`damageDisplay.breakdown[${index}].text`);
+      }
+      const sourceSegment = sourceSegments[index];
+      if (!sourceSegment) warnings.push(`${label}.breakdown[${index}] 没有匹配到配置伤害段`);
+      return {
+        label: cleanText(item?.label) || `第${index + 1}段`,
+        text: sourceSegment ? damageSegmentText(sourceSegment) : '配置未解析',
+        ...(cleanText(item?.detail) ? { detail: cleanText(item.detail) } : {}),
+      };
+    });
+  }
+  return { display: result, ignoredFields };
 }
 
 function resolveBuffBrief(buffIds, buffById) {
@@ -188,17 +437,24 @@ function resolveBuffBrief(buffIds, buffById) {
   });
 }
 
-function resolveBeSkillBrief(ids, beSkillById) {
+function resolveBeSkillBrief(ids, beSkillById, buffById) {
   return uniqueNumbers(ids).map((id) => {
     const row = beSkillById.get(id);
+    const assembledDescription = buildBuffAssembleText(row, buffById);
     return {
       id,
       name: row?.text || row?.name || '',
-      description: buildBeSkillPlayerText(row),
+      description: assembledDescription || buildBeSkillPlayerText(row),
       cooldownFrames: typeof row?.cd === 'number' ? row.cd : null,
       initialCooldownFrames: typeof row?.initCd === 'number' ? row.initCd : null,
       chargeCount: typeof row?.chargedNumber === 'number' ? row.chargedNumber : null,
       chargeCooldownFrames: typeof row?.chargedCd === 'number' ? row.chargedCd : null,
+      ...(assembledDescription ? {
+        assembledBuffs: {
+          listenBuffs: uniqueNumbers(row?.attribute?.lsnBuffs || []),
+          effectBuffs: uniqueNumbers(row?.attribute?.detBuffs || []),
+        },
+      } : {}),
     };
   });
 }
@@ -281,12 +537,15 @@ function resolveSkill(skillId, context, sourceGroup, depth = 0, visited = new Se
   const mechanics = [];
   const intro = cleanText(skill.desIntro);
   if (intro) mechanics.push(mechanismEntry('技能说明', intro));
-  for (const item of resolveBeSkillBrief([...(skill.beSkill || []), ...(skill.beSkill2 || [])], context.beSkillById)) {
+  for (const item of resolveBeSkillBrief([...(skill.beSkill || []), ...(skill.beSkill2 || [])], context.beSkillById, context.buffById)) {
     mechanics.push(mechanismEntry('被动效果', item.description, item));
   }
+  const poisonMechanism = buildJiaochongPoisonMechanism(skill.desName || skill.Name || skill.id, allSegments, context.buffById, warnings);
   for (const item of resolveBuffBrief([...actionBuffIds, ...hitBuffIds], context.buffById)) {
+    if (poisonMechanism && item.id === JIAOCHONG_POISON_BUFF_ID) continue;
     mechanics.push(mechanismEntry('附带效果', item.text, item));
   }
+  if (poisonMechanism) mechanics.push(poisonMechanism);
 
   return {
     id: skill.id,
@@ -304,6 +563,7 @@ function resolveSkill(skillId, context, sourceGroup, depth = 0, visited = new Se
     confirmedHits,
     totalCoefficient: totalCoefficient || null,
     totalCoefficientText: totalCoefficient ? formatCoefficient(totalCoefficient) : '',
+    damageDisplay: buildConfigDamageDisplay({ damageSegments: allSegments, totalCoefficient: totalCoefficient || null }),
     damageSegments: allSegments,
     directDamageSegments: damageSegments,
     mechanics: compactMechanisms(mechanics),
@@ -347,7 +607,7 @@ function monsterIdsForBossRow(row) {
   return [...new Set(Object.values(row?.monsterId || {}).filter((id) => typeof id === 'number'))];
 }
 
-function buildFashionByBossGroup(fashionRows, bossGroupByRowId, beSkillById) {
+function buildFashionByBossGroup(fashionRows, bossGroupByRowId, beSkillById, buffById) {
   const map = new Map();
   for (const fashion of fashionRows) {
     const groupId = bossGroupByRowId.get(Number(fashion.godWarBossId));
@@ -358,14 +618,14 @@ function buildFashionByBossGroup(fashionRows, bossGroupByRowId, beSkillById) {
       name: fashion.name,
       description: cleanText(fashion.desc),
       permanentOptions: Array.isArray(fashion.time) ? fashion.time.includes(-1) : false,
-      effects: resolveBeSkillBrief([...(fashion.beskill || []), ...(fashion.beskillLimit || []).map((item) => item?.[0])], beSkillById)
+      effects: resolveBeSkillBrief([...(fashion.beskill || []), ...(fashion.beskillLimit || []).map((item) => item?.[0])], beSkillById, buffById)
         .filter((item) => item.description),
     });
   }
   return map;
 }
 
-function buildTalents(talentRows, talentGroupRows, beSkillById) {
+function buildTalents(talentRows, talentGroupRows, beSkillById, buffById) {
   const groupInfoByTalent = new Map();
   for (const row of talentGroupRows) {
     for (const talentGroup of row.talentGroups || []) {
@@ -388,7 +648,7 @@ function buildTalents(talentRows, talentGroupRows, beSkillById) {
       name: first.talentName,
       unlockStageRange: Array.isArray(groupInfo?.godWar) ? groupInfo.godWar : null,
       maxLevel: sorted[sorted.length - 1]?.talentLevel || sorted.length,
-      effects: resolveBeSkillBrief(first.beskillId || [], beSkillById).filter((item) => item.description),
+      effects: resolveBeSkillBrief(first.beskillId || [], beSkillById, buffById).filter((item) => item.description),
       levels: sorted.map((row) => ({
         level: row.talentLevel,
         cost: row.talentCost,
@@ -409,26 +669,36 @@ function applyBossOverride(entry, overrides) {
   if (!bossOverride) {
     return {
       ...entry,
-      baseMechanisms: [],
-      skills: (entry.skills || []).map((skill) => ({ ...skill, mechanics: [] })),
+      baseMechanisms: entry.baseMechanisms || [],
+      skills: (entry.skills || []).map((skill) => ({ ...skill, damageDisplay: buildConfigDamageDisplay(skill) })),
+      internalSkills: (entry.internalSkills || []).map((skill) => ({ ...skill, damageDisplay: buildConfigDamageDisplay(skill) })),
       mechanismOverride: { covered: false },
     };
   }
 
   const applySkillOverride = (skill) => {
     const override = skillOverrideFor(skill, bossOverride);
-    if (!override) return { ...skill, mechanics: [] };
+    if (!override) return { ...skill, damageDisplay: buildConfigDamageDisplay(skill) };
+    const warnings = [...(skill.warnings || [])];
+    const damageDisplayHints = applyDamageDisplayHints(skill, override, warnings);
     return {
       ...skill,
-      damageDisplay: override.damageDisplay && typeof override.damageDisplay === 'object' ? override.damageDisplay : skill.damageDisplay,
-      mechanics: Array.isArray(override.mechanics) ? override.mechanics : skill.mechanics,
-      mechanismOverride: { covered: true },
+      damageDisplay: damageDisplayHints.display,
+      mechanics: compactMechanisms([
+        ...(skill.mechanics || []),
+        ...(Array.isArray(override.mechanics) ? override.mechanics : []),
+      ]),
+      warnings,
+      mechanismOverride: { covered: true, ignoredDamageDisplayFields: damageDisplayHints.ignoredFields },
     };
   };
 
   return {
     ...entry,
-    baseMechanisms: Array.isArray(bossOverride.baseMechanisms) ? bossOverride.baseMechanisms : [],
+    baseMechanisms: compactMechanisms([
+      ...(entry.baseMechanisms || []),
+      ...(Array.isArray(bossOverride.baseMechanisms) ? bossOverride.baseMechanisms : []),
+    ]),
     skills: (entry.skills || []).map(applySkillOverride),
     internalSkills: (entry.internalSkills || []).map(applySkillOverride),
     mechanismOverride: { covered: true },
@@ -460,7 +730,7 @@ function buildBossAnalysisPayload() {
 
   const bossGroupByRowId = new Map();
   for (const row of bossRows) bossGroupByRowId.set(Number(row.id), row.group);
-  const fashionByBossGroup = buildFashionByBossGroup(fashionRows, bossGroupByRowId, beSkillById);
+  const fashionByBossGroup = buildFashionByBossGroup(fashionRows, bossGroupByRowId, beSkillById, buffById);
 
   return groupBossRows(bossRows)
     .map(({ groupId, rows }) => {
@@ -480,8 +750,8 @@ function buildBossAnalysisPayload() {
       });
 
       const initBuffs = resolveBuffBrief(primaryMonster?.initBuff || [], buffById);
-      const initBeSkills = resolveBeSkillBrief(primaryMonster?.initBeSkill || [], beSkillById);
-      const bossRowBeSkills = resolveBeSkillBrief(rows.flatMap((row) => row.beSkill || []), beSkillById);
+      const initBeSkills = resolveBeSkillBrief(primaryMonster?.initBeSkill || [], beSkillById, buffById);
+      const bossRowBeSkills = resolveBeSkillBrief(rows.flatMap((row) => row.beSkill || []), beSkillById, buffById);
       const bossRowWuShuangSkills = uniqueNumbers(rows.flatMap((row) => row.wsSkill || []))
         .map((skillId) => resolveSkill(skillId, context, WUSHUANG_SKILL_GROUP));
       const skills = uniqueSkills([...resolvedSkills.filter((skill) => skill.showAsSkillCard), ...bossRowWuShuangSkills]);
@@ -527,7 +797,8 @@ function buildBossTalentPayload() {
   const talentRows = u.loadTable('godWarBossTalent');
   const talentGroupRows = u.loadTable('godWarBossTalentGroup');
   const beSkillById = indexById(u.loadTable('beskill'));
-  return buildTalents(talentRows, talentGroupRows, beSkillById);
+  const buffById = indexById(u.loadTable('buff'));
+  return buildTalents(talentRows, talentGroupRows, beSkillById, buffById);
 }
 
 function extractCallGodBossAnalysis() {

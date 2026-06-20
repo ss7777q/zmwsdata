@@ -1,4 +1,4 @@
-import { Award, Box, CircleHelp, ChevronLeft, ChevronRight, Dog, Flame, Search, ServerCog, Shield, Skull, Star, Trophy, User, Zap, Sliders } from 'lucide-react';
+import { Award, BookOpenText, Box, CircleHelp, ChevronLeft, ChevronRight, Dog, Flame, Gauge, PackageOpen, Search, ServerCog, Shield, Skull, Star, Trophy, User, Zap, Sliders } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface SideNavProps {
@@ -17,15 +17,18 @@ const menuItems = [
   { id: 'role_starstone', label: '星石系统', icon: Sliders },
   { id: 'role_fashion', label: '角色时装', icon: Star },
   { id: 'role_honor', label: '称号系统', icon: Award },
+  { id: 'role_extreme_stats', label: '极限属性', icon: Gauge },
   { id: 'role_wing', label: '翅膀系统', icon: Box },
   { id: 'role_cultivate', label: '修炼系统', icon: User },
   { id: 'pet', label: '宠物系统', icon: Dog },
   { id: 'beast_stats', label: '万兽统计', icon: Trophy },
   { id: 'ride', label: '坐骑系统', icon: Box },
   { id: 'call_god', label: '神魔相关', icon: Flame },
+  { id: 'rogue_item', label: '局内道具', icon: PackageOpen },
   { id: 'boss', label: 'BOSS 属性', icon: Skull },
   { id: 'resist', label: '抗值标准', icon: Shield },
   { id: 'player_lookup', label: '玩家改名记录', icon: Search },
+  { id: 'cold_knowledge', label: '冷知识', icon: BookOpenText },
   { id: 'help', label: '帮助与反馈', icon: CircleHelp },
   { id: 'ops', label: '资源运维', icon: ServerCog },
 ];

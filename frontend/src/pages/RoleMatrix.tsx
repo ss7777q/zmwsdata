@@ -18,70 +18,9 @@ const QUALITY_COLORS: Record<number, string> = {
     5: 'text-yellow-600 dark:text-yellow-500 border-yellow-500/20 group-hover:border-yellow-500/40 hover:shadow-[0_8px_30px_rgba(234,179,8,0.04)]',
     6: 'text-red-500 border-red-500/20 group-hover:border-red-500/40 hover:shadow-[0_8px_30px_rgba(239,68,68,0.04)]'
 };
-
-interface MatrixEffectTable {
-    title: string;
-    columns: string[];
-    rows: {
-        label?: string;
-        level?: number;
-        values: string[];
-    }[];
-    emptyText: string;
-}
-
-
-
-
-
-function EffectGrowthTable({ table }: { table: MatrixEffectTable | null }) {
-    if (!table) return null;
-    const hasRows = table.columns.length > 0 && table.rows.length > 0;
-
-    return (
-        <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
-            <div className="border-b border-border/60 bg-slate-500/[0.02] dark:bg-white/[0.01] px-5 py-3.5">
-                <div className="text-xs font-bold tracking-wider text-textMain uppercase">
-                    {table.title}
-                </div>
-            </div>
-            {hasRows ? (
-                <div className="overflow-x-auto custom-scrollbar">
-                    <table className="w-full min-w-[520px] text-center text-xs">
-                        <thead>
-                            <tr className="border-b border-border/40 bg-slate-500/[0.04] dark:bg-white/[0.02] text-textSub">
-                                <th className="sticky left-0 z-10 bg-card px-4 py-2.5 font-semibold text-[10px] tracking-wider">Lv.</th>
-                                {table.columns.map((column) => (
-                                    <th key={column} className="border-l border-border/20 px-4 py-2.5 font-semibold text-[10px] tracking-wider">
-                                        {column}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/20">
-                            {table.rows.map((row) => (
-                                <tr key={row.label || row.level} className="hover:bg-purple-500/[0.02] transition-colors duration-150">
-                                    <td className="sticky left-0 z-10 bg-card px-4 py-2.5 font-mono font-bold text-textMain text-xs">
-                                        {row.label || `Lv.${row.level}`}
-                                    </td>
-                                    {row.values.map((value, index) => (
-                                        <td key={index} className="min-w-[120px] border-l border-border/20 px-4 py-2.5 align-top font-mono leading-5 text-textSub text-[11px]">
-                                            {value}
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            ) : (
-                <div className="px-5 py-6 text-xs leading-6 text-textSub/75">
-                    {table.emptyText}
-                </div>
-            )}
-        </div>
-    );
-}
+import { EffectGrowthTable } from '../components/roleMatrix/MatrixEffectGrowthTable';
+import { MatrixTabs } from '../components/roleMatrix/MatrixTabs';
+import { sumMatrixPartsCost } from '../components/roleMatrix/matrixCost';
 
 interface Props {
     dataSources: Record<string, any>;
@@ -152,68 +91,9 @@ export default function RoleMatrix({ dataSources }: Props) {
                 }
             });
 
-            // 2. 辅助函数：计算装备部件(法器/镇魂)各类消耗单次组合汇总
-            const sumPartsCost = (parts: any[]) => {
-                const upMap = new Map();
-                const clearMap = new Map();
-                const luckMap = new Map();
 
-                const details: any[] = [];
-
-                parts.forEach(part => {
-                    const limit = part.levelLimit || 0;
-                    const partUpCosts: any[] = [];
-                    const partLuckCosts: any[] = [];
-
-                    if (Array.isArray(part.upLevelCost)) {
-                        part.upLevelCost.forEach((c: any) => {
-                            if (c.itemId === 1 || !c.itemId) return;
-                            const exist = upMap.get(c.itemId) || { name: c.name, count: 0 };
-                            exist.count += c.count * limit; // 获取拉满的材料总量
-                            upMap.set(c.itemId, exist);
-
-                            partUpCosts.push({ ...c, count: c.count * limit });
-                        });
-                    }
-                    if (Array.isArray(part.clearCost)) {
-                        part.clearCost.forEach((c: any) => {
-                            if (c.itemId === 1 || !c.itemId) return;
-                            const exist = clearMap.get(c.itemId) || { name: c.name, count: 0 };
-                            exist.count += c.count;
-                            clearMap.set(c.itemId, exist);
-                        });
-                    }
-                    if (part.luckClear) {
-                        Object.entries(part.luckClear).forEach(([key, c]: [string, any]) => {
-                            if (c.itemId === 1 || !c.itemId) return;
-                            const luckType = key === '0' ? '全部' : '单条';
-                            const mapKey = `${c.itemId}_${luckType}`;
-
-                            const exist = luckMap.get(mapKey) || { itemId: c.itemId, name: `${c.name}(${luckType})`, count: 0 };
-                            exist.count += c.count;
-                            luckMap.set(mapKey, exist);
-
-                            partLuckCosts.push({ ...c, luckLabel: luckType });
-                        });
-                    }
-
-                    details.push({
-                        name: part.name, // 例如 "天"
-                        upCosts: partUpCosts,
-                        luckCosts: partLuckCosts
-                    });
-                });
-
-                return {
-                    upCosts: Array.from(upMap.entries()).map(([itemId, v]) => ({ itemId, ...v })),
-                    clearCosts: Array.from(clearMap.entries()).map(([itemId, v]) => ({ itemId, ...v })),
-                    luckCosts: Array.from(luckMap.entries()).map(([itemId, v]) => ({ itemId, ...v })),
-                    details
-                };
-            };
-
-            const fqCosts = sumPartsCost(myFq);
-            const zhCosts = sumPartsCost(myZh);
+            const fqCosts = sumMatrixPartsCost(myFq);
+            const zhCosts = sumMatrixPartsCost(myZh);
 
             return {
                 id: uid,
@@ -245,31 +125,7 @@ export default function RoleMatrix({ dataSources }: Props) {
 
     return (
         <div className="space-y-6 animate-fade-in fade-in">
-            {/* 顶部分类选项卡 */}
-            <div className="flex bg-slate-200/40 dark:bg-black/20 p-1 rounded-xl border border-slate-300/60 dark:border-border/60 w-max mb-6 gap-1 shadow-sm backdrop-blur-sm">
-                <button
-                    onClick={() => setActiveTab('cost')}
-                    className={clsx(
-                        "px-6 py-2 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border active:scale-95",
-                        activeTab === 'cost'
-                            ? "bg-purple-500/10 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-300/50 dark:border-purple-500/30 shadow-[0_2px_10px_rgba(168,85,247,0.08)]"
-                            : "text-slate-500 dark:text-textSub hover:text-slate-800 dark:hover:text-textMain hover:bg-slate-200/60 dark:hover:bg-white/5 border-transparent"
-                    )}
-                >
-                    升级消耗
-                </button>
-                <button
-                    onClick={() => setActiveTab('effect')}
-                    className={clsx(
-                        "px-6 py-2 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border active:scale-95",
-                        activeTab === 'effect'
-                            ? "bg-purple-500/10 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-300/50 dark:border-purple-500/30 shadow-[0_2px_10px_rgba(168,85,247,0.08)]"
-                            : "text-slate-500 dark:text-textSub hover:text-slate-800 dark:hover:text-textMain hover:bg-slate-200/60 dark:hover:bg-white/5 border-transparent"
-                    )}
-                >
-                    阵法效果
-                </button>
-            </div>
+            <MatrixTabs activeTab={activeTab} onChange={setActiveTab} />
 
             {activeTab === 'cost' ? (
                 /* 升级消耗内容 */
