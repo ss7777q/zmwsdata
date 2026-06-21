@@ -13,6 +13,7 @@ export default function CultivateInner({ dataSources }: Props) {
     const danqiData = (dataSources['role_danqi'] as any)?.data || [];
     const danyuanData = (dataSources['role_danyuan'] as any)?.data || [];
     const danyuanEffectData = (dataSources['role_danyuan_effect'] as any)?.data;
+    const danyuanEffectIndexData = (dataSources['role_danyuan_effect_index'] as any)?.data;
 
     const activeTab = location.pathname.endsWith('/inner/danyuan')
         ? 'danyuan'
@@ -56,7 +57,7 @@ export default function CultivateInner({ dataSources }: Props) {
         };
     }).filter((x: any) => x.cost && x.targetName);
 
-    if (danqiData.length === 0 && danyuanData.length === 0 && !danyuanEffectData?.families?.length) {
+    if (danqiData.length === 0 && danyuanData.length === 0 && !danyuanEffectData?.families?.length && !danyuanEffectIndexData?.families?.length) {
         return (
             <div className="flex flex-col items-center justify-center py-20 border border-dashed border-border/80 bg-slate-500/[0.01] dark:bg-white/[0.01] rounded-xl">
                 <div className="relative flex items-center justify-center w-12 h-12 mb-3">
