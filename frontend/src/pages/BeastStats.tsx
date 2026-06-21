@@ -1,18 +1,15 @@
 import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
-import { apiUrl, type BeastDetailResponse, type BeastLineupAnalysisResponse, type BeastPlayerAnalysisResponse } from '../lib/api';
+import type { BeastDetailResponse, BeastLineupAnalysisResponse, BeastPlayerAnalysisResponse } from '../lib/api';
+import { loadDataFile } from '../hooks/useGameData';
 import { DetailTab } from '../components/beastStats/BeastDetailTab';
 import { LineupTab } from '../components/beastStats/BeastLineupTab';
 import { PlayerTab } from '../components/beastStats/BeastPlayerTab';
 import { EmptyState, type BeastStatsProps, type BeastTab } from '../components/beastStats/beastStatsShared';
 
 async function fetchDataFile<T>(name: string): Promise<T> {
-  const response = await fetch(apiUrl(`/api/data/${name}`), { cache: 'no-store' });
-  if (!response.ok) {
-    throw new Error(`加载 ${name} 失败: ${response.status}`);
-  }
-
-  const payload = await response.json() as { data?: T };
+  const payload = await loadDataFile(name) as { data?: T };
   if (!payload || typeof payload !== 'object' || !('data' in payload)) {
     throw new Error(`${name} 返回格式不正确`);
   }
@@ -21,7 +18,13 @@ async function fetchDataFile<T>(name: string): Promise<T> {
 }
 
 export default function BeastStats({ detailSource, lineupSource, playerSource, loading = false }: BeastStatsProps) {
-  const [activeTab, setActiveTab] = useState<BeastTab>('detail');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const activeTab: BeastTab = location.pathname.endsWith('/lineup')
+    ? 'lineup'
+    : location.pathname.endsWith('/players')
+      ? 'players'
+      : 'detail';
   const [detailData, setDetailData] = useState<BeastDetailResponse | undefined>(detailSource);
   const [lineupData, setLineupData] = useState<BeastLineupAnalysisResponse | undefined>(lineupSource);
   const [playerData, setPlayerData] = useState<BeastPlayerAnalysisResponse | undefined>(playerSource);
@@ -46,19 +49,25 @@ export default function BeastStats({ detailSource, lineupSource, playerSource, l
       try {
         const tasks: Promise<void>[] = [];
 
-        if (!detailSource) {
+        if (activeTab === 'detail' && !detailSource) {
           tasks.push(fetchDataFile<BeastDetailResponse>('beast_detail').then((data) => {
             if (!cancelled) setDetailData(data);
           }));
         }
 
-        if (!lineupSource) {
+        if (activeTab === 'lineup' && !lineupSource) {
           tasks.push(fetchDataFile<BeastLineupAnalysisResponse>('beast_lineup_analysis').then((data) => {
             if (!cancelled) setLineupData(data);
           }));
         }
 
-        if (!playerSource) {
+        if (activeTab === 'players' && !detailSource) {
+          tasks.push(fetchDataFile<BeastDetailResponse>('beast_detail').then((data) => {
+            if (!cancelled) setDetailData(data);
+          }));
+        }
+
+        if (activeTab === 'players' && !playerSource) {
           tasks.push(fetchDataFile<BeastPlayerAnalysisResponse>('beast_player_analysis').then((data) => {
             if (!cancelled) setPlayerData(data);
           }));
@@ -79,9 +88,9 @@ export default function BeastStats({ detailSource, lineupSource, playerSource, l
     return () => {
       cancelled = true;
     };
-  }, [detailSource, lineupSource, playerSource]);
+  }, [activeTab, detailSource, lineupSource, playerSource]);
 
-  if (loading && (!detailData || !lineupData || !playerData)) {
+  if (loading && ((activeTab === 'detail' && !detailData) || (activeTab === 'lineup' && !lineupData) || (activeTab === 'players' && (!detailData || !playerData)))) {
     return <EmptyState message="正在加载万兽统计数据..." />;
   }
 
@@ -89,7 +98,7 @@ export default function BeastStats({ detailSource, lineupSource, playerSource, l
     return <EmptyState message={errorMessage} />;
   }
 
-  if (!detailData || !lineupData || !playerData) {
+  if ((activeTab === 'detail' && !detailData) || (activeTab === 'lineup' && !lineupData) || (activeTab === 'players' && (!detailData || !playerData))) {
     return <EmptyState message="万兽统计数据暂未准备完成" />;
   }
 
@@ -97,14 +106,14 @@ export default function BeastStats({ detailSource, lineupSource, playerSource, l
     <div className="space-y-6 pb-16">
       <div className="flex gap-2 p-1 bg-surface border border-border rounded-xl w-max max-w-[calc(100vw-2rem)] overflow-x-auto custom-scrollbar relative z-10">
         {[
-          { id: 'detail', label: '详情' },
-          { id: 'lineup', label: '阵容分析' },
-          { id: 'players', label: '兽王玩家分析' },
+          { id: 'detail', label: '详情', path: '/pet_champion/detail' },
+          { id: 'lineup', label: '阵容分析', path: '/pet_champion/lineup' },
+          { id: 'players', label: '兽王玩家分析', path: '/pet_champion/players' },
         ].map((tab) => (
           <button
             key={tab.id}
             type="button"
-            onClick={() => setActiveTab(tab.id as BeastTab)}
+            onClick={() => navigate(tab.path)}
             className={clsx(
               'px-5 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 flex items-center gap-2 relative overflow-hidden',
               activeTab === tab.id
@@ -117,9 +126,9 @@ export default function BeastStats({ detailSource, lineupSource, playerSource, l
         ))}
       </div>
 
-      {activeTab === 'detail' ? <DetailTab source={detailData} /> : null}
-      {activeTab === 'lineup' ? <LineupTab source={lineupData} /> : null}
-      {activeTab === 'players' ? <PlayerTab source={playerData} detailSource={detailData} /> : null}
+      {activeTab === 'detail' && detailData ? <DetailTab source={detailData} /> : null}
+      {activeTab === 'lineup' && lineupData ? <LineupTab source={lineupData} /> : null}
+      {activeTab === 'players' && playerData && detailData ? <PlayerTab source={playerData} detailSource={detailData} /> : null}
     </div>
   );
 }

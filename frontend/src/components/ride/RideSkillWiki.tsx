@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import SkillCard, { type SkillBaselineData, type SkillCardData } from '../wiki/SkillCard';
+import { useDataFiles } from '../../hooks/useGameData';
 
 const SkillCardView = SkillCard as any;
 
@@ -42,16 +43,22 @@ interface RideMenuEntry {
   rideName: string;
 }
 
-const GROUPS = [
-  { key: 'ride_wiki_diting', name: '谛听' },
-  { key: 'ride_wiki_pixiu', name: '天禄/辟邪' },
-  { key: 'ride_wiki_qingshi', name: '青狮/青鬃狮王' },
-  { key: 'ride_wiki_nianshou', name: '年兽/上古年兽/永冬年兽' },
-  { key: 'ride_wiki_fenghuang', name: '赤凤/赤炎凤凰/青鸾/寒冰凤凰' },
-  { key: 'ride_wiki_wangwang', name: '汪汪/超级汪' },
-  { key: 'ride_wiki_jinmaohou', name: '金毛犼/冲天神犼' },
-  { key: 'ride_wiki_mojingshou', name: '魔睛兽/金睛兽' },
-];
+interface RideWikiIndexEntry {
+  fileName: string;
+  rideId: number;
+  rideName: string;
+}
+
+interface RideWikiIndexGroup {
+  fileName: string;
+  key: string;
+  name: string;
+  entries: RideWikiIndexEntry[];
+}
+
+interface RideWikiIndexPayload {
+  groups?: RideWikiIndexGroup[];
+}
 
 function dedupeSort(arr: number[]) {
   return [...new Set(arr)].filter((n) => n >= 1).sort((a, b) => a - b);
@@ -80,27 +87,10 @@ function collectCardLevels(card: SkillCardData | undefined, levelSet: Set<number
   }
 }
 
-function pickHighestRideVariants(variants: RideWikiVariant[]) {
-  const byGroup = new Map<number, RideWikiVariant>();
-  for (const variant of variants) {
-    const groupKey = variant.ride.idGroup ?? variant.ride.id;
-    const current = byGroup.get(groupKey);
-    if (!current) {
-      byGroup.set(groupKey, variant);
-      continue;
-    }
-
-    const rank = variant.ride.rank ?? Number.NEGATIVE_INFINITY;
-    const currentRank = current.ride.rank ?? Number.NEGATIVE_INFINITY;
-    if (rank > currentRank || (rank === currentRank && variant.slots.length > current.slots.length)) {
-      byGroup.set(groupKey, variant);
-    }
-  }
-  return [...byGroup.values()];
-}
-
 export default function RideSkillWiki({ dataSources }: Props) {
-  const availableGroups = useMemo(() => GROUPS.filter((g) => dataSources[g.key]?.data), [dataSources]);
+  const indexPayload = dataSources.ride_wiki_index?.data as RideWikiIndexPayload | undefined;
+  const indexGroups = useMemo(() => Array.isArray(indexPayload?.groups) ? indexPayload.groups : [], [indexPayload]);
+  const firstGroupKey = indexGroups[0]?.fileName ?? '';
   const baselineBySkill = useMemo(() => {
     const payload = dataSources.ride_skill_baseline?.data as RideSkillBaselinePayload | undefined;
     const map = new Map<string, RideSkillBaselineEntry>();
@@ -112,22 +102,25 @@ export default function RideSkillWiki({ dataSources }: Props) {
   }, [dataSources]);
   const rideEntries = useMemo<RideMenuEntry[]>(() => {
     const entries: RideMenuEntry[] = [];
-    for (const group of availableGroups) {
-      const payload = dataSources[group.key]?.data as RideWikiPayload | undefined;
-      if (!payload?.variants?.length) continue;
-      for (const variant of pickHighestRideVariants(payload.variants)) {
+    for (const group of indexGroups) {
+      for (const entry of group.entries || []) {
         entries.push({
-          groupKey: group.key,
-          rideId: variant.ride.id,
-          rideName: variant.ride.name,
+          groupKey: entry.fileName || group.fileName,
+          rideId: entry.rideId,
+          rideName: entry.rideName,
         });
       }
     }
     return entries;
-  }, [availableGroups, dataSources]);
-  const [activeGroupKey, setActiveGroupKey] = useState(GROUPS[0].key);
+  }, [indexGroups]);
+  const [activeGroupKey, setActiveGroupKey] = useState(firstGroupKey);
   const [activeRideId, setActiveRideId] = useState<number | null>(null);
   const [picked, setPicked] = useState<number[] | null>(null);
+  const detailResult = useDataFiles(activeGroupKey ? [activeGroupKey] : [], Boolean(activeGroupKey));
+  const mergedSources = useMemo(
+    () => ({ ...dataSources, ...detailResult.dataSources }),
+    [dataSources, detailResult.dataSources]
+  );
 
   useEffect(() => {
     if (!rideEntries.length) return;
@@ -140,9 +133,9 @@ export default function RideSkillWiki({ dataSources }: Props) {
   }, [activeGroupKey, activeRideId, rideEntries]);
 
   const payload: RideWikiPayload | null = useMemo(() => {
-    const src = dataSources[activeGroupKey];
+    const src = mergedSources[activeGroupKey];
     return src?.data ?? null;
-  }, [activeGroupKey, dataSources]);
+  }, [activeGroupKey, mergedSources]);
 
   const activeVariant = useMemo(() => {
     if (!payload?.variants?.length) return null;
@@ -191,7 +184,17 @@ export default function RideSkillWiki({ dataSources }: Props) {
     });
   };
 
-  if (!payload || !activeVariant) {
+  if (Object.keys(detailResult.errors).length > 0) {
+    const message = Object.entries(detailResult.errors).map(([name, error]) => `${name}.json：${error}`).join('；');
+    return (
+      <div className="card border border-dashed border-red-300 bg-red-50/70 py-20 text-center dark:border-red-500/40 dark:bg-red-500/10">
+        <h3 className="text-xl font-medium text-red-700 dark:text-red-200">坐骑技能 Wiki 详情加载失败</h3>
+        <p className="mt-2 text-sm text-red-600/80 dark:text-red-100/80">{message}</p>
+      </div>
+    );
+  }
+
+  if (!payload || !activeVariant || detailResult.loading) {
     return (
       <div className="card border border-dashed border-border bg-transparent py-20 text-center">
         <h3 className="text-xl font-medium text-textSub">正在加载坐骑技能 Wiki...</h3>

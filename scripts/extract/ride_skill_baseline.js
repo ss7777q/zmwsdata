@@ -15,6 +15,7 @@ const u = require("../lib/utils");
 const OUTPUT_DIR = u.OUTPUT_DIR;
 const RIDE_WIKI_FILE_RE = /^ride_wiki_.*\.json$/;
 const OUTPUT_NAME = "ride_skill_baseline";
+const RIDE_WIKI_INDEX_OUTPUT_NAME = "ride_wiki_index";
 
 const ACTIVE_SLOT_KINDS = new Set(["active", "sp"]);
 const BASELINE_CLUSTER_RELATIVE_TOLERANCE = 0.015;
@@ -52,6 +53,63 @@ function listRideWikiFiles() {
   return fs.readdirSync(OUTPUT_DIR)
     .filter((file) => RIDE_WIKI_FILE_RE.test(file))
     .sort();
+}
+
+function pickHighestRideVariants(variants) {
+  const byGroup = new Map();
+  for (const variant of variants) {
+    const ride = variant.ride || {};
+    if (!Number.isInteger(ride.id)) continue;
+    const groupKey = ride.idGroup ?? ride.id;
+    const current = byGroup.get(groupKey);
+    if (!current) {
+      byGroup.set(groupKey, variant);
+      continue;
+    }
+
+    const rank = ride.rank ?? Number.NEGATIVE_INFINITY;
+    const currentRank = current.ride?.rank ?? Number.NEGATIVE_INFINITY;
+    if (rank > currentRank || (rank === currentRank && (variant.slots || []).length > (current.slots || []).length)) {
+      byGroup.set(groupKey, variant);
+    }
+  }
+  return [...byGroup.values()];
+}
+
+function buildRideWikiIndex(warnings) {
+  const groups = [];
+  for (const file of listRideWikiFiles()) {
+    const fileName = file.slice(0, -5);
+    const fullPath = path.join(OUTPUT_DIR, file);
+    const json = JSON.parse(fs.readFileSync(fullPath, "utf8"));
+    const group = json.data?.rideGroup;
+    const variants = Array.isArray(json.data?.variants) ? json.data.variants : [];
+    if (!group || variants.length === 0) {
+      pushWarning(warnings, "INVALID_RIDE_WIKI_FILE", `${file} 缺少 rideGroup 或 variants，未进入 ride_wiki_index`);
+      continue;
+    }
+
+    groups.push({
+      fileName,
+      key: group.key || fileName.replace(/^ride_wiki_/, ""),
+      name: group.name || fileName,
+      note: group.note || null,
+      entries: pickHighestRideVariants(variants).map((variant) => {
+        const ride = variant.ride || {};
+        return {
+          fileName,
+          rideId: ride.id,
+          rideName: ride.name || `坐骑 ${ride.id}`,
+          idGroup: ride.idGroup ?? null,
+          rank: ride.rank ?? null,
+        };
+      }).filter((entry) => Number.isInteger(entry.rideId)),
+    });
+  }
+  return {
+    groups,
+    warnings,
+  };
 }
 
 function collectSamples(warnings) {
@@ -297,6 +355,7 @@ function extract() {
   const samples = collectSamples(warnings);
   const baselines = inferBaselines(samples, warnings);
   const skills = summarizeSkills(samples, baselines);
+  const indexWarnings = [];
 
   u.saveOutput(OUTPUT_NAME, {
     baselines,
@@ -309,6 +368,13 @@ function extract() {
     clusterRelativeTolerance: BASELINE_CLUSTER_RELATIVE_TOLERANCE,
     fixedMultiplierStaticRelativeRangeLimit: FIXED_MULTIPLIER_STATIC_RELATIVE_RANGE_LIMIT,
     note: "不读取攻略倍率文本;缺 CD、缺固伤或仅有 0/1 占位伤害不补值;无有效 CD 的技能不进入样本",
+  });
+
+  u.saveOutput(RIDE_WIKI_INDEX_OUTPUT_NAME, buildRideWikiIndex(indexWarnings), {
+    system: "坐骑 → 技能 Wiki 索引",
+    source: "output/ride_wiki_*.json",
+    method: "只汇总坐骑组、默认展示条目和对应详情文件名；技能详情仍保留在 ride_wiki_*.json",
+    note: "用于 /ride/wiki 首屏懒加载，不包含技能成长明细，不构造缺失数值",
   });
 }
 

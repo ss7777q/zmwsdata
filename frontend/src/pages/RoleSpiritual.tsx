@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import RoleMagic from './RoleMagic';
 import RoleGodWeapon from './RoleGodWeapon';
 import RoleMatrix from './RoleMatrix';
@@ -9,13 +10,20 @@ interface Props {
 }
 
 export default function RoleSpiritual({ dataSources }: Props) {
-    const [activeTab, setActiveTab] = useState<'magic' | 'godweapon' | 'matrix'>('magic');
+    const location = useLocation();
+    const navigate = useNavigate();
+    const activeTab = location.pathname.includes('/godweapon/')
+        ? 'godweapon'
+        : location.pathname.includes('/matrix/')
+            ? 'matrix'
+            : 'magic';
+    const activeMode = location.pathname.endsWith('/effect') ? 'effect' : 'cost';
 
-    const tabs = [
-        { id: 'magic', label: '法宝系统' },
-        { id: 'godweapon', label: '神器系统' },
-        { id: 'matrix', label: '阵法系统' },
-    ] as const;
+    const tabs = useMemo(() => [
+        { id: 'magic', label: '法宝系统', path: '/user_spiritual/magic/cost' },
+        { id: 'godweapon', label: '神器系统', path: '/user_spiritual/godweapon/cost' },
+        { id: 'matrix', label: '阵法系统', path: '/user_spiritual/matrix/cost' },
+    ] as const, []);
 
     return (
         <div className="space-y-6">
@@ -25,7 +33,7 @@ export default function RoleSpiritual({ dataSources }: Props) {
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
-                            onClick={() => setActiveTab(tab.id as 'magic' | 'godweapon' | 'matrix')}
+                            onClick={() => navigate(tab.path)}
                             className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${activeTab === tab.id
                                 ? 'bg-primary/20 text-primary shadow-[0_0_15px_rgba(30,64,175,0.2)]'
                                 : 'text-textSub hover:text-textMain hover:bg-surface'
@@ -39,9 +47,9 @@ export default function RoleSpiritual({ dataSources }: Props) {
 
             {/* 内容区 */}
             <div className="min-h-[500px]">
-                {activeTab === 'magic' && <RoleMagic dataSources={dataSources} />}
-                {activeTab === 'godweapon' && <RoleGodWeapon dataSources={dataSources} />}
-                {activeTab === 'matrix' && <RoleMatrix dataSources={dataSources} />}
+                {activeTab === 'magic' && <RoleMagic dataSources={dataSources} activeTab={activeMode} onTabChange={(tab) => navigate(`/user_spiritual/magic/${tab}`)} />}
+                {activeTab === 'godweapon' && <RoleGodWeapon dataSources={dataSources} activeTab={activeMode} onTabChange={(tab) => navigate(`/user_spiritual/godweapon/${tab}`)} />}
+                {activeTab === 'matrix' && <RoleMatrix dataSources={dataSources} activeTab={activeMode} onTabChange={(tab) => navigate(`/user_spiritual/matrix/${tab}`)} />}
             </div>
         </div>
     );

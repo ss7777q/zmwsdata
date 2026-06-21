@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import SkillCard, { type SkillBaselineData, type SkillCardData } from '../wiki/SkillCard';
+import { useDataFiles } from '../../hooks/useGameData';
 
 const SkillCardView = SkillCard as any;
 
@@ -45,26 +46,24 @@ interface PetMenuEntry {
   petName: string;
 }
 
-const GROUPS = [
-  { key: 'pet_wiki_xuanwu', name: '玄武大帝', type: '神兽' },
-  { key: 'pet_wiki_baihu', name: '白虎战神', type: '神兽' },
-  { key: 'pet_wiki_zhuque', name: '朱雀炎皇', type: '神兽' },
-  { key: 'pet_wiki_qinglong', name: '青龙妖圣', type: '神兽' },
-  { key: 'pet_wiki_tianshe', name: '天蛇元君', type: '神兽' },
-  { key: 'pet_wiki_qilin', name: '麒麟', type: '神兽' },
-  { key: 'pet_wiki_hou', name: '炽焰/极光猴王', type: '灵兽' },
-  { key: 'pet_wiki_wangshe', name: '圣木/圣砂王蛇', type: '灵兽' },
-  { key: 'pet_wiki_niuxueren', name: '圣力神牛/圣雪圆圆', type: '灵兽' },
-  { key: 'pet_wiki_tuzi', name: '皓月兔皇/暗月兔皇', type: '灵兽' },
-  { key: 'pet_wiki_laoshu', name: '暗夜鼠王/冥甲鼠王', type: '灵兽' },
-  { key: 'pet_wiki_huadiehubing', name: '神霄花仙/玄蝶仙子/千年冰狐', type: '仙兽' },
-] as const satisfies ReadonlyArray<{ key: string; name: string; type: PetGroupType }>;
+interface PetWikiIndexEntry {
+  fileName: string;
+  petId: number;
+  petName: string;
+  type: PetGroupType;
+}
 
-const PET_TYPE_OVERRIDES: Record<string, Record<number, PetGroupType>> = {
-  pet_wiki_huadiehubing: {
-    190000073: '灵兽',
-  },
-};
+interface PetWikiIndexGroup {
+  fileName: string;
+  key: string;
+  name: string;
+  type: PetGroupType;
+  entries: PetWikiIndexEntry[];
+}
+
+interface PetWikiIndexPayload {
+  groups?: PetWikiIndexGroup[];
+}
 
 const TYPE_ORDER: PetGroupType[] = ['神兽', '灵兽', '仙兽'];
 
@@ -101,12 +100,10 @@ function collectCardLevels(card: SkillCardData | undefined, levelSet: Set<number
   }
 }
 
-function petEntryType(group: (typeof GROUPS)[number], petId: number): PetGroupType {
-  return PET_TYPE_OVERRIDES[group.key]?.[petId] ?? group.type;
-}
-
 export default function PetSkillWiki({ dataSources }: Props) {
-  const availableGroups = useMemo(() => GROUPS.filter((g) => dataSources[g.key]?.data), [dataSources]);
+  const indexPayload = dataSources.pet_wiki_index?.data as PetWikiIndexPayload | undefined;
+  const indexGroups = useMemo(() => Array.isArray(indexPayload?.groups) ? indexPayload.groups : [], [indexPayload]);
+  const firstGroupKey = indexGroups[0]?.fileName ?? '';
   const baselineBySkill = useMemo(() => {
     const payload = dataSources.pet_skill_baseline?.data as PetSkillBaselinePayload | undefined;
     const map = new Map<string, PetSkillBaselineEntry>();
@@ -118,29 +115,32 @@ export default function PetSkillWiki({ dataSources }: Props) {
   }, [dataSources]);
   const petEntriesByType = useMemo<Record<PetGroupType, PetMenuEntry[]>>(() => {
     const buckets: Record<PetGroupType, PetMenuEntry[]> = { 神兽: [], 灵兽: [], 仙兽: [] };
-    for (const group of availableGroups) {
-      const payload = dataSources[group.key]?.data as PetWikiPayload | undefined;
-      if (!payload?.variants?.length) continue;
-      for (const variant of payload.variants) {
-        const type = petEntryType(group, variant.pet.id);
+    for (const group of indexGroups) {
+      for (const entry of group.entries || []) {
+        const type = entry.type ?? group.type;
         buckets[type].push({
           type,
-          groupKey: group.key,
-          petId: variant.pet.id,
-          petName: variant.pet.name,
+          groupKey: entry.fileName || group.fileName,
+          petId: entry.petId,
+          petName: entry.petName,
         });
       }
     }
     return buckets;
-  }, [availableGroups, dataSources]);
+  }, [indexGroups]);
   const availableTypes = useMemo(
     () => TYPE_ORDER.filter((type) => petEntriesByType[type].length > 0),
     [petEntriesByType]
   );
   const [activeType, setActiveType] = useState<PetGroupType>('神兽');
-  const [activeGroupKey, setActiveGroupKey] = useState<string>(GROUPS[0].key);
+  const [activeGroupKey, setActiveGroupKey] = useState<string>(firstGroupKey);
   const [activePetId, setActivePetId] = useState<number | null>(null);
   const [picked, setPicked] = useState<number[] | null>(null);
+  const detailResult = useDataFiles(activeGroupKey ? [activeGroupKey] : [], Boolean(activeGroupKey));
+  const mergedSources = useMemo(
+    () => ({ ...dataSources, ...detailResult.dataSources }),
+    [dataSources, detailResult.dataSources]
+  );
 
   useEffect(() => {
     if (!availableTypes.length) return;
@@ -165,9 +165,9 @@ export default function PetSkillWiki({ dataSources }: Props) {
   }, [activeGroupKey, activePetId, visiblePetEntries]);
 
   const payload: PetWikiPayload | null = useMemo(() => {
-    const src = dataSources[activeGroupKey];
+    const src = mergedSources[activeGroupKey];
     return src?.data ?? null;
-  }, [activeGroupKey, dataSources]);
+  }, [activeGroupKey, mergedSources]);
 
   const activeVariant = useMemo(() => {
     if (!payload?.variants?.length) return null;
@@ -223,7 +223,17 @@ export default function PetSkillWiki({ dataSources }: Props) {
     });
   };
 
-  if (!payload || !activeVariant) {
+  if (Object.keys(detailResult.errors).length > 0) {
+    const message = Object.entries(detailResult.errors).map(([name, error]) => `${name}.json：${error}`).join('；');
+    return (
+      <div className="card border border-dashed border-red-300 bg-red-50/70 py-20 text-center dark:border-red-500/40 dark:bg-red-500/10">
+        <h3 className="text-xl font-medium text-red-700 dark:text-red-200">宠物技能 Wiki 详情加载失败</h3>
+        <p className="mt-2 text-sm text-red-600/80 dark:text-red-100/80">{message}</p>
+      </div>
+    );
+  }
+
+  if (!payload || !activeVariant || detailResult.loading) {
     return (
       <div className="card border border-dashed border-border bg-transparent py-20 text-center">
         <h3 className="text-xl font-medium text-textSub">正在加载宠物技能 Wiki...</h3>

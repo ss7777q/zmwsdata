@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 import PetSkill from '../components/pet/PetSkill';
 import PetStar from '../components/pet/PetStar';
@@ -11,21 +12,24 @@ interface PetProps {
 }
 
 export default function RolePet({ dataSources }: PetProps) {
-    const [subTab, setSubTab] = useState<'skill' | 'wiki' | 'star' | 'equip'>('skill');
+    const location = useLocation();
+    const navigate = useNavigate();
+    const tabs = useMemo(() => [
+        { id: 'skill', label: '技能与潜能', path: '/pet/skill' },
+        { id: 'wiki', label: '技能 Wiki', path: '/pet/wiki' },
+        { id: 'star', label: '升星与进阶', path: '/pet/star' },
+        { id: 'equip', label: '宠物装备', path: '/pet/equip' },
+    ] as const, []);
+    const subTab = tabs.find((tab) => tab.path === location.pathname)?.id ?? 'skill';
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500 pb-20">
             {/* Header Tabs Navigation */}
             <div className="flex gap-2 p-1 bg-surface border border-border rounded-xl w-max max-w-[calc(100vw-2rem)] overflow-x-auto custom-scrollbar relative z-10 shadow-sm">
-                {[
-                    { id: 'skill', label: '技能与潜能' },
-                    { id: 'wiki', label: '技能 Wiki' },
-                    { id: 'star', label: '升星与进阶' },
-                    { id: 'equip', label: '宠物装备' },
-                ].map(tab => (
+                {tabs.map(tab => (
                     <button
                         key={tab.id}
-                        onClick={() => setSubTab(tab.id as any)}
+                        onClick={() => navigate(tab.path)}
                         className={clsx(
                             "px-6 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center relative overflow-hidden group border active:scale-95 cursor-pointer",
                             subTab === tab.id

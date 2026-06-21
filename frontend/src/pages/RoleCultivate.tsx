@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 import CultivateHeart from '../components/CultivateHeart';
 import CultivateInner from '../components/CultivateInner';
@@ -10,7 +11,18 @@ interface CultivateProps {
 }
 
 export default function RoleCultivate({ dataSources }: CultivateProps) {
-    const [subTab, setSubTab] = useState<'heart' | 'inner' | 'body' | 'outer'>('heart');
+    const location = useLocation();
+    const navigate = useNavigate();
+    const tabs = useMemo(() => [
+        { id: 'heart', label: '修心', path: '/user_cultivate/heart' },
+        { id: 'inner', label: '内丹', path: '/user_cultivate/inner/danqi' },
+        { id: 'body', label: '炼体', path: '/user_cultivate/body' },
+    ] as const, []);
+    const subTab = location.pathname.startsWith('/user_cultivate/inner/')
+        ? 'inner'
+        : location.pathname.endsWith('/body')
+            ? 'body'
+            : 'heart';
 
     // 这里将包含：
     // role_heart - 修心(1)
@@ -21,14 +33,10 @@ export default function RoleCultivate({ dataSources }: CultivateProps) {
         <div className="space-y-6 animate-in fade-in duration-500 pb-20">
             {/* Header Tabs Navigation */}
             <div className="flex gap-2 p-1 bg-surface border border-border rounded-xl w-max max-w-[calc(100vw-2rem)] overflow-x-auto custom-scrollbar relative z-10 shadow-sm">
-                {[
-                    { id: 'heart', label: '修心' },
-                    { id: 'inner', label: '内丹' },
-                    { id: 'body', label: '炼体' },
-                ].map(tab => (
+                {tabs.map(tab => (
                     <button
                         key={tab.id}
-                        onClick={() => setSubTab(tab.id as any)}
+                        onClick={() => navigate(tab.path)}
                         className={clsx(
                             "px-6 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center relative overflow-hidden group border active:scale-95 cursor-pointer",
                             subTab === tab.id

@@ -1674,11 +1674,19 @@ function buildStageDerivedMechanics(row) {
   return skipPleaseGodBuffDetails ? uniq(mechanics.filter(Boolean)) : uniq(mechanics);
 }
 
-function stageFromRow(row, stageMechanics) {
+function isSuppressedWarning(warning, override) {
+  const rules = Array.isArray(override?.suppressWarnings) ? override.suppressWarnings : [];
+  return rules.some((rule) => warning.includes(rule));
+}
+
+function stageFromRow(row, stageMechanics, override) {
   const levelKey = row.Level == null ? '' : String(row.Level);
   const rowKey = String(row.id);
   const configMechanics = buildStageDerivedMechanics(row);
   const damageAnalysis = buildDamageAnalysisForRow(row);
+  const damageWarnings = damageAnalysis.warnings
+    .map(formatWarningForDisplay)
+    .filter((warning) => !isSuppressedWarning(warning, override));
   const cooldownMechanics = [formatUseCooldown(row)].filter(Boolean);
   return {
     id: row.id,
@@ -1703,7 +1711,7 @@ function stageFromRow(row, stageMechanics) {
     guideMechanics: stageMechanics && (stageMechanics[rowKey] || stageMechanics[levelKey]) ? (stageMechanics[rowKey] || stageMechanics[levelKey]) : [],
     cooldownMechanics,
     damageMechanics: uniq(damageAnalysis.facts.map(damageFactText)),
-    damageWarnings: damageAnalysis.warnings.map(formatWarningForDisplay),
+    damageWarnings,
     configMechanics,
   };
 }
@@ -1736,7 +1744,7 @@ function buildWarnings(rows, override, derived) {
     : (derived.warnings || []);
   warnings.push(...(hasDamageFacts ? derivedWarnings.filter((warning) => !isGenericUnresolvedDamageWarning(warning)) : derivedWarnings).map(formatWarningForDisplay));
   if (override?.notes) warnings.push(...override.notes.map(formatWarningForDisplay));
-  return uniq(warnings);
+  return uniq(warnings).filter((warning) => !isSuppressedWarning(warning, override));
 }
 
 function groupRows(rows) {
@@ -1919,7 +1927,7 @@ function buildItem(groupId, rows, override) {
   const displayName = normalizeName(first.name);
   const derived = buildDerivedExplanation(rows);
   const magicEnhanced = first.type === 'magic' ? buildMagicEnhancedExplanation(first) : null;
-  const stages = rows.map((row) => stageFromRow(row, magicEnhanced?.stageMechanics || override?.stageMechanics));
+  const stages = rows.map((row) => stageFromRow(row, magicEnhanced?.stageMechanics || override?.stageMechanics, override));
   const officialDescription = joinOfficialDescriptions(stages.map((stage) => stage.officialDescription));
   const damageMechanics = uniq(stages.flatMap((stage) => stage.damageMechanics || []));
   const warnings = buildWarnings(rows, override, derived)

@@ -24,14 +24,21 @@ import { sumMatrixPartsCost } from '../components/roleMatrix/matrixCost';
 
 interface Props {
     dataSources: Record<string, any>;
+    activeTab?: 'cost' | 'effect';
+    onTabChange?: (tab: 'cost' | 'effect') => void;
 }
 
-export default function RoleMatrix({ dataSources }: Props) {
+export default function RoleMatrix({ dataSources, activeTab, onTabChange }: Props) {
     const fqData = dataSources['role_matrix_fq']?.data || [];
     const zhData = dataSources['role_matrix_zh']?.data || [];
     const skillData = dataSources['role_matrix_skill']?.data || [];
 
-    const [activeTab, setActiveTab] = useState<'cost' | 'effect'>('cost');
+    const [localActiveTab, setLocalActiveTab] = useState<'cost' | 'effect'>('cost');
+    const currentTab = activeTab ?? localActiveTab;
+    const setCurrentTab = (tab: 'cost' | 'effect') => {
+        if (onTabChange) onTabChange(tab);
+        else setLocalActiveTab(tab);
+    };
     const [selectedMatrixId, setSelectedMatrixId] = useState<number | null>(null);
 
     const [expandedSkillCards, setExpandedSkillCards] = useState<Record<string, boolean>>({});
@@ -125,9 +132,9 @@ export default function RoleMatrix({ dataSources }: Props) {
 
     return (
         <div className="space-y-6 animate-fade-in fade-in">
-            <MatrixTabs activeTab={activeTab} onChange={setActiveTab} />
+            <MatrixTabs activeTab={currentTab} onChange={setCurrentTab} />
 
-            {activeTab === 'cost' ? (
+            {currentTab === 'cost' ? (
                 /* 升级消耗内容 */
                 <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {cards.map((card: any) => {

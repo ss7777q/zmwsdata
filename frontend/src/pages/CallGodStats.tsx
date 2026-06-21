@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { apiUrl } from '../lib/api';
 import { AttributeTab } from '../components/callGodStats/CallGodAttributeTab';
@@ -7,7 +8,15 @@ import { StoneRewardsTab } from '../components/callGodStats/CallGodStoneRewardsT
 import type { BattlefieldConfig, BattlefieldResult, BossAnalysisEntry, BossTalentAnalysis, OutputDataFile, Props, StoneRewardPayload } from '../components/callGodStats/callGodStatsShared';
 
 export default function CallGodStats({ dataSources }: Props) {
-  const [activeTab, setActiveTab] = useState<'stats' | 'stones' | 'boss' | 'talents'>('stats');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const tabs = useMemo(() => [
+    { key: 'stats', label: '神魔属性', path: '/call_god/stats' },
+    { key: 'stones', label: '神/魔灵石获取详情', path: '/call_god/stones' },
+    { key: 'boss', label: '魔王解析', path: '/call_god/boss' },
+    { key: 'talents', label: '通用魔王天赋', path: '/call_god/talents' },
+  ] as const, []);
+  const activeTab = tabs.find((tab) => tab.path === location.pathname)?.key ?? 'stats';
   const [config, setConfig] = useState<BattlefieldConfig | null>(null);
   const [result, setResult] = useState<BattlefieldResult | null>(null);
   const [battlefieldTier, setBattlefieldTier] = useState<number>(0);
@@ -103,15 +112,10 @@ export default function CallGodStats({ dataSources }: Props) {
     <div className="space-y-6 pb-20">
       <section className="rounded-2xl border border-border bg-card p-3 shadow-sm">
         <div className="flex flex-wrap gap-2">
-          {[
-            { key: 'stats' as const, label: '神魔属性' },
-            { key: 'stones' as const, label: '神/魔灵石获取详情' },
-            { key: 'boss' as const, label: '魔王解析' },
-            { key: 'talents' as const, label: '通用魔王天赋' },
-          ].map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => navigate(tab.path)}
               className={clsx(
                 'rounded-xl px-4 py-2 text-sm font-medium transition-colors',
                 activeTab === tab.key

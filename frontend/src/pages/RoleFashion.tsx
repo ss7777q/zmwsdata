@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 
 const FashionBall = React.lazy(() => import('../components/fashion/FashionBall'));
@@ -9,12 +10,14 @@ interface Props {
 }
 
 export default function RoleFashion({ dataSources }: Props) {
-    const [activeTab, setActiveTab] = useState<'ball' | 'renew'>('ball');
+    const location = useLocation();
+    const navigate = useNavigate();
 
-    const tabs = [
-        { id: 'ball', label: '时装宝珠升级' },
-        { id: 'renew', label: '时装续期与传承' },
-    ] as const;
+    const tabs = useMemo(() => [
+        { id: 'ball', label: '时装宝珠升级', path: '/user_fashion/ball' },
+        { id: 'renew', label: '时装续期与传承', path: '/user_fashion/renew' },
+    ] as const, []);
+    const activeTab = tabs.find((tab) => tab.path === location.pathname)?.id ?? 'ball';
 
     return (
         <div className="space-y-6 max-h-full flex flex-col animate-in fade-in duration-500">
@@ -23,7 +26,7 @@ export default function RoleFashion({ dataSources }: Props) {
                 {tabs.map(tab => (
                     <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id as 'ball' | 'renew')}
+                            onClick={() => navigate(tab.path)}
                         className={clsx(
                             "px-6 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border active:scale-95",
                             activeTab === tab.id

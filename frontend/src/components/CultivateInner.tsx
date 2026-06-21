@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 import CostBadge from './ui/CostBadge';
 import CultivateDanyuanEffect from './CultivateDanyuanEffect';
@@ -8,11 +8,17 @@ interface Props {
 }
 
 export default function CultivateInner({ dataSources }: Props) {
+    const location = useLocation();
+    const navigate = useNavigate();
     const danqiData = (dataSources['role_danqi'] as any)?.data || [];
     const danyuanData = (dataSources['role_danyuan'] as any)?.data || [];
     const danyuanEffectData = (dataSources['role_danyuan_effect'] as any)?.data;
 
-    const [activeTab, setActiveTab] = useState<'danqi' | 'danyuan' | 'danyuanEffect'>('danqi');
+    const activeTab = location.pathname.endsWith('/inner/danyuan')
+        ? 'danyuan'
+        : location.pathname.endsWith('/inner/danyuan_effect')
+            ? 'danyuanEffect'
+            : 'danqi';
 
     // 丹元品质名称映射
     const QualityNames: Record<number, string> = {
@@ -70,7 +76,7 @@ export default function CultivateInner({ dataSources }: Props) {
             {/* Sub Tabs */}
             <div className="flex bg-slate-200/40 dark:bg-black/20 p-1 rounded-xl border border-slate-300/60 dark:border-border/60 w-max mb-6 gap-1 shadow-sm backdrop-blur-sm">
                 <button
-                    onClick={() => setActiveTab('danqi')}
+                    onClick={() => navigate('/user_cultivate/inner/danqi')}
                     className={clsx(
                         "px-6 py-2 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border active:scale-95",
                         activeTab === 'danqi'
@@ -81,7 +87,7 @@ export default function CultivateInner({ dataSources }: Props) {
                     丹气气力
                 </button>
                 <button
-                    onClick={() => setActiveTab('danyuan')}
+                    onClick={() => navigate('/user_cultivate/inner/danyuan')}
                     className={clsx(
                         "px-6 py-2 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border active:scale-95",
                         activeTab === 'danyuan'
@@ -92,7 +98,7 @@ export default function CultivateInner({ dataSources }: Props) {
                     丹元升级
                 </button>
                 <button
-                    onClick={() => setActiveTab('danyuanEffect')}
+                    onClick={() => navigate('/user_cultivate/inner/danyuan_effect')}
                     className={clsx(
                         "px-6 py-2 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border active:scale-95",
                         activeTab === 'danyuanEffect'

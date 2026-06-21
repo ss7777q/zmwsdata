@@ -81,14 +81,21 @@ function EffectGrowthTable({ table }: { table: GodWeaponEffectTable | null }) {
 
 interface Props {
     dataSources: Record<string, any>;
+    activeTab?: 'cost' | 'effect';
+    onTabChange?: (tab: 'cost' | 'effect') => void;
 }
 
-export default function RoleGodWeapon({ dataSources }: Props) {
+export default function RoleGodWeapon({ dataSources, activeTab, onTabChange }: Props) {
     const unlockData = dataSources['role_godweapon_unlock']?.data || [];
     const levData = dataSources['role_godweapon_lev']?.data || [];
     const effectData = (dataSources['role_godweapon_effect']?.data || []) as GodWeaponEffectDetail[];
 
-    const [activeTab, setActiveTab] = useState<'cost' | 'effect'>('cost');
+    const [localActiveTab, setLocalActiveTab] = useState<'cost' | 'effect'>('cost');
+    const currentTab = activeTab ?? localActiveTab;
+    const setCurrentTab = (tab: 'cost' | 'effect') => {
+        if (onTabChange) onTabChange(tab);
+        else setLocalActiveTab(tab);
+    };
     const [selectedWeaponId, setSelectedWeaponId] = useState<number | null>(null);
     const [expandedCards, setExpandedCards] = useState<Record<number, boolean>>({});
 
@@ -188,10 +195,10 @@ export default function RoleGodWeapon({ dataSources }: Props) {
         <div className="space-y-6 animate-fade-in fade-in">
             <div className="flex bg-slate-200/40 dark:bg-black/20 p-1 rounded-xl border border-slate-300/60 dark:border-border/60 w-max mb-6 gap-1 shadow-sm backdrop-blur-sm">
                 <button
-                    onClick={() => setActiveTab('cost')}
+                    onClick={() => setCurrentTab('cost')}
                     className={clsx(
                         "px-6 py-2 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border active:scale-95",
-                        activeTab === 'cost'
+                        currentTab === 'cost'
                             ? "bg-purple-500/10 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-300/50 dark:border-purple-500/30 shadow-[0_2px_10px_rgba(168,85,247,0.08)]"
                             : "text-slate-500 dark:text-textSub hover:text-slate-800 dark:hover:text-textMain hover:bg-slate-200/60 dark:hover:bg-white/5 border-transparent"
                     )}
@@ -199,10 +206,10 @@ export default function RoleGodWeapon({ dataSources }: Props) {
                     升级消耗
                 </button>
                 <button
-                    onClick={() => setActiveTab('effect')}
+                    onClick={() => setCurrentTab('effect')}
                     className={clsx(
                         "px-6 py-2 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border active:scale-95",
-                        activeTab === 'effect'
+                        currentTab === 'effect'
                             ? "bg-purple-500/10 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-300/50 dark:border-purple-500/30 shadow-[0_2px_10px_rgba(168,85,247,0.08)]"
                             : "text-slate-500 dark:text-textSub hover:text-slate-800 dark:hover:text-textMain hover:bg-slate-200/60 dark:hover:bg-white/5 border-transparent"
                     )}
@@ -211,7 +218,7 @@ export default function RoleGodWeapon({ dataSources }: Props) {
                 </button>
             </div>
 
-            {activeTab === 'cost' ? (
+            {currentTab === 'cost' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
                     {cards.map((card: any) => (
                         <div

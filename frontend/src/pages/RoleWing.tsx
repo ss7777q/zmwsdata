@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 import CostBadge from '../components/ui/CostBadge';
 import { ChevronRight } from 'lucide-react';
@@ -17,13 +18,19 @@ interface RoleWingProps {
 }
 
 export default function RoleWing({ dataSources }: RoleWingProps) {
+    const location = useLocation();
+    const navigate = useNavigate();
     const wingData = dataSources['role_wing_upgrade']?.data || [];
     const wingSkillData = (dataSources['role_wing_skill']?.data || []) as WingEffectDetail[];
     const _featherAdvanceData = dataSources['role_feather_advance']?.data || [];
     const _featherBaptizeData = dataSources['role_feather_baptize']?.data || [];
     const _featherLuckData = dataSources['role_feather_luck']?.data || [];
 
-    const [activeTab, setActiveTab] = useState<'wing' | 'feather' | 'skill'>('wing');
+    const activeTab = location.pathname.endsWith('/feather')
+        ? 'feather'
+        : location.pathname.endsWith('/skill')
+            ? 'skill'
+            : 'wing';
     const [selectedWingId, setSelectedWingId] = useState<number | null>(null);
 
     // =========== 翅膀 Tab 逻辑 ===========
@@ -112,7 +119,7 @@ export default function RoleWing({ dataSources }: RoleWingProps) {
             {/* Top Navigation Tabs */}
             <div className="flex bg-slate-200/40 dark:bg-black/20 p-1 rounded-xl border border-slate-300/60 dark:border-border/60 w-max mb-6 gap-1 shadow-sm backdrop-blur-sm">
                 <button
-                    onClick={() => setActiveTab('wing')}
+                    onClick={() => navigate('/user_wing/upgrade')}
                     className={clsx(
                         "px-6 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border active:scale-95",
                         activeTab === 'wing'
@@ -123,7 +130,7 @@ export default function RoleWing({ dataSources }: RoleWingProps) {
                     翅膀升级
                 </button>
                 <button
-                    onClick={() => setActiveTab('feather')}
+                    onClick={() => navigate('/user_wing/feather')}
                     className={clsx(
                         "px-6 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border active:scale-95",
                         activeTab === 'feather'
@@ -134,7 +141,7 @@ export default function RoleWing({ dataSources }: RoleWingProps) {
                     羽毛系统
                 </button>
                 <button
-                    onClick={() => setActiveTab('skill')}
+                    onClick={() => navigate('/user_wing/skill')}
                     className={clsx(
                         "px-6 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border active:scale-95",
                         activeTab === 'skill'

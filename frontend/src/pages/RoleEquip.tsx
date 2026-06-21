@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import CostBadge from '../components/ui/CostBadge';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { clsx } from 'clsx';
@@ -8,13 +9,22 @@ interface RoleEquipProps {
 }
 
 import RoleEquipUpgrade from './RoleEquipUpgrade';
-// import RoleEquipSmelt from './RoleEquipSmelt';
-// import RoleEquipStone from './RoleEquipStone';
+import RoleEquipSmelt from './RoleEquipSmelt';
+import RoleEquipStone from './RoleEquipStone';
 
 export default function RoleEquip({ dataSources }: RoleEquipProps) {
+    const location = useLocation();
+    const navigate = useNavigate();
     const makeData = dataSources['role_equip_make'];
     const [activeGroup, setActiveGroup] = useState<number | 'none' | null>(null);
     const [expandedCards, setExpandedCards] = useState<Record<number, boolean>>({});
+    const tabs = useMemo(() => [
+        { id: 'make', label: '打造/重铸', path: '/user_equip/make' },
+        { id: 'upgrade', label: '装备升级', path: '/user_equip/upgrade' },
+        { id: 'smelt', label: '熔炼', path: '/user_equip/smelt' },
+        { id: 'stone', label: '宝石', path: '/user_equip/stone' },
+    ] as const, []);
+    const activeTab = tabs.find((tab) => tab.path === location.pathname)?.id ?? 'make';
 
     const toggleExpand = (cardIndex: number) => {
         setExpandedCards(prev => ({
@@ -52,10 +62,34 @@ export default function RoleEquip({ dataSources }: RoleEquipProps) {
         }
     }, [groupedData, activeGroup]);
 
+    const nav = (
+        <div className="flex gap-2 p-1 bg-surface border border-border rounded-xl w-max max-w-[calc(100vw-2rem)] overflow-x-auto custom-scrollbar relative z-10 shadow-sm">
+            {tabs.map((tab) => (
+                <button
+                    key={tab.id}
+                    onClick={() => navigate(tab.path)}
+                    className={clsx(
+                        "px-6 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center relative overflow-hidden group border active:scale-95 cursor-pointer",
+                        activeTab === tab.id
+                            ? "bg-purple-500/10 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-300/50 dark:border-purple-500/30 shadow-[0_2px_10px_rgba(168,85,247,0.08)]"
+                            : "text-textSub hover:text-textMain hover:bg-slate-200/60 dark:hover:bg-white/5 border-transparent"
+                    )}
+                >
+                    {tab.label}
+                </button>
+            ))}
+        </div>
+    );
+
+    if (activeTab === 'upgrade') return <div className="space-y-6">{nav}<RoleEquipUpgrade dataSources={dataSources} /></div>;
+    if (activeTab === 'smelt') return <div className="space-y-6">{nav}<RoleEquipSmelt dataSources={dataSources} /></div>;
+    if (activeTab === 'stone') return <div className="space-y-6">{nav}<RoleEquipStone dataSources={dataSources} /></div>;
+
     if (!makeData) return <div className="text-textSub p-8 text-center bg-card rounded-xl animate-pulse">正在加载装备数据...</div>;
 
     return (
         <div className="space-y-8">
+            {nav}
             {/* 顶层图表与汇总区 */}
             <RoleEquipUpgrade dataSources={dataSources} />
 

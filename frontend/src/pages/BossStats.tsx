@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import BossStatsTable from '../components/boss/BossStatsTable';
 import BossStatsToolbar from '../components/boss/BossStatsToolbar';
 import BossTypeTabs from '../components/boss/BossTypeTabs';
@@ -19,7 +20,13 @@ interface Props {
 }
 
 export default function BossStats({ dataSources, searchQuery = '' }: Props) {
+  const location = useLocation();
+  const navigate = useNavigate();
   const groups = useMemo(() => collectBossGroups(dataSources), [dataSources]);
+  const bossIndex = dataSources.boss_index?.data as {
+    summary?: { stageCount?: number; bossCount?: number };
+    types?: Array<{ routeKey: string; label: string; stageCount: number; bossCount: number }>;
+  } | undefined;
 
   const sortedGroups = useMemo(() => {
     const order = ['主线', '精英', '噩梦', '幻境', '罗汉堂', '昆仑', '兜率宫', '十绝阵', '联盟BOSS', '七星战场'];
@@ -39,30 +46,14 @@ export default function BossStats({ dataSources, searchQuery = '' }: Props) {
   const allBosses = useMemo(() => flattenBossGroups(groups), [groups]);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const hasSearchQuery = normalizedSearchQuery.length > 0;
-
-  const [activeTypeKey, setActiveTypeKey] = useState<string | null>(null);
-  const currentTypeKey = activeTypeKey ?? (hasSearchQuery ? SEARCH_RESULTS_KEY : (sortedGroups.length > 0 ? getTypeKey(sortedGroups[0].type) : 'all'));
+  const routeKey = location.pathname.split('/').filter(Boolean)[1] || 'mainline';
+  const currentTypeKey = hasSearchQuery || routeKey === 'search'
+    ? SEARCH_RESULTS_KEY
+    : routeKey;
 
   const [currentPage, setCurrentPage] = useState(1);
   const [levelInput, setLevelInput] = useState('');
   const [presetLevel, setPresetLevel] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (hasSearchQuery) {
-      setActiveTypeKey(SEARCH_RESULTS_KEY);
-      return;
-    }
-    setActiveTypeKey((previous) => (previous === SEARCH_RESULTS_KEY ? null : previous));
-  }, [hasSearchQuery]);
-
-  useEffect(() => {
-    if (currentTypeKey === 'all' || (hasSearchQuery && currentTypeKey === SEARCH_RESULTS_KEY)) {
-      return;
-    }
-    if (!sortedGroups.some((group) => getTypeKey(group.type) === currentTypeKey)) {
-      setActiveTypeKey('all');
-    }
-  }, [currentTypeKey, hasSearchQuery, sortedGroups]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -71,7 +62,7 @@ export default function BossStats({ dataSources, searchQuery = '' }: Props) {
   const activeGroup = useMemo(
     () => currentTypeKey === SEARCH_RESULTS_KEY
       ? null
-      : sortedGroups.find((group) => getTypeKey(group.type) === currentTypeKey) || null,
+      : sortedGroups.find((group) => (group.slug || getTypeKey(group.type)) === currentTypeKey) || null,
     [currentTypeKey, sortedGroups]
   );
 
@@ -94,34 +85,42 @@ export default function BossStats({ dataSources, searchQuery = '' }: Props) {
   }, [activeGroup, supportsLevelOverride]);
 
   const typeTabs = useMemo(() => {
-    const totalStageCount = sortedGroups.reduce((sum, group) => sum + group.stageCount, 0);
-    const tabs = sortedGroups.map((group) => ({
-      key: getTypeKey(group.type),
-      label: group.type == null ? (group.label || '未知类型') : `${group.label || `Type ${group.type}`}`,
-      description: `${group.stageCount} 关卡 / ${group.bossCount} BOSS`,
-    }));
+    const indexTypes = Array.isArray(bossIndex?.types) ? bossIndex.types : [];
+    const totalStageCount = bossIndex?.summary?.stageCount ?? sortedGroups.reduce((sum, group) => sum + group.stageCount, 0);
+    const totalBossCount = bossIndex?.summary?.bossCount ?? allBosses.length;
+    const tabs = indexTypes.length > 0
+      ? indexTypes.map((group) => ({
+        key: group.routeKey,
+        label: group.label,
+        description: `${group.stageCount} 关卡 / ${group.bossCount} BOSS`,
+      }))
+      : sortedGroups.map((group) => ({
+        key: group.slug || getTypeKey(group.type),
+        label: group.type == null ? (group.label || '未知类型') : `${group.label || `Type ${group.type}`}`,
+        description: `${group.stageCount} 关卡 / ${group.bossCount} BOSS`,
+      }));
 
     tabs.push({
       key: 'all',
       label: '全部BOSS',
-      description: `${totalStageCount} 关卡 / ${allBosses.length} BOSS`,
+      description: `${totalStageCount} 关卡 / ${totalBossCount} BOSS`,
     });
 
-    if (hasSearchQuery) {
-      const matchedCount = allBosses.filter((boss) => {
+    if (hasSearchQuery || routeKey === 'search') {
+      const matchedCount = hasSearchQuery ? allBosses.filter((boss) => {
         const fields = [boss.name, boss.remark, boss.stageName];
         return fields.some((value) => value?.toLowerCase().includes(normalizedSearchQuery));
-      }).length;
+      }).length : allBosses.length;
 
       tabs.unshift({
         key: SEARCH_RESULTS_KEY,
-        label: '搜索结果',
-        description: `${matchedCount} 条匹配`,
+        label: '搜索',
+        description: hasSearchQuery ? `${matchedCount} 条匹配` : `${matchedCount} BOSS`,
       });
     }
 
     return tabs;
-  }, [allBosses, hasSearchQuery, normalizedSearchQuery, sortedGroups]);
+  }, [allBosses, bossIndex, hasSearchQuery, normalizedSearchQuery, routeKey, sortedGroups]);
 
   const overrideLevel = useMemo(() => {
     if (!supportsLevelOverride || !activeGroup?.levelTemplates) {
@@ -166,13 +165,13 @@ export default function BossStats({ dataSources, searchQuery = '' }: Props) {
 
   const searchResultBosses = useMemo(() => {
     if (!hasSearchQuery) {
-      return [];
+      return routeKey === 'search' ? allBosses : [];
     }
     return allBosses.filter((boss) => {
       const fields = [boss.name, boss.remark, boss.stageName];
       return fields.some((value) => value?.toLowerCase().includes(normalizedSearchQuery));
     });
-  }, [allBosses, hasSearchQuery, normalizedSearchQuery]);
+  }, [allBosses, hasSearchQuery, normalizedSearchQuery, routeKey]);
 
   const typeScopedBosses = useMemo(() => {
     if (currentTypeKey === SEARCH_RESULTS_KEY) {
@@ -181,7 +180,10 @@ export default function BossStats({ dataSources, searchQuery = '' }: Props) {
 
     const baseBosses = currentTypeKey === 'all'
       ? allBosses
-      : allBosses.filter((boss) => getTypeKey(boss.type) === currentTypeKey);
+      : allBosses.filter((boss) => {
+        const group = groups.find((item) => String(item.type) === String(boss.type));
+        return (group?.slug || getTypeKey(boss.type)) === currentTypeKey;
+      });
 
     if (!supportsLevelOverride || overrideLevel == null || !activeGroup?.levelTemplates) {
       return baseBosses;
@@ -193,7 +195,7 @@ export default function BossStats({ dataSources, searchQuery = '' }: Props) {
     }
 
     return baseBosses.map((boss) => recalculateBossProps(boss, overrideLevel, template));
-  }, [activeGroup, currentTypeKey, allBosses, overrideLevel, searchResultBosses, supportsLevelOverride]);
+  }, [activeGroup, currentTypeKey, allBosses, groups, overrideLevel, searchResultBosses, supportsLevelOverride]);
 
   const visibleBosses = typeScopedBosses;
   const showSourceColumn = currentTypeKey === SEARCH_RESULTS_KEY;
@@ -254,7 +256,13 @@ export default function BossStats({ dataSources, searchQuery = '' }: Props) {
       <BossTypeTabs
         tabs={typeTabs}
         activeKey={currentTypeKey}
-        onChange={setActiveTypeKey}
+        onChange={(nextKey) => {
+          if (nextKey === SEARCH_RESULTS_KEY) {
+            navigate('/boss/search');
+            return;
+          }
+          navigate(`/boss/${nextKey}`);
+        }}
       />
 
       <BossStatsToolbar

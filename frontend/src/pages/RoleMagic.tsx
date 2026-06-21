@@ -78,16 +78,23 @@ function EffectGrowthTable({ table }: { table: MagicWeaponEffectTable | null }) 
 
 interface Props {
     dataSources: Record<string, any>;
+    activeTab?: 'cost' | 'effect';
+    onTabChange?: (tab: 'cost' | 'effect') => void;
 }
 
-export default function RoleMagic({ dataSources }: Props) {
+export default function RoleMagic({ dataSources, activeTab, onTabChange }: Props) {
     const magicLuckData = dataSources['role_magic_luck']?.data || [];
     const magicLevData = dataSources['role_magic_lev']?.data || [];
     const magicSoulData = dataSources['role_magic_soul']?.data || [];
     const magicEffectData = (dataSources['role_magic_effect']?.data || []) as MagicWeaponEffectDetail[];
 
     // 页面全局子选项卡控制: 'cost' (升级消耗) | 'effect' (法宝效果)
-    const [activeTab, setActiveTab] = useState<'cost' | 'effect'>('cost');
+    const [localActiveTab, setLocalActiveTab] = useState<'cost' | 'effect'>('cost');
+    const currentTab = activeTab ?? localActiveTab;
+    const setCurrentTab = (tab: 'cost' | 'effect') => {
+        if (onTabChange) onTabChange(tab);
+        else setLocalActiveTab(tab);
+    };
 
     // 效果区域当前选中的法宝 ID
     const [selectedWeaponId, setSelectedWeaponId] = useState<number | null>(null);
@@ -196,10 +203,10 @@ export default function RoleMagic({ dataSources }: Props) {
             {/* 页面级子选项卡 */}
             <div className="flex bg-slate-200/40 dark:bg-black/20 p-1 rounded-xl border border-slate-300/60 dark:border-border/60 w-max mb-6 gap-1 shadow-sm backdrop-blur-sm">
                 <button
-                    onClick={() => setActiveTab('cost')}
+                    onClick={() => setCurrentTab('cost')}
                     className={clsx(
                         "px-6 py-2 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border active:scale-95",
-                        activeTab === 'cost'
+                        currentTab === 'cost'
                             ? "bg-purple-500/10 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-300/50 dark:border-purple-500/30 shadow-[0_2px_10px_rgba(168,85,247,0.08)]"
                             : "text-slate-500 dark:text-textSub hover:text-slate-800 dark:hover:text-textMain hover:bg-slate-200/60 dark:hover:bg-white/5 border-transparent"
                     )}
@@ -207,10 +214,10 @@ export default function RoleMagic({ dataSources }: Props) {
                     升级消耗
                 </button>
                 <button
-                    onClick={() => setActiveTab('effect')}
+                    onClick={() => setCurrentTab('effect')}
                     className={clsx(
                         "px-6 py-2 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border active:scale-95",
-                        activeTab === 'effect'
+                        currentTab === 'effect'
                             ? "bg-purple-500/10 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-300/50 dark:border-purple-500/30 shadow-[0_2px_10px_rgba(168,85,247,0.08)]"
                             : "text-slate-500 dark:text-textSub hover:text-slate-800 dark:hover:text-textMain hover:bg-slate-200/60 dark:hover:bg-white/5 border-transparent"
                     )}
@@ -220,7 +227,7 @@ export default function RoleMagic({ dataSources }: Props) {
             </div>
 
             {/* 卡片展示区 */}
-            {activeTab === 'cost' ? (
+            {currentTab === 'cost' ? (
                 /* 消耗区域 - 网格消耗列表 */
                 <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {cards.map((card: any) => (

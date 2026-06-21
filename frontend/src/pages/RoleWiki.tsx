@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import SkillCard, { type SkillCardData } from '../components/wiki/SkillCard';
-import { apiUrl, dataFileUrl, staticDataEnabled } from '../lib/api';
+import { ROLE_WIKI_FILE_BY_ROUTE } from '../lib/appRoutes';
 
 interface SkillSlot {
   slot: string;
@@ -20,6 +21,10 @@ interface RoleWikiFile {
   data: RoleWikiPayload;
 }
 
+interface Props {
+  dataSources: Record<string, RoleWikiFile | undefined>;
+}
+
 // 已生成 Wiki 的角色(数据源名 -> 显示名)。后续角色加到这里即可。
 const ROLES = [
   { key: 'role_wiki_wukong', name: '孙悟空' },
@@ -33,6 +38,7 @@ const ROLES = [
   { key: 'role_wiki_yangjian', name: '杨戬' },
   { key: 'role_wiki_skill_extra', name: '绝技无双' },
 ];
+const ROLE_ROUTE_BY_FILE = Object.fromEntries(Object.entries(ROLE_WIKI_FILE_BY_ROUTE).map(([route, file]) => [file, route]));
 
 /** 去重升序 */
 function dedupeSort(arr: number[]) {
@@ -63,62 +69,17 @@ function collectCardLevels(card: SkillCardData | undefined, levelSet: Set<number
   }
 }
 
-async function loadRoleWikiPayload(name: string, signal: AbortSignal): Promise<RoleWikiPayload> {
-  const response = await fetch(staticDataEnabled() ? dataFileUrl(name) : apiUrl(`/api/data/${encodeURIComponent(name)}`), { signal });
-  if (!response.ok) {
-    throw new Error(`Load ${name}.json failed: ${response.status}`);
-  }
-
-  const file = (await response.json()) as RoleWikiFile;
-  if (!file?.data?.role || !Array.isArray(file.data.slots)) {
-    throw new Error(`Invalid ${name}.json`);
-  }
-  return file.data;
-}
-
-export default function RoleWiki() {
-  const [activeRole, setActiveRole] = useState(ROLES[0].key);
-  const [payloadCache, setPayloadCache] = useState<Record<string, RoleWikiPayload>>({});
-  const [loadingRole, setLoadingRole] = useState<string | null>(activeRole);
-  const [loadError, setLoadError] = useState<string | null>(null);
+export default function RoleWiki({ dataSources }: Props) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const routeKey = location.pathname.split('/').filter(Boolean)[1] || 'wukong';
+  const activeRole = ROLE_WIKI_FILE_BY_ROUTE[routeKey] ?? ROLES[0].key;
   // null = 跟随默认档位;非 null = 用户手动选择的等级集合
   const [picked, setPicked] = useState<number[] | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'active' | 'passive'>('all');
 
-  const payload = payloadCache[activeRole] ?? null;
+  const payload = dataSources[activeRole]?.data ?? null;
   const isSkillExtra = payload?.kind === 'skillExtra';
-
-  useEffect(() => {
-    if (payload) {
-      setLoadingRole(null);
-      setLoadError(null);
-      return;
-    }
-
-    const controller = new AbortController();
-    let disposed = false;
-    setLoadingRole(activeRole);
-    setLoadError(null);
-
-    loadRoleWikiPayload(activeRole, controller.signal)
-      .then((nextPayload) => {
-        if (disposed) return;
-        setPayloadCache((prev) => ({ ...prev, [activeRole]: nextPayload }));
-      })
-      .catch((err) => {
-        if (disposed || (err instanceof DOMException && err.name === 'AbortError')) return;
-        console.error(`Failed to load ${activeRole}:`, err);
-        setLoadError(err instanceof Error ? err.message : `Load ${activeRole}.json failed`);
-      })
-      .finally(() => {
-        if (!disposed) setLoadingRole(null);
-      });
-
-    return () => {
-      disposed = true;
-      controller.abort();
-    };
-  }, [activeRole, payload]);
 
   const availableLevels = useMemo(() => {
     const levelSet = new Set<number>();
@@ -145,7 +106,7 @@ export default function RoleWiki() {
   };
 
   const switchRole = (key: string) => {
-    setActiveRole(key);
+    navigate(`/role_wiki/${ROLE_ROUTE_BY_FILE[key] ?? 'wukong'}`);
     setPicked(null); // 切角色回到默认档位
     setFilterType('all');
   };
@@ -190,16 +151,7 @@ export default function RoleWiki() {
   const activeCards = useMemo(() => filteredCards.filter((c) => !c.isPassive), [filteredCards]);
   const passiveCards = useMemo(() => filteredCards.filter((c) => c.isPassive), [filteredCards]);
 
-  if (!payload && loadError) {
-    return (
-      <div className="card border border-dashed border-red-300 bg-red-50/70 py-20 text-center dark:border-red-500/40 dark:bg-red-500/10">
-        <h3 className="text-xl font-medium text-red-700 dark:text-red-200">角色技能数据加载失败</h3>
-        <p className="mt-2 text-sm text-red-600/80 dark:text-red-100/80">{loadError}</p>
-      </div>
-    );
-  }
-
-  if (!payload || loadingRole === activeRole) {
+  if (!payload) {
     return (
       <div className="card border border-dashed border-border bg-transparent py-20 text-center">
         <h3 className="text-xl font-medium text-textSub">正在加载角色技能数据...</h3>

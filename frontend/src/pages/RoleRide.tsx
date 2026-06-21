@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 import RideStar from '../components/ride/RideStar';
 import RideSkill from '../components/ride/RideSkill';
@@ -12,22 +13,25 @@ interface RideProps {
 }
 
 export default function RoleRide({ dataSources }: RideProps) {
-    const [subTab, setSubTab] = useState<'star' | 'skill' | 'wiki' | 'make' | 'upgrade'>('star');
+    const location = useLocation();
+    const navigate = useNavigate();
+    const tabs = useMemo(() => [
+        { id: 'star', label: '图鉴及升星进阶', path: '/ride/star' },
+        { id: 'skill', label: '技能升级', path: '/ride/skill' },
+        { id: 'wiki', label: '技能 Wiki', path: '/ride/wiki' },
+        { id: 'make', label: '装备打造/重铸', path: '/ride/make' },
+        { id: 'upgrade', label: '装备升级', path: '/ride/upgrade' },
+    ] as const, []);
+    const subTab = tabs.find((tab) => tab.path === location.pathname)?.id ?? 'star';
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500 pb-20">
             {/* Header Tabs Navigation */}
             <div className="flex gap-2 p-1 bg-surface border border-border rounded-xl w-max max-w-[calc(100vw-2rem)] overflow-x-auto custom-scrollbar relative z-10 shadow-sm">
-                {[
-                    { id: 'star', label: '图鉴及升星进阶' },
-                    { id: 'skill', label: '技能升级' },
-                    { id: 'wiki', label: '技能 Wiki' },
-                    { id: 'make', label: '装备打造/重铸' },
-                    { id: 'upgrade', label: '装备升级' },
-                ].map(tab => (
+                {tabs.map(tab => (
                     <button
                         key={tab.id}
-                        onClick={() => setSubTab(tab.id as any)}
+                        onClick={() => navigate(tab.path)}
                         className={clsx(
                             "px-6 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center relative overflow-hidden group border active:scale-95 cursor-pointer",
                             subTab === tab.id

@@ -16,6 +16,7 @@ const u = require("../lib/utils");
 const OUTPUT_DIR = u.OUTPUT_DIR;
 const PET_WIKI_FILE_RE = /^pet_wiki_.*\.json$/;
 const OUTPUT_NAME = "pet_skill_baseline";
+const PET_WIKI_INDEX_OUTPUT_NAME = "pet_wiki_index";
 
 const ACTIVE_SLOT_KINDS = new Set(["active", "sp"]);
 const BASELINE_CLUSTER_RELATIVE_TOLERANCE = 0.015;
@@ -25,6 +26,27 @@ const NUMBER_DISPLAY_DIGITS = 6;
 const RATIO_DISPLAY_DIGITS = 4;
 const PERCENT_DISPLAY_DIGITS = 4;
 const FIXED_MULTIPLIER_STATIC_RELATIVE_RANGE_LIMIT = 0.05;
+
+const PET_GROUP_TYPES = {
+  pet_wiki_xuanwu: "神兽",
+  pet_wiki_baihu: "神兽",
+  pet_wiki_zhuque: "神兽",
+  pet_wiki_qinglong: "神兽",
+  pet_wiki_tianshe: "神兽",
+  pet_wiki_qilin: "神兽",
+  pet_wiki_hou: "灵兽",
+  pet_wiki_wangshe: "灵兽",
+  pet_wiki_niuxueren: "灵兽",
+  pet_wiki_tuzi: "灵兽",
+  pet_wiki_laoshu: "灵兽",
+  pet_wiki_huadiehubing: "仙兽",
+};
+
+const PET_TYPE_OVERRIDES = {
+  pet_wiki_huadiehubing: {
+    190000073: "灵兽",
+  },
+};
 
 function roundTo(n, digits) {
   const factor = 10 ** digits;
@@ -53,6 +75,58 @@ function listPetWikiFiles() {
   return fs.readdirSync(OUTPUT_DIR)
     .filter((file) => PET_WIKI_FILE_RE.test(file))
     .sort();
+}
+
+function petTypeFor(fileName, petId) {
+  return PET_TYPE_OVERRIDES[fileName]?.[petId] || PET_GROUP_TYPES[fileName] || null;
+}
+
+function buildPetWikiIndex(warnings) {
+  const groups = [];
+  for (const file of listPetWikiFiles()) {
+    const fileName = file.slice(0, -5);
+    const fullPath = path.join(OUTPUT_DIR, file);
+    const json = JSON.parse(fs.readFileSync(fullPath, "utf8"));
+    const group = json.data?.petGroup;
+    const variants = Array.isArray(json.data?.variants) ? json.data.variants : [];
+    if (!group || variants.length === 0) {
+      pushWarning(warnings, "INVALID_PET_WIKI_FILE", `${file} 缺少 petGroup 或 variants，未进入 pet_wiki_index`);
+      continue;
+    }
+    const groupType = PET_GROUP_TYPES[fileName];
+    if (!groupType) {
+      pushWarning(warnings, "UNKNOWN_PET_WIKI_TYPE", `${file} 没有配置宠物类型，未进入 pet_wiki_index`);
+      continue;
+    }
+
+    groups.push({
+      fileName,
+      key: group.key || fileName.replace(/^pet_wiki_/, ""),
+      name: group.name || fileName,
+      type: groupType,
+      note: group.note || null,
+      entries: variants.map((variant) => {
+        const pet = variant.pet || {};
+        const type = petTypeFor(fileName, pet.id);
+        if (!type) {
+          pushWarning(warnings, "UNKNOWN_PET_ENTRY_TYPE", `${file} 的宠物 ${pet.id} 没有明确类型，未进入 pet_wiki_index`);
+          return null;
+        }
+        return {
+          fileName,
+          petId: pet.id,
+          petName: pet.name || `宠物 ${pet.id}`,
+          idGroup: pet.idGroup ?? null,
+          rank: pet.rank ?? null,
+          type,
+        };
+      }).filter((entry) => entry && Number.isInteger(entry.petId)),
+    });
+  }
+  return {
+    groups,
+    warnings,
+  };
 }
 
 function collectSamples(warnings) {
@@ -298,6 +372,7 @@ function extract() {
   const samples = collectSamples(warnings);
   const baselines = inferBaselines(samples, warnings);
   const skills = summarizeSkills(samples, baselines);
+  const indexWarnings = [];
 
   u.saveOutput(OUTPUT_NAME, {
     baselines,
@@ -310,6 +385,13 @@ function extract() {
     clusterRelativeTolerance: BASELINE_CLUSTER_RELATIVE_TOLERANCE,
     fixedMultiplierStaticRelativeRangeLimit: FIXED_MULTIPLIER_STATIC_RELATIVE_RANGE_LIMIT,
     note: "不读取攻略倍率文本;缺 CD 或缺固伤不补值;无有效 CD 的技能不进入样本",
+  });
+
+  u.saveOutput(PET_WIKI_INDEX_OUTPUT_NAME, buildPetWikiIndex(indexWarnings), {
+    system: "宠物 → 技能 Wiki 索引",
+    source: "output/pet_wiki_*.json",
+    method: "只汇总宠物组、宠物条目和对应详情文件名；技能详情仍保留在 pet_wiki_*.json",
+    note: "用于 /pet/wiki 首屏懒加载，不包含技能成长明细，不构造缺失数值",
   });
 }
 

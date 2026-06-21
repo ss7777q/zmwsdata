@@ -13,6 +13,7 @@ const DEFAULT_MAP_CACHE_ROOT = path.join(ROOT, 'file', 'map-cache');
 const DEFAULT_MAP_CACHE_DIR = path.join(DEFAULT_MAP_CACHE_ROOT, 'resources', 'map');
 const DEFAULT_MANIFEST_PATH = path.join(ROOT, 'file', 'runtime', 'cocos-map-manifest.json');
 const BOSS_OUTPUT_PREFIX = 'boss_type';
+const BOSS_INDEX_OUTPUT_NAME = 'boss_index';
 
 const PROP_KEYS = [
   'atk', 'def', 'hp', 'mp', 'hitVal', 'dodge', 'crit', 'tenacity', 'lucky', 'guardian',
@@ -1299,7 +1300,65 @@ function writeBossOutput(groupedData, outPath, options = {}) {
     });
   }
 
+  writeBossIndex(groupedData, options);
+
   console.log(`[boss] 已拆分输出 ${groupedData.length} 个类型文件`);
+}
+
+function bossIndexTypeOf(group) {
+  return {
+    routeKey: group.slug,
+    fileName: group.fileName,
+    type: group.type,
+    label: group.label || `Type ${group.type}`,
+    slug: group.slug,
+    stageCount: group.stageCount,
+    bossCount: group.bossCount,
+    subTypes: Array.isArray(group.subTypes) ? group.subTypes : [],
+    supportsLevelOverride: Boolean(group.supportsLevelOverride),
+    levelOverrideMode: group.levelOverrideMode || null,
+    defaultLevel: group.defaultLevel ?? null,
+    levelOptions: Array.isArray(group.levelOptions) ? group.levelOptions : [],
+    levelRange: group.levelRange || null,
+    noteText: group.noteText || '',
+  };
+}
+
+function buildBossIndexPayload(types) {
+  const sortedTypes = [...types].sort((left, right) => Number(left.type ?? Number.MAX_SAFE_INTEGER) - Number(right.type ?? Number.MAX_SAFE_INTEGER));
+  return {
+    summary: {
+      typeCount: sortedTypes.length,
+      stageCount: sortedTypes.reduce((sum, item) => sum + Number(item.stageCount || 0), 0),
+      bossCount: sortedTypes.reduce((sum, item) => sum + Number(item.bossCount || 0), 0),
+    },
+    types: sortedTypes,
+  };
+}
+
+function readExistingBossIndexTypes() {
+  const indexPath = path.join(utils.OUTPUT_DIR, `${BOSS_INDEX_OUTPUT_NAME}.json`);
+  if (!fs.existsSync(indexPath)) return [];
+  const payload = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+  return Array.isArray(payload.data?.types) ? payload.data.types : [];
+}
+
+function writeBossIndex(groupedData, options = {}) {
+  const currentTypes = groupedData.map(bossIndexTypeOf);
+  let types = currentTypes;
+  if (Array.isArray(options.types) && options.types.length > 0) {
+    const merged = new Map(readExistingBossIndexTypes().map((entry) => [String(entry.type), entry]));
+    for (const entry of currentTypes) {
+      merged.set(String(entry.type), entry);
+    }
+    types = [...merged.values()];
+  }
+
+  utils.saveOutput(BOSS_INDEX_OUTPUT_NAME, buildBossIndexPayload(types), {
+    system: 'BOSS 属性',
+    source: 'boss_type_*.json',
+    grouping: '轻量索引，只记录分类入口与详情文件名；具体关卡和属性保留在 boss_type_* 文件',
+  });
 }
 
 function extractBossStats(options = {}) {

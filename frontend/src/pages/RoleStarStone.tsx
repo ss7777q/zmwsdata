@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { clsx } from 'clsx';
-import { useGameData } from '../hooks/useGameData';
 
 interface StarStoneTier {
     level: number;
@@ -61,8 +60,7 @@ function asStarStoneEffects(value: unknown): StarStoneEffect[] {
     });
 }
 
-export default function RoleStarStone() {
-    const { dataSources, loading } = useGameData('role_starstone');
+export default function RoleStarStone({ dataSources }: { dataSources: Record<string, any> }) {
     const starStones = useMemo(
         () => asStarStoneEffects(dataSources.role_starstone_effect_all?.data ?? dataSources.role_starstone_effect?.data)
             .filter((stone) => stone.ownership?.name !== '未知' && stone.ownership?.kind !== '未知'),
@@ -176,14 +174,6 @@ export default function RoleStarStone() {
         setSelectedId(id);
         setPickedLevels(null);
     };
-
-    if (loading) {
-        return (
-            <div className="rounded-lg border border-border bg-card p-8 text-sm text-textSub">
-                正在加载星石词条数据...
-            </div>
-        );
-    }
 
     if (!activeStone) {
         return (

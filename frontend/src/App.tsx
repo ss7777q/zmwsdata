@@ -4,10 +4,24 @@ import SideNav from './components/layout/SideNav';
 import TopBar from './components/layout/TopBar';
 import SearchResults from './components/ui/SearchResults';
 import LoadingSpinner from './components/ui/LoadingSpinner';
-import { useGameData } from './hooks/useGameData';
+import { useDataFiles } from './hooks/useGameData';
 import { useVisitorStats } from './hooks/useVisitorStats';
 import { searchDataSources } from './lib/search';
 import { apiUrl } from './lib/api';
+import {
+  COLD_KNOWLEDGE_SYSTEM,
+  DEFAULT_SYSTEM,
+  DEFAULT_SYSTEM_PATHS,
+  EXTREME_STATS_SYSTEM,
+  getRequiredDataFiles,
+  HELP_SYSTEM,
+  isNoDataSystem,
+  normalizeRoutePath,
+  OPS_SYSTEM,
+  PLAYER_LOOKUP_SYSTEM,
+  resolveSystemFromPath,
+  supportsGlobalSearch,
+} from './lib/appRoutes';
 
 const RoleWiki = lazy(() => import('./pages/RoleWiki'));
 const RoleEquip = lazy(() => import('./pages/RoleEquip'));
@@ -65,43 +79,25 @@ function NoticeBanner() {
   );
 }
 
-const DEFAULT_SYSTEM = 'role_wiki';
-const SYSTEM_PATHS: Record<string, string> = {
-  role_wiki: '/role_wiki',
-  role_equip: '/user_equip',
-  role_spiritual: '/user_spiritual',
-  role_starstone: '/user_starstone',
-  role_fashion: '/user_fashion',
-  role_honor: '/title',
-  role_extreme_stats: '/extreme_stats',
-  role_wing: '/user_wing',
-  role_cultivate: '/user_cultivate',
-  pet: '/pet',
-  beast_stats: '/pet_champion',
-  ride: '/ride',
-  call_god: '/call_god',
-  rogue_item: '/rogue_item',
-  boss: '/boss',
-  resist: '/resist',
-  player_lookup: '/player_lookup',
-  cold_knowledge: '/cold_knowledge',
-  help: '/help',
-};
-const OPS_ROUTE_PATH = '/ops';
-const LEGACY_ROUTE_REDIRECTS: Record<string, string> = {
-  '/beast_stats': '/pet_champion',
-};
-const PATH_TO_SYSTEM = Object.fromEntries(Object.entries(SYSTEM_PATHS).map(([system, routePath]) => [routePath, system]));
-const OPS_SYSTEM = 'ops';
-const EXTREME_STATS_SYSTEM = 'role_extreme_stats';
-const PLAYER_LOOKUP_SYSTEM = 'player_lookup';
-const HELP_SYSTEM = 'help';
-const COLD_KNOWLEDGE_SYSTEM = 'cold_knowledge';
-const NO_DATA_SYSTEMS = [OPS_SYSTEM, PLAYER_LOOKUP_SYSTEM, HELP_SYSTEM, COLD_KNOWLEDGE_SYSTEM] as const;
 const KNOWN_SYSTEMS = ['role_wiki', 'role_equip', 'role_spiritual', 'role_starstone', 'role_wing', 'role_cultivate', 'pet', 'beast_stats', 'ride', 'role_fashion', 'role_honor', 'role_extreme_stats', 'call_god', 'rogue_item', 'boss', 'resist', 'player_lookup', 'cold_knowledge', 'help', 'ops'] as const;
 
 function PageFallback() {
   return <LoadingSpinner message="正在载入系统视图..." />;
+}
+
+function DataErrorPanel({ errors }: { errors: Record<string, string> }) {
+  const entries = Object.entries(errors);
+  if (entries.length === 0) return null;
+  return (
+    <div className="rounded-lg border border-red-300 bg-red-50/80 p-5 text-sm text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-100">
+      <div className="font-semibold">配置文件加载失败</div>
+      <div className="mt-2 space-y-1">
+        {entries.map(([name, message]) => (
+          <div key={name} className="font-mono text-xs">{name}.json：{message}</div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 const WATERMARK_SVG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' opacity='0.1' viewBox='0 0 400 300'%3E%3Ctext x='50%25' y='50%25' transform='rotate(-30 200 150)' font-family='system-ui, sans-serif' font-size='24' font-weight='bold' fill='%23888888' text-anchor='middle' dominant-baseline='middle'%3Edata.zmwsrank.top%3C/text%3E%3C/svg%3E`;
@@ -109,7 +105,6 @@ const WATERMARK_SVG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [currentSystem, setCurrentSystem] = useState(DEFAULT_SYSTEM);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [showOps, setShowOps] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -170,43 +165,26 @@ function App() {
     document.addEventListener('pointermove', handlePointerMove);
     document.addEventListener('pointerup', handlePointerUp);
   };
-  const activeSystem = !showOps && currentSystem === OPS_SYSTEM ? DEFAULT_SYSTEM : currentSystem;
-  const shouldLoadGameData = !NO_DATA_SYSTEMS.includes(activeSystem as typeof NO_DATA_SYSTEMS[number]);
-  const shouldLoadBulkGameData = shouldLoadGameData && activeSystem !== 'role_wiki';
-  const supportsGlobalSearch = ['role_equip', 'role_fashion', 'boss'].includes(activeSystem);
-  const shouldShowSearchBar = shouldLoadGameData && supportsGlobalSearch;
-  const { dataSources, loading } = useGameData(activeSystem, shouldLoadBulkGameData);
+  const routeSystem = resolveSystemFromPath(location.pathname) || DEFAULT_SYSTEM;
+  const activeSystem = !showOps && routeSystem === OPS_SYSTEM ? DEFAULT_SYSTEM : routeSystem;
+  const shouldLoadGameData = !isNoDataSystem(activeSystem);
+  const hasGlobalSearch = supportsGlobalSearch(activeSystem);
+  const shouldShowSearchBar = shouldLoadGameData && hasGlobalSearch;
+  const requiredDataFiles = useMemo(
+    () => getRequiredDataFiles(activeSystem, location.pathname, searchQuery),
+    [activeSystem, location.pathname, searchQuery]
+  );
+  const { dataSources, loading, errors: dataErrors } = useDataFiles(requiredDataFiles, shouldLoadGameData && requiredDataFiles.length > 0);
   const visitorStats = useVisitorStats();
   const isBossSystem = activeSystem === 'boss';
   const isSearching = shouldLoadGameData && searchQuery.trim().length > 0 && !isBossSystem;
 
   useEffect(() => {
-    if (location.pathname === OPS_ROUTE_PATH) {
-      navigate(SYSTEM_PATHS[DEFAULT_SYSTEM], { replace: true });
-      return;
+    const normalized = normalizeRoutePath(location.pathname, showOps);
+    if (normalized !== location.pathname) {
+      navigate(normalized, { replace: true });
     }
-
-    const legacyRedirectTarget = LEGACY_ROUTE_REDIRECTS[location.pathname];
-    if (legacyRedirectTarget) {
-      navigate(legacyRedirectTarget, { replace: true });
-      return;
-    }
-
-    const isExtremeStatsPath = location.pathname === SYSTEM_PATHS[EXTREME_STATS_SYSTEM]
-      || location.pathname.startsWith(`${SYSTEM_PATHS[EXTREME_STATS_SYSTEM]}/`);
-    const matchedSystem = isExtremeStatsPath ? EXTREME_STATS_SYSTEM : PATH_TO_SYSTEM[location.pathname];
-    if (matchedSystem && matchedSystem !== currentSystem) {
-      setCurrentSystem(matchedSystem);
-      return;
-    }
-    if (!matchedSystem && location.pathname !== '/' && location.pathname !== '') {
-      navigate(SYSTEM_PATHS[DEFAULT_SYSTEM], { replace: true });
-      return;
-    }
-    if ((location.pathname === '/' || location.pathname === '') && currentSystem !== DEFAULT_SYSTEM) {
-      setCurrentSystem(DEFAULT_SYSTEM);
-    }
-  }, [currentSystem, location.pathname, navigate]);
+  }, [location.pathname, navigate, showOps]);
 
   useEffect(() => {
     let disposed = false;
@@ -222,17 +200,15 @@ function App() {
         const enabled = Boolean(health.opsEnabled);
         setShowOps(enabled);
         if (!enabled) {
-          setCurrentSystem((previous) => (previous === OPS_SYSTEM ? DEFAULT_SYSTEM : previous));
-          if (location.pathname === OPS_ROUTE_PATH) {
-            navigate(SYSTEM_PATHS[DEFAULT_SYSTEM], { replace: true });
+          if (resolveSystemFromPath(location.pathname) === OPS_SYSTEM) {
+            navigate(DEFAULT_SYSTEM_PATHS[DEFAULT_SYSTEM], { replace: true });
           }
         }
       } catch {
         if (disposed) return;
         setShowOps(false);
-        setCurrentSystem((previous) => (previous === OPS_SYSTEM ? DEFAULT_SYSTEM : previous));
-        if (location.pathname === OPS_ROUTE_PATH) {
-          navigate(SYSTEM_PATHS[DEFAULT_SYSTEM], { replace: true });
+        if (resolveSystemFromPath(location.pathname) === OPS_SYSTEM) {
+          navigate(DEFAULT_SYSTEM_PATHS[DEFAULT_SYSTEM], { replace: true });
         }
       }
     }
@@ -247,23 +223,6 @@ function App() {
   const searchResults = useMemo(() => searchDataSources(dataSources, searchQuery), [dataSources, searchQuery]);
 
   const knownSystems: string[] = showOps ? [...KNOWN_SYSTEMS] : KNOWN_SYSTEMS.filter((item) => item !== OPS_SYSTEM);
-
-  useEffect(() => {
-    if (activeSystem === OPS_SYSTEM) {
-      return;
-    }
-
-    const expectedPath = SYSTEM_PATHS[activeSystem] || SYSTEM_PATHS[DEFAULT_SYSTEM];
-    const isExpectedNestedPath = activeSystem === EXTREME_STATS_SYSTEM
-      && location.pathname.startsWith(`${SYSTEM_PATHS[EXTREME_STATS_SYSTEM]}/`);
-    if (location.pathname === '/' || location.pathname === '') {
-      navigate(expectedPath, { replace: true });
-      return;
-    }
-    if (!isExpectedNestedPath && location.pathname !== expectedPath && PATH_TO_SYSTEM[location.pathname] == null) {
-      navigate(expectedPath, { replace: true });
-    }
-  }, [activeSystem, location.pathname, navigate]);
 
   return (
     <div className={`min-h-screen bg-background flex ${isDragging ? 'no-transition' : ''}`}>
@@ -293,12 +252,9 @@ function App() {
             if (system === OPS_SYSTEM && !showOps) {
               return;
             }
-            setCurrentSystem(system);
             setSearchQuery('');
             setIsMobileOpen(false);
-            if (system !== OPS_SYSTEM) {
-              navigate(SYSTEM_PATHS[system] || SYSTEM_PATHS[DEFAULT_SYSTEM]);
-            }
+            navigate(DEFAULT_SYSTEM_PATHS[system] || DEFAULT_SYSTEM_PATHS[DEFAULT_SYSTEM]);
           }}
         />
 
@@ -323,7 +279,7 @@ function App() {
           showDataCount={shouldLoadGameData}
           showSearch={shouldShowSearchBar}
           searchValue={searchQuery}
-          searchDisabled={!supportsGlobalSearch}
+          searchDisabled={!hasGlobalSearch}
           onSearchChange={setSearchQuery}
           visitorStats={visitorStats}
         />
@@ -347,8 +303,10 @@ function App() {
             ) : null}
 
             <section key={`${activeSystem}-${isSearching ? 'search' : 'view'}`} className="module-view">
-              {loading && shouldLoadBulkGameData && activeSystem !== 'call_god' ? (
+              {loading && requiredDataFiles.length > 0 && activeSystem !== 'call_god' ? (
                 <LoadingSpinner message="正在载入游戏配置文件..." />
+              ) : Object.keys(dataErrors).length > 0 ? (
+                <DataErrorPanel errors={dataErrors} />
               ) : isSearching ? (
                 <SearchResults
                   currentLabel={currentMeta.title}
@@ -358,10 +316,10 @@ function App() {
               ) : (
                 <>
                   <Suspense fallback={<PageFallback />}>
-                    {activeSystem === 'role_wiki' && <RoleWiki />}
+                    {activeSystem === 'role_wiki' && <RoleWiki dataSources={dataSources} />}
                     {activeSystem === 'role_equip' && <RoleEquip dataSources={dataSources} />}
                     {activeSystem === 'role_spiritual' && <RoleSpiritual dataSources={dataSources} />}
-                    {activeSystem === 'role_starstone' && <RoleStarStone />}
+                    {activeSystem === 'role_starstone' && <RoleStarStone dataSources={dataSources} />}
                     {activeSystem === 'role_wing' && <RoleWing dataSources={dataSources} />}
                     {activeSystem === 'role_cultivate' && <RoleCultivate dataSources={dataSources} loading={loading} />}
                     {activeSystem === 'pet' && <RolePet dataSources={dataSources} />}

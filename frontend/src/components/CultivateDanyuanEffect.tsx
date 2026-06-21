@@ -1,14 +1,27 @@
 import { useMemo, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useDataFiles } from '../hooks/useGameData';
 
 interface Props {
     dataSources: Record<string, { data?: unknown } | undefined>;
 }
 
 interface DanyuanEffectData {
-    families?: DanyuanFamily[];
+    families?: DanyuanFamilyIndexEntry[];
     warnings?: DanyuanWarning[];
+}
+
+interface DanyuanFamilyIndexEntry {
+    familyId: number;
+    fileName: string;
+    name: string;
+    innerTypeName?: string | null;
+    tags?: string[];
+    summary: string;
+    levelCount?: number;
+    qualityCount?: number;
+    maxLevel?: number | null;
 }
 
 interface DanyuanFamily {
@@ -138,6 +151,11 @@ function toDataSource(value: { data?: unknown } | undefined): DanyuanEffectData 
     return value.data as DanyuanEffectData;
 }
 
+function toFamilySource(value: { data?: unknown } | undefined): DanyuanFamily | null {
+    if (!value || typeof value.data !== 'object' || value.data == null) return null;
+    return value.data as DanyuanFamily;
+}
+
 function effectValuesOf(payload: DanyuanQualityLevel | null | undefined) {
     return Array.isArray(payload?.effectValues) ? payload.effectValues : [];
 }
@@ -231,16 +249,22 @@ function renderLevelCell(payload: DanyuanQualityLevel | null | undefined, column
 }
 
 export default function CultivateDanyuanEffect({ dataSources }: Props) {
-    const effectData = toDataSource(dataSources.role_danyuan_effect);
+    const effectData = toDataSource(dataSources.role_danyuan_effect_index);
     const families = useMemo(() => {
         const sourceFamilies = Array.isArray(effectData?.families) ? effectData.families : [];
         return [...sourceFamilies].sort((a, b) => a.familyId - b.familyId);
     }, [effectData]);
 
     const [selectedFamilyId, setSelectedFamilyId] = useState<number | null>(null);
-    const activeFamily = useMemo(() => {
+    const activeFamilyIndex = useMemo(() => {
         return families.find((item) => item.familyId === selectedFamilyId) ?? families[0] ?? null;
     }, [families, selectedFamilyId]);
+    const activeFamilyFileName = activeFamilyIndex?.fileName ?? '';
+    const detailResult = useDataFiles(activeFamilyFileName ? [activeFamilyFileName] : [], Boolean(activeFamilyFileName));
+    const activeFamily = useMemo(
+        () => toFamilySource(detailResult.dataSources[activeFamilyFileName]),
+        [activeFamilyFileName, detailResult.dataSources]
+    );
     const levelColumnGroups = useMemo(() => activeFamily ? buildLevelColumnGroups(activeFamily) : [], [activeFamily]);
     const levelColumnCount = levelColumnGroups.reduce((sum, group) => sum + group.columns.length, 0);
     const detailParagraphs = activeFamily ? [...(activeFamily.detail ?? []), ...(activeFamily.clarification ?? [])] : [];
@@ -254,7 +278,31 @@ export default function CultivateDanyuanEffect({ dataSources }: Props) {
                         <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse"></span>
                     </div>
                 </div>
-                <h3 className="text-sm font-semibold tracking-wider text-textSub">未获取到丹元效果卷轴 (role_danyuan_effect)</h3>
+                <h3 className="text-sm font-semibold tracking-wider text-textSub">未获取到丹元效果索引 (role_danyuan_effect_index)</h3>
+            </div>
+        );
+    }
+
+    if (Object.keys(detailResult.errors).length > 0) {
+        const message = Object.entries(detailResult.errors).map(([name, error]) => `${name}.json：${error}`).join('；');
+        return (
+            <div className="card border border-dashed border-red-300 bg-red-50/70 py-20 text-center dark:border-red-500/40 dark:bg-red-500/10">
+                <h3 className="text-xl font-medium text-red-700 dark:text-red-200">丹元效果详情加载失败</h3>
+                <p className="mt-2 text-sm text-red-600/80 dark:text-red-100/80">{message}</p>
+            </div>
+        );
+    }
+
+    if (!activeFamily || detailResult.loading) {
+        return (
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-surface/50 py-20">
+                <div className="relative flex items-center justify-center w-12 h-12 mb-3">
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-slate-500/10 animate-ping opacity-60"></span>
+                    <div className="relative inline-flex rounded-full h-8 w-8 bg-slate-500/15 border border-slate-500/30 items-center justify-center">
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse"></span>
+                    </div>
+                </div>
+                <h3 className="text-sm font-semibold tracking-wider text-textSub">正在加载丹元效果详情...</h3>
             </div>
         );
     }
@@ -271,7 +319,7 @@ export default function CultivateDanyuanEffect({ dataSources }: Props) {
                     </div>
                     <div className="max-h-[640px] overflow-auto p-3.5 custom-scrollbar xl:max-h-none xl:flex-1 xl:min-h-0 space-y-2">
                         {families.map((family) => {
-                            const selected = family.familyId === activeFamily?.familyId;
+                            const selected = family.familyId === activeFamilyIndex?.familyId;
                             const innerStyle = family.innerTypeName ? InnerTypeStyles[family.innerTypeName] : null;
                             return (
                                 <button
