@@ -283,29 +283,9 @@ export default function CultivateDanyuanEffect({ dataSources }: Props) {
         );
     }
 
-    if (Object.keys(detailResult.errors).length > 0) {
-        const message = Object.entries(detailResult.errors).map(([name, error]) => `${name}.json：${error}`).join('；');
-        return (
-            <div className="card border border-dashed border-red-300 bg-red-50/70 py-20 text-center dark:border-red-500/40 dark:bg-red-500/10">
-                <h3 className="text-xl font-medium text-red-700 dark:text-red-200">丹元效果详情加载失败</h3>
-                <p className="mt-2 text-sm text-red-600/80 dark:text-red-100/80">{message}</p>
-            </div>
-        );
-    }
-
-    if (!activeFamily || detailResult.loading) {
-        return (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-surface/50 py-20">
-                <div className="relative flex items-center justify-center w-12 h-12 mb-3">
-                    <span className="absolute inline-flex h-full w-full rounded-full bg-slate-500/10 animate-ping opacity-60"></span>
-                    <div className="relative inline-flex rounded-full h-8 w-8 bg-slate-500/15 border border-slate-500/30 items-center justify-center">
-                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse"></span>
-                    </div>
-                </div>
-                <h3 className="text-sm font-semibold tracking-wider text-textSub">正在加载丹元效果详情...</h3>
-            </div>
-        );
-    }
+    const detailErrorMessage = activeFamilyFileName && detailResult.errors[activeFamilyFileName]
+        ? `${activeFamilyFileName}.json：${detailResult.errors[activeFamilyFileName]}`
+        : '';
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
@@ -352,7 +332,22 @@ export default function CultivateDanyuanEffect({ dataSources }: Props) {
                 </div>
 
                 {/* 右侧详情 */}
-                {activeFamily && (
+                {detailErrorMessage ? (
+                    <div className="card min-h-[360px] border border-dashed border-red-300 bg-red-50/70 py-20 text-center dark:border-red-500/40 dark:bg-red-500/10">
+                        <h3 className="text-xl font-medium text-red-700 dark:text-red-200">丹元效果详情加载失败</h3>
+                        <p className="mt-2 text-sm text-red-600/80 dark:text-red-100/80">{detailErrorMessage}</p>
+                    </div>
+                ) : !activeFamily ? (
+                    <div className="flex min-h-[360px] flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-surface/50 py-20">
+                        <div className="relative flex items-center justify-center w-12 h-12 mb-3">
+                            <span className="absolute inline-flex h-full w-full rounded-full bg-slate-500/10 animate-ping opacity-60"></span>
+                            <div className="relative inline-flex rounded-full h-8 w-8 bg-slate-500/15 border border-slate-500/30 items-center justify-center">
+                                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse"></span>
+                            </div>
+                        </div>
+                        <h3 className="text-sm font-semibold tracking-wider text-textSub">正在加载丹元效果详情...</h3>
+                    </div>
+                ) : (
                     <div className="space-y-5 min-w-0 flex-1">
                         <div className="rounded-xl border border-border bg-card p-6 shadow-sm space-y-6">
                             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">

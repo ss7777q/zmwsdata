@@ -5,7 +5,6 @@ import TopBar from './components/layout/TopBar';
 import SearchResults from './components/ui/SearchResults';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import { useDataFiles } from './hooks/useGameData';
-import { useVisitorStats } from './hooks/useVisitorStats';
 import { searchDataSources } from './lib/search';
 import { apiUrl } from './lib/api';
 import {
@@ -175,7 +174,6 @@ function App() {
     [activeSystem, location.pathname, searchQuery]
   );
   const { dataSources, loading, errors: dataErrors } = useDataFiles(requiredDataFiles, shouldLoadGameData && requiredDataFiles.length > 0);
-  const visitorStats = useVisitorStats();
   const isBossSystem = activeSystem === 'boss';
   const isSearching = shouldLoadGameData && searchQuery.trim().length > 0 && !isBossSystem;
 
@@ -281,7 +279,6 @@ function App() {
           searchValue={searchQuery}
           searchDisabled={!hasGlobalSearch}
           onSearchChange={setSearchQuery}
-          visitorStats={visitorStats}
         />
 
         <div className="hidden lg:block">
@@ -303,7 +300,7 @@ function App() {
             ) : null}
 
             <section key={`${activeSystem}-${isSearching ? 'search' : 'view'}`} className="module-view">
-              {loading && requiredDataFiles.length > 0 && activeSystem !== 'call_god' ? (
+              {loading && requiredDataFiles.length > 0 && activeSystem !== 'call_god' && activeSystem !== 'role_wiki' && activeSystem !== 'ride' ? (
                 <LoadingSpinner message="正在载入游戏配置文件..." />
               ) : Object.keys(dataErrors).length > 0 ? (
                 <DataErrorPanel errors={dataErrors} />
@@ -333,7 +330,7 @@ function App() {
                     {activeSystem === 'boss' && <BossStats dataSources={dataSources} searchQuery={searchQuery} />}
                     {activeSystem === 'resist' && <ResistStats dataSources={dataSources} />}
                     {activeSystem === PLAYER_LOOKUP_SYSTEM && <PlayerLookup />}
-                    {activeSystem === COLD_KNOWLEDGE_SYSTEM && <ColdKnowledge />}
+                    {activeSystem === COLD_KNOWLEDGE_SYSTEM && <ColdKnowledge dataSources={dataSources} />}
                     {activeSystem === HELP_SYSTEM && <HelpCenter />}
                     {activeSystem === OPS_SYSTEM && <OpsDashboard />}
                   </Suspense>

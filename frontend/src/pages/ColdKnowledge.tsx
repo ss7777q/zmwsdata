@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fetchColdKnowledge, type ColdKnowledgeArticle, type ColdKnowledgeDifficulty } from '../lib/api';
+import { type ColdKnowledgeArticle, type ColdKnowledgeDifficulty, type ColdKnowledgeResponse } from '../lib/api';
 
 type DifficultyFilter = '全部' | ColdKnowledgeDifficulty;
 
@@ -31,10 +31,11 @@ function hasItems(items: string[]) {
   return items.length > 0;
 }
 
-export default function ColdKnowledge() {
-  const [allArticles, setAllArticles] = useState<ColdKnowledgeArticle[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
+export default function ColdKnowledge({ dataSources }: { dataSources: Record<string, { data?: unknown } | undefined> }) {
+  const allArticles = useMemo(() => {
+    const payload = dataSources.cold_knowledge as ColdKnowledgeResponse | undefined;
+    return Array.isArray(payload?.data) ? payload.data : [];
+  }, [dataSources]);
   const categories = useMemo(() => [ALL_CATEGORY, ...Array.from(new Set(allArticles.map((item) => item.category)))], [allArticles]);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState(ALL_CATEGORY);
@@ -46,27 +47,13 @@ export default function ColdKnowledge() {
     return textMatches(article, query);
   }), [allArticles, category, difficulty, query]);
   const activeArticle = articles.find((article) => article.id === activeId) || articles[0] || allArticles[0];
-
   useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setLoadError('');
-    fetchColdKnowledge(controller.signal)
-      .then((response) => {
-        setAllArticles(response.data);
-        setActiveId(response.data[0]?.id ?? '');
-      })
-      .catch((error) => {
-        if (controller.signal.aborted) return;
-        setLoadError(error instanceof Error ? error.message : String(error));
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
+    if (allArticles.length > 0 && !allArticles.some((article) => article.id === activeId)) {
+      setActiveId(allArticles[0]?.id ?? '');
+    }
+  }, [activeId, allArticles]);
 
-    return () => controller.abort();
-  }, []);
-  if (!loading && !loadError && allArticles.length === 0) {
+  if (allArticles.length === 0) {
     return (
       <div className="card text-center py-20 border border-dashed border-border bg-card shadow-sm rounded-2xl flex flex-col items-center justify-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-surface text-textSub">
@@ -110,17 +97,7 @@ export default function ColdKnowledge() {
         </aside>
 
         <article className="min-w-0 rounded-2xl border border-border bg-card p-5 shadow-sm lg:p-7">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <h3 className="text-base font-semibold text-textMain">正在加载冷知识机制数据</h3>
-              <p className="mt-1 max-w-xs text-xs leading-5 text-textSub">正在读取 Markdown 文章内容。</p>
-            </div>
-          ) : loadError ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <h3 className="text-base font-semibold text-textMain">冷知识机制数据加载失败</h3>
-              <p className="mt-1 max-w-md text-xs leading-5 text-textSub">{loadError}</p>
-            </div>
-          ) : !activeArticle ? (
+          {!activeArticle ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border bg-surface text-textSub">
                 <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

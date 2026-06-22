@@ -268,8 +268,8 @@ export default function RoleMagic({ dataSources, activeTab, onTabChange }: Props
 
                                             {/* 展开显示的各级明细 */}
                                             <div className={clsx(
-                                                "grid gap-2 overflow-hidden transition-all duration-300",
-                                                expandedCards[card.id] ? "max-h-[500px] mt-3 pt-3 border-t border-border/30 opacity-100" : "max-h-0 opacity-0"
+                                                "grid gap-2 transition-all duration-300",
+                                                expandedCards[card.id] ? "max-h-[500px] overflow-y-auto custom-scrollbar mt-3 pt-3 border-t border-border/30 opacity-100" : "max-h-0 overflow-hidden opacity-0"
                                             )}>
                                                 {card.levDetails.map((detail: any, i: number) => (
                                                     <div key={i} className="flex flex-col gap-1.5 bg-slate-500/[0.04] dark:bg-black/20 rounded-lg p-2.5 border border-border/10">
@@ -307,8 +307,8 @@ export default function RoleMagic({ dataSources, activeTab, onTabChange }: Props
 
                                             {/* 展开显示的各级明细 */}
                                             <div className={clsx(
-                                                "grid gap-2 overflow-hidden transition-all duration-300",
-                                                expandedSoulCards[card.id] ? "max-h-[500px] overflow-y-auto custom-scrollbar mt-3 pt-3 border-t border-border/30 opacity-100" : "max-h-0 opacity-0"
+                                                "grid gap-2 transition-all duration-300",
+                                                expandedSoulCards[card.id] ? "max-h-[500px] overflow-y-auto custom-scrollbar mt-3 pt-3 border-t border-border/30 opacity-100" : "max-h-0 overflow-hidden opacity-0"
                                             )}>
                                                 {card.soulDetails.map((detail: any, i: number) => (
                                                     <div key={i} className="flex flex-col gap-1.5 bg-slate-500/[0.04] dark:bg-black/20 rounded-lg p-2.5 border border-border/10">

@@ -178,7 +178,7 @@ export function normalizeRoutePath(pathname: string, showOps: boolean) {
 }
 
 export function isNoDataSystem(system: string) {
-  return [OPS_SYSTEM, PLAYER_LOOKUP_SYSTEM, HELP_SYSTEM, COLD_KNOWLEDGE_SYSTEM].includes(system);
+  return [OPS_SYSTEM, PLAYER_LOOKUP_SYSTEM, HELP_SYSTEM].includes(system);
 }
 
 export function supportsGlobalSearch(system: string) {

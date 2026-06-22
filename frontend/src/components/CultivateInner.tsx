@@ -12,8 +12,7 @@ export default function CultivateInner({ dataSources }: Props) {
     const navigate = useNavigate();
     const danqiData = (dataSources['role_danqi'] as any)?.data || [];
     const danyuanData = (dataSources['role_danyuan'] as any)?.data || [];
-    const danyuanEffectData = (dataSources['role_danyuan_effect'] as any)?.data;
-    const danyuanEffectIndexData = (dataSources['role_danyuan_effect_index'] as any)?.data;
+    const danyuanEffectData = (dataSources['role_danyuan_effect_index'] as any)?.data;
 
     const activeTab = location.pathname.endsWith('/inner/danyuan')
         ? 'danyuan'
@@ -57,7 +56,7 @@ export default function CultivateInner({ dataSources }: Props) {
         };
     }).filter((x: any) => x.cost && x.targetName);
 
-    if (danqiData.length === 0 && danyuanData.length === 0 && !danyuanEffectData?.families?.length && !danyuanEffectIndexData?.families?.length) {
+    if (danqiData.length === 0 && danyuanData.length === 0 && !danyuanEffectData?.families?.length) {
         return (
             <div className="flex flex-col items-center justify-center py-20 border border-dashed border-border/80 bg-slate-500/[0.01] dark:bg-white/[0.01] rounded-xl">
                 <div className="relative flex items-center justify-center w-12 h-12 mb-3">
@@ -66,7 +65,7 @@ export default function CultivateInner({ dataSources }: Props) {
                         <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse"></span>
                     </div>
                 </div>
-                <h3 className="text-xs text-textSub font-medium tracking-wider">未获取到内丹卷轴 (role_danqi / role_danyuan / role_danyuan_effect)</h3>
+                <h3 className="text-xs text-textSub font-medium tracking-wider">未获取到内丹卷轴 (role_danqi / role_danyuan / role_danyuan_effect_index)</h3>
             </div>
         );
     }

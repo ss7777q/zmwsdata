@@ -184,33 +184,20 @@ export default function RideSkillWiki({ dataSources }: Props) {
     });
   };
 
-  if (Object.keys(detailResult.errors).length > 0) {
-    const message = Object.entries(detailResult.errors).map(([name, error]) => `${name}.json：${error}`).join('；');
-    return (
-      <div className="card border border-dashed border-red-300 bg-red-50/70 py-20 text-center dark:border-red-500/40 dark:bg-red-500/10">
-        <h3 className="text-xl font-medium text-red-700 dark:text-red-200">坐骑技能 Wiki 详情加载失败</h3>
-        <p className="mt-2 text-sm text-red-600/80 dark:text-red-100/80">{message}</p>
-      </div>
-    );
-  }
-
-  if (!payload || !activeVariant || detailResult.loading) {
-    return (
-      <div className="card border border-dashed border-border bg-transparent py-20 text-center">
-        <h3 className="text-xl font-medium text-textSub">正在加载坐骑技能 Wiki...</h3>
-      </div>
-    );
-  }
+  const detailErrorMessage = activeGroupKey && detailResult.errors[activeGroupKey]
+    ? `${activeGroupKey}.json：${detailResult.errors[activeGroupKey]}`
+    : '';
+  const isDetailLoading = detailResult.loading && !payload;
 
   return (
     <div className="space-y-5">
       <div className="flex flex-col gap-4 rounded-[24px] border border-border bg-card px-5 py-4">
         <div className="flex flex-wrap gap-2">
           {rideEntries.map((entry) => (
-            <button
+              <button
               key={`${entry.groupKey}-${entry.rideId}`}
               onClick={() => switchRideEntry(entry)}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${activeGroupKey === entry.groupKey && activeVariant.ride.id === entry.rideId ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-surface text-textSub hover:text-textMain'
+              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${activeGroupKey === entry.groupKey && activeVariant?.ride.id === entry.rideId ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-surface text-textSub hover:text-textMain'
                 }`}
             >
               {entry.rideName}
@@ -221,35 +208,52 @@ export default function RideSkillWiki({ dataSources }: Props) {
         <div className="flex flex-col gap-2 border-t border-border pt-3">
           <div className="flex items-center justify-between">
             <span className="text-sm text-textSub">对比等级<span className="ml-2 text-xs text-textSub/70">点选多个等级横向对比</span></span>
-            <div className="flex gap-2 text-xs">
-              <button onClick={() => setPicked(defaults)} className="rounded-md bg-surface px-2 py-1 text-textSub hover:text-textMain">默认档位</button>
-              <button onClick={() => setPicked(availableLevels)} className="rounded-md bg-surface px-2 py-1 text-textSub hover:text-textMain">全选</button>
-              <button onClick={() => setPicked([maxLevel])} className="rounded-md bg-surface px-2 py-1 text-textSub hover:text-textMain">仅满级</button>
+            {payload ? (
+              <div className="flex gap-2 text-xs">
+                <button onClick={() => setPicked(defaults)} className="rounded-md bg-surface px-2 py-1 text-textSub hover:text-textMain">默认档位</button>
+                <button onClick={() => setPicked(availableLevels)} className="rounded-md bg-surface px-2 py-1 text-textSub hover:text-textMain">全选</button>
+                <button onClick={() => setPicked([maxLevel])} className="rounded-md bg-surface px-2 py-1 text-textSub hover:text-textMain">仅满级</button>
+              </div>
+            ) : (
+              <span className="rounded-md bg-surface px-2 py-1 text-xs text-textSub">等级数据加载中...</span>
+            )}
+          </div>
+          {payload ? (
+            <div className="flex max-h-28 flex-wrap gap-1.5 overflow-y-auto">
+              {availableLevels.map((n) => {
+                const on = selectedLevels.includes(n);
+                return (
+                  <button
+                    key={n}
+                    onClick={() => toggleLevel(n)}
+                    className={`min-w-[2.5rem] rounded-lg px-2 py-1 text-center font-mono text-xs transition-colors ${on ? 'bg-primary text-white' : 'bg-surface text-textSub hover:text-textMain'
+                      }`}
+                  >
+                    {n}
+                  </button>
+                );
+              })}
             </div>
-          </div>
-          <div className="flex max-h-28 flex-wrap gap-1.5 overflow-y-auto">
-            {availableLevels.map((n) => {
-              const on = selectedLevels.includes(n);
-              return (
-                <button
-                  key={n}
-                  onClick={() => toggleLevel(n)}
-                  className={`min-w-[2.5rem] rounded-lg px-2 py-1 text-center font-mono text-xs transition-colors ${on ? 'bg-primary text-white' : 'bg-surface text-textSub hover:text-textMain'
-                    }`}
-                >
-                  {n}
-                </button>
-              );
-            })}
-          </div>
+          ) : null}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {cards.map((c, i) => (
-          <SkillCardView key={`${activeVariant.ride.id}-${c.card.skillId}-${i}`} card={c.card} level={displayLevel} levels={selectedLevels} slotLabel={c.slotLabel} badge={c.badge} />
-        ))}
-      </div>
+      {detailErrorMessage ? (
+        <div className="card border border-dashed border-red-300 bg-red-50/70 py-20 text-center dark:border-red-500/40 dark:bg-red-500/10">
+          <h3 className="text-xl font-medium text-red-700 dark:text-red-200">坐骑技能 Wiki 详情加载失败</h3>
+          <p className="mt-2 text-sm text-red-600/80 dark:text-red-100/80">{detailErrorMessage}</p>
+        </div>
+      ) : isDetailLoading || !activeVariant ? (
+        <div className="card border border-dashed border-border bg-transparent py-20 text-center">
+          <h3 className="text-xl font-medium text-textSub">正在加载坐骑技能 Wiki...</h3>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {cards.map((c, i) => (
+            <SkillCardView key={`${activeVariant.ride.id}-${c.card.skillId}-${i}`} card={c.card} level={displayLevel} levels={selectedLevels} slotLabel={c.slotLabel} badge={c.badge} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

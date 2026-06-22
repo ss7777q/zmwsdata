@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import SkillCard, { type SkillCardData } from '../components/wiki/SkillCard';
+import { useDataFiles } from '../hooks/useGameData';
 import { ROLE_WIKI_FILE_BY_ROUTE } from '../lib/appRoutes';
 
 interface SkillSlot {
@@ -77,8 +78,13 @@ export default function RoleWiki({ dataSources }: Props) {
   // null = 跟随默认档位;非 null = 用户手动选择的等级集合
   const [picked, setPicked] = useState<number[] | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'active' | 'passive'>('all');
+  const detailResult = useDataFiles(activeRole ? [activeRole] : [], Boolean(activeRole));
+  const mergedSources = useMemo(
+    () => ({ ...dataSources, ...detailResult.dataSources }),
+    [dataSources, detailResult.dataSources]
+  );
 
-  const payload = dataSources[activeRole]?.data ?? null;
+  const payload = mergedSources[activeRole]?.data ?? null;
   const isSkillExtra = payload?.kind === 'skillExtra';
 
   const availableLevels = useMemo(() => {
@@ -115,9 +121,9 @@ export default function RoleWiki({ dataSources }: Props) {
   const cards = useMemo(() => {
     if (!payload?.slots) return [];
     const out: { card: SkillCardData; slotLabel: string; badge?: string; levels?: number[]; isPassive?: boolean }[] = [];
-    for (const slot of payload.slots) {
+    for (const slot of payload.slots as SkillSlot[]) {
       if (!slot.base) continue;
-      const distinctAwakens = (slot.awakens || []).filter((a) => a && !a.identicalToBase);
+      const distinctAwakens = (slot.awakens || []).filter((a: SkillCardData) => a && !a.identicalToBase);
       const mergedCount = (slot.awakens || []).length - distinctAwakens.length;
       out.push({
         card: slot.base,
@@ -131,9 +137,9 @@ export default function RoleWiki({ dataSources }: Props) {
         }
       }
     }
-    for (const slot of payload.passiveSlots || []) {
+    for (const slot of (payload.passiveSlots || []) as SkillSlot[]) {
       if (!slot.base) continue;
-      const passiveLevels = (slot.base.levels || []).map((level) => level.level).sort((a, b) => a - b);
+      const passiveLevels = (slot.base.levels || []).map((level) => level.level).sort((a: number, b: number) => a - b);
       out.push({ card: slot.base, slotLabel: slot.slotLabel, badge: '角色被动', levels: passiveLevels, isPassive: true });
     }
     return out;
@@ -151,13 +157,10 @@ export default function RoleWiki({ dataSources }: Props) {
   const activeCards = useMemo(() => filteredCards.filter((c) => !c.isPassive), [filteredCards]);
   const passiveCards = useMemo(() => filteredCards.filter((c) => c.isPassive), [filteredCards]);
 
-  if (!payload) {
-    return (
-      <div className="card border border-dashed border-border bg-transparent py-20 text-center">
-        <h3 className="text-xl font-medium text-textSub">正在加载角色技能数据...</h3>
-      </div>
-    );
-  }
+  const detailErrorMessage = activeRole && detailResult.errors[activeRole]
+    ? `${activeRole}.json：${detailResult.errors[activeRole]}`
+    : '';
+  const isDetailLoading = detailResult.loading && !payload;
 
   return (
     <div className="space-y-5">
@@ -180,27 +183,33 @@ export default function RoleWiki({ dataSources }: Props) {
         <div className="flex flex-col gap-2 border-t border-border pt-3">
           <div className="flex items-center justify-between">
             <span className="text-sm text-textSub">对比等级<span className="ml-2 text-xs text-textSub/70">点选多个等级横向对比</span></span>
-            <div className="flex gap-2 text-xs">
-              <button onClick={() => setPicked(defaults)} className="rounded-md bg-surface px-2 py-1 text-textSub hover:text-textMain">默认档位</button>
-              <button onClick={() => setPicked(availableLevels)} className="rounded-md bg-surface px-2 py-1 text-textSub hover:text-textMain">全选</button>
-              <button onClick={() => setPicked([maxLevel])} className="rounded-md bg-surface px-2 py-1 text-textSub hover:text-textMain">仅满级</button>
+            {payload ? (
+              <div className="flex gap-2 text-xs">
+                <button onClick={() => setPicked(defaults)} className="rounded-md bg-surface px-2 py-1 text-textSub hover:text-textMain">默认档位</button>
+                <button onClick={() => setPicked(availableLevels)} className="rounded-md bg-surface px-2 py-1 text-textSub hover:text-textMain">全选</button>
+                <button onClick={() => setPicked([maxLevel])} className="rounded-md bg-surface px-2 py-1 text-textSub hover:text-textMain">仅满级</button>
+              </div>
+            ) : (
+              <span className="rounded-md bg-surface px-2 py-1 text-xs text-textSub">等级数据加载中...</span>
+            )}
+          </div>
+          {payload ? (
+            <div className="flex max-h-28 flex-wrap gap-1.5 overflow-y-auto">
+              {availableLevels.map((n) => {
+                const on = selectedLevels.includes(n);
+                return (
+                  <button
+                    key={n}
+                    onClick={() => toggleLevel(n)}
+                    className={`min-w-[2.5rem] rounded-lg px-2 py-1 text-center font-mono text-xs transition-colors ${on ? 'bg-primary text-white' : 'bg-surface text-textSub hover:text-textMain'
+                      }`}
+                  >
+                    {n}
+                  </button>
+                );
+              })}
             </div>
-          </div>
-          <div className="flex max-h-28 flex-wrap gap-1.5 overflow-y-auto">
-            {availableLevels.map((n) => {
-              const on = selectedLevels.includes(n);
-              return (
-                <button
-                  key={n}
-                  onClick={() => toggleLevel(n)}
-                  className={`min-w-[2.5rem] rounded-lg px-2 py-1 text-center font-mono text-xs transition-colors ${on ? 'bg-primary text-white' : 'bg-surface text-textSub hover:text-textMain'
-                    }`}
-                >
-                  {n}
-                </button>
-              );
-            })}
-          </div>
+          ) : null}
         </div>
 
         {/* 技能类型筛选 */}
@@ -230,32 +239,46 @@ export default function RoleWiki({ dataSources }: Props) {
         </div>}
       </div>
 
-      {activeCards.length > 0 && (
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-textMain">{isSkillExtra ? '绝技无双' : '主动技能'}</h3>
-            <span className="text-xs text-textSub">{activeCards.length} 张</span>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {activeCards.map((c, i) => (
-              <SkillCard key={`${c.card.skillId}-${i}`} card={c.card} levels={c.levels || selectedLevels} slotLabel={c.slotLabel} badge={c.badge} />
-            ))}
-          </div>
-        </section>
-      )}
+      {detailErrorMessage ? (
+        <div className="card border border-dashed border-red-300 bg-red-50/70 py-20 text-center dark:border-red-500/40 dark:bg-red-500/10">
+          <h3 className="text-xl font-medium text-red-700 dark:text-red-200">角色技能数据加载失败</h3>
+          <p className="mt-2 text-sm text-red-600/80 dark:text-red-100/80">{detailErrorMessage}</p>
+        </div>
+      ) : isDetailLoading || !payload ? (
+        <div className="card border border-dashed border-border bg-transparent py-20 text-center">
+          <h3 className="text-xl font-medium text-textSub">正在加载角色技能数据...</h3>
+        </div>
+      ) : (
+        <>
 
-      {passiveCards.length > 0 && (
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-textMain">角色被动</h3>
-            <span className="text-xs text-textSub">{passiveCards.length} 张</span>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {passiveCards.map((c, i) => (
-              <SkillCard key={`${c.card.skillId}-${i}`} card={c.card} levels={c.levels || selectedLevels} slotLabel={c.slotLabel} badge={c.badge} />
-            ))}
-          </div>
-        </section>
+          {activeCards.length > 0 && (
+            <section className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-textMain">{isSkillExtra ? '绝技无双' : '主动技能'}</h3>
+                <span className="text-xs text-textSub">{activeCards.length} 张</span>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {activeCards.map((c, i) => (
+                  <SkillCard key={`${c.card.skillId}-${i}`} card={c.card} levels={c.levels || selectedLevels} slotLabel={c.slotLabel} badge={c.badge} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {passiveCards.length > 0 && (
+            <section className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-textMain">角色被动</h3>
+                <span className="text-xs text-textSub">{passiveCards.length} 张</span>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {passiveCards.map((c, i) => (
+                  <SkillCard key={`${c.card.skillId}-${i}`} card={c.card} levels={c.levels || selectedLevels} slotLabel={c.slotLabel} badge={c.badge} />
+                ))}
+              </div>
+            </section>
+          )}
+        </>
       )}
     </div>
   );

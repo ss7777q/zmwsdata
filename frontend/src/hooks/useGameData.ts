@@ -53,7 +53,7 @@ export function matchesSystemFilter(name: string, systemFilter?: string) {
   if (systemFilter === 'pet') return name.startsWith('pet_');
   if (systemFilter === 'beast_stats') return name.startsWith('beast_');
   if (systemFilter === 'role_cultivate') {
-    return ['role_heart', 'role_meridians', 'role_danqi', 'role_danyuan', 'role_danyuan_effect', 'role_xianpo'].includes(name);
+    return ['role_heart', 'role_meridians', 'role_danqi', 'role_danyuan', 'role_danyuan_effect', 'role_danyuan_effect_index', 'role_xianpo'].includes(name) || name.startsWith('role_danyuan_effect_family_');
   }
   if (systemFilter === 'role_spiritual') {
     return name.startsWith('role_magic') || name.startsWith('role_godweapon') || name.startsWith('role_matrix');
