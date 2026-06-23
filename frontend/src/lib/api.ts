@@ -1,8 +1,12 @@
-﻿const API_BASE = (import.meta.env.VITE_DATA_API_BASE || '').replace(/\/$/, '');
+﻿const LEGACY_API_BASE = (import.meta.env.VITE_DATA_API_BASE || '').replace(/\/$/, '');
+const SERVER_API_BASE = (import.meta.env.VITE_SERVER_API_BASE || LEGACY_API_BASE).replace(/\/$/, '');
 const STATIC_DATA_BASE = (import.meta.env.VITE_STATIC_DATA_BASE || '').replace(/\/$/, '');
 
 export function apiUrl(path: string) {
-  return API_BASE ? `${API_BASE}${path}` : path;
+  if (path === '/api/battlefield' || path.startsWith('/api/battlefield?') || path.startsWith('/api/battlefield/')) {
+    return path;
+  }
+  return SERVER_API_BASE ? `${SERVER_API_BASE}${path}` : path;
 }
 
 export function staticDataEnabled() {

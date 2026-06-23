@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..');
 const OUTPUT_DIR = path.join(ROOT, 'output');
 const PUBLIC_DATA_DIR = path.join(ROOT, 'frontend', 'public', 'data');
 const MANIFEST_PATH = path.join(PUBLIC_DATA_DIR, 'manifest.json');
+const CALL_GOD_BATTLEFIELD_SOURCE_SCRIPT = path.join(ROOT, 'scripts', 'extract', 'call_god_battlefield_source.js');
+const CALL_GOD_BATTLEFIELD_OUTPUT = path.join(OUTPUT_DIR, 'call_god_battlefield_source.json');
 const { DEFAULT_SETTINGS, loadAppSettings } = require('../server/app-config');
 
 function getConfiguredMaxLevel() {
@@ -110,9 +113,45 @@ function ensureDir(dir) {
   fs.mkdirSync(dir, { recursive: true });
 }
 
+function hasBattlefieldDataApiFiles(dir) {
+  if (!dir || !fs.existsSync(dir)) return false;
+  const names = fs.readdirSync(dir);
+  return ['monster', 'monsterAttribute', 'godWarAttribute', 'godWarCrystal'].every((prefix) => {
+    const pattern = new RegExp(`^${prefix}(?:\\.[^.]+)?\\.json$`, 'i');
+    return names.some((name) => pattern.test(name));
+  });
+}
+
+function resolveBattlefieldDataApiDir() {
+  const candidates = [
+    process.env.CALL_GOD_DATA_API_DIR,
+    path.join(ROOT, 'dataApi'),
+    path.resolve(ROOT, '..', 'deployable-app', 'dataApi'),
+  ].filter(Boolean);
+  return candidates.find(hasBattlefieldDataApiFiles) || null;
+}
+
+function generateCallGodBattlefieldSource() {
+  if (!fs.existsSync(CALL_GOD_BATTLEFIELD_SOURCE_SCRIPT)) return;
+  const dataApiDir = resolveBattlefieldDataApiDir();
+  if (!dataApiDir) {
+    if (fs.existsSync(CALL_GOD_BATTLEFIELD_OUTPUT)) {
+      console.warn('[cf-static-data] keep existing call_god_battlefield_source.json: dataApi source not found');
+      return;
+    }
+    throw new Error('Missing dataApi source for call_god_battlefield_source.json. Set CALL_GOD_DATA_API_DIR.');
+  }
+  execFileSync(process.execPath, [CALL_GOD_BATTLEFIELD_SOURCE_SCRIPT, dataApiDir], {
+    cwd: ROOT,
+    stdio: 'inherit',
+  });
+}
+
 if (!fs.existsSync(OUTPUT_DIR)) {
   throw new Error(`Missing output directory: ${OUTPUT_DIR}`);
 }
+
+generateCallGodBattlefieldSource();
 
 ensureDir(PUBLIC_DATA_DIR);
 for (const fileName of fs.readdirSync(PUBLIC_DATA_DIR).filter((name) => name.endsWith('.json'))) {
