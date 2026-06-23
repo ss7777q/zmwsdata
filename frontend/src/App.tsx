@@ -5,6 +5,7 @@ import TopBar from './components/layout/TopBar';
 import SearchResults from './components/ui/SearchResults';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import { useDataFiles } from './hooks/useGameData';
+import { useVisitorStats } from './hooks/useVisitorStats';
 import { searchDataSources } from './lib/search';
 import { apiUrl } from './lib/api';
 import {
@@ -104,6 +105,7 @@ const WATERMARK_SVG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
+  const visitorStats = useVisitorStats();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [showOps, setShowOps] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -279,6 +281,7 @@ function App() {
           searchValue={searchQuery}
           searchDisabled={!hasGlobalSearch}
           onSearchChange={setSearchQuery}
+          visitorStats={visitorStats}
         />
 
         <div className="hidden lg:block">
