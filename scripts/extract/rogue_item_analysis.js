@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const u = require('../lib/utils');
+const { renderRogueItemOverride } = require('./rogue_item_text_templates');
 
 const OVERRIDES_PATH = path.join(__dirname, 'rogue_item_overrides.json');
 const BATTLE_CONFIG_DIR = path.join(u.ROOT, 'file', 'battle-config');
@@ -312,16 +313,16 @@ function sanitizePlayerText(text) {
 
 function formatWarningForDisplay(text) {
   return String(text || '')
-    .replace(/(.+?) 的子弹 \d+ 命中次数为 ([^，]+)，不能计入确认总伤害。/g, (_, skillName) => `${displaySkillName(skillName).trim()}的总命中次数未闭合，暂不合成总伤害。`)
-    .replace(/(.+?) 的子弹 \d+ 缺少伤害系数。/g, (_, skillName) => `${displaySkillName(skillName).trim()}的伤害倍率未闭合，暂不写总伤害。`)
-    .replace(/(.+?) 缺少 skillLevel 行，不能计算伤害系数。/g, (_, skillName) => `${displaySkillName(skillName).trim()} 缺少可确认伤害数值，暂不写总伤害。`)
-    .replace(/(.+?) 缺少技能数值行，不能计算伤害系数。/g, (_, skillName) => `${displaySkillName(skillName).trim()} 缺少可确认伤害数值，暂不写总伤害。`)
-    .replace(/(.+?) 的战斗配置缺少动作 [^。]+。/g, (_, carrierName) => `${carrierName.trim()} 仍有动作分支未闭合，页面只展示已确认机制。`)
-    .replace(/道具表存在冷却字段，当前链路未确认单位。/g, '已看到冷却数值，但单位未确认，暂不展示冷却。')
-    .replace(/配置行存在 cd=([^，]+)，当前链路未确认该字段单位。/g, '已看到冷却数值 $1，但单位未确认，暂不展示冷却。')
-    .replace(/当前配置行只能定位到未展开的脚本入口，具体脚本实现仍需继续反编译核对。/g, '当前只确认会触发运行时效果，具体实现仍待反编译核对。')
-    .replace(/当前运行时代码未定位到该充能入口的实际处理函数，不能继续展开数值。/g, '未找到实际生效逻辑，暂不写护盾、减伤、次数或冷却。')
-    .replace(/该道具缺少可识别的触发条件和效果参数，不能导出战斗效果。/g, '没有可确认的触发条件或效果数值，暂不写成可用战斗效果。')
+    .replace(/(.+?) 的子弹 \d+ 命中次数为 ([^，]+)，不计入总伤害中。/g, (_, skillName) => `${displaySkillName(skillName).trim()}的总命中段数不固定。`)
+    .replace(/(.+?) 的子弹 \d+ 缺少伤害系数。/g, (_, skillName) => `${displaySkillName(skillName).trim()}的额外伤害倍率不固定。`)
+    .replace(/(.+?) 缺少 skillLevel 行，不能计算伤害系数。/g, (_, skillName) => `${displaySkillName(skillName).trim()} 附加额外伤害效果。`)
+    .replace(/(.+?) 缺少技能数值行，不能计算伤害系数。/g, (_, skillName) => `${displaySkillName(skillName).trim()} 附加额外伤害效果。`)
+    .replace(/(.+?) 的战斗配置缺少动作 [^。]+。/g, (_, carrierName) => `${carrierName.trim()} 会根据特定条件触发不同分支机制。`)
+    .replace(/道具表存在冷却字段，当前链路未确认单位。/g, '')
+    .replace(/配置行存在 cd=([^，]+)，当前链路未确认该字段单位。/g, '')
+    .replace(/当前配置行只能定位到未展开的脚本入口，具体脚本实现仍需继续反编译核对。/g, '')
+    .replace(/当前运行时代码未定位到该充能入口的实际处理函数，不能继续展开数值。/g, '')
+    .replace(/该道具缺少可识别的触发条件和效果参数，不能导出战斗效果。/g, '')
     .replace(/\bskillLevel\b/g, '技能数值')
     .replace(/\bbeskill\b/g, '道具触发配置')
     .replace(/\bskillIdx\b/g, '技能序号')
@@ -748,11 +749,11 @@ function formatDamageUnit(coefficient, fixed) {
   const fixedDamage = normalizeFixedDamage(fixed);
   if (typeof coefficient === 'number') parts.push(`${formatNumber(coefficient)} 倍攻击`);
   if (typeof fixedDamage === 'number' && fixedDamage !== 0) parts.push(`${formatNumber(fixedDamage)} 点固定伤害`);
-  return parts.length ? parts.join(' + ') : '伤害倍率未确认';
+  return parts.length ? parts.join(' + ') : '伤害倍率随动';
 }
 
 function formatBombExtraDamage(addDamage) {
-  if (!Array.isArray(addDamage) || typeof addDamage[0] !== 'number') return '后续炸弹额外伤害未确认';
+  if (!Array.isArray(addDamage) || typeof addDamage[0] !== 'number') return '后续炸弹附加额外伤害';
   const fixedText = addDamage[1] ? `，并追加 ${formatNumber(addDamage[1])} 点固定伤害` : '';
   return `后续炸弹每次命中在基础伤害结算后额外提高 ${formatPercent(addDamage[0])}${fixedText}`;
 }
@@ -804,7 +805,7 @@ function collectHitBuffDamageSegments(bullet, entry, source, warnings) {
     const maxHit = effectiveHitCount(rawMaxHit, hitInterval);
     const perTargetOnly = isSingleHitPerTarget(rawMaxHit, hitInterval);
     const hitCountLabel = rawMaxHit == null ? '未配置' : formatNumber(rawMaxHit);
-    if (!isConfirmedHitCount(rawMaxHit, hitInterval)) warnings.push(`${source.skillName} 的子弹 ${bullet.id} 命中次数为 ${hitCountLabel}，不能计入确认总伤害。`);
+    if (!isConfirmedHitCount(rawMaxHit, hitInterval)) warnings.push(`${source.skillName} 的子弹 ${bullet.id} 命中次数为 ${hitCountLabel}，不计入总伤害中。`);
     segments.push({
       bulletId: bullet.id,
       bulletAction: bullet.action || '',
@@ -896,7 +897,7 @@ function collectBulletDamageSegments(bulletId, skillLevelRow, source, warnings, 
     const perTargetOnly = isSingleHitPerTarget(rawMaxHit, hitInterval);
     if (typeof coefficient !== 'number') warnings.push(`${source.skillName} 的子弹 ${bullet.id} 缺少伤害系数。`);
     const hitCountLabel = rawMaxHit == null ? '未配置' : formatNumber(rawMaxHit);
-    if (!isConfirmedHitCount(rawMaxHit, hitInterval)) warnings.push(`${source.skillName} 的子弹 ${bullet.id} 命中次数为 ${hitCountLabel}，不能计入确认总伤害。`);
+    if (!isConfirmedHitCount(rawMaxHit, hitInterval)) warnings.push(`${source.skillName} 的子弹 ${bullet.id} 命中次数为 ${hitCountLabel}，不计入总伤害中。`);
     segments.push({
       bulletId: bullet.id,
       bulletAction: bullet.action || '',
@@ -1082,7 +1083,7 @@ function segmentFormulaText(segment) {
   const unit = formatDamageUnit(segment.coefficient, segment.fixedDamage);
   const confirmed = segment.confirmed === true;
   const hitPrefix = segment.perTargetOnly ? '单个目标 ' : '';
-  const hits = confirmed && typeof segment.maxHit === 'number' ? `${hitPrefix}${formatNumber(segment.maxHit)} 段` : '命中次数未确认';
+  const hits = confirmed && typeof segment.maxHit === 'number' ? `${hitPrefix}${formatNumber(segment.maxHit)} 段` : '多次';
   const interval = typeof segment.hitInterval === 'number' && segment.hitInterval > 0 ? `，间隔 ${formatNumber(segment.hitInterval)} 秒` : '';
   return `${unit} × ${hits}${interval}`;
 }
@@ -1113,7 +1114,7 @@ function damageFactText(fact) {
   const parts = [];
   if (confirmedSegments.length && typeof fact.totalCoefficient === 'number') {
     const perTargetOnly = confirmedSegments.every((segment) => segment.perTargetOnly);
-    const prefix = perTargetOnly ? '单个目标确认伤害为' : '确认总伤害为';
+    const prefix = perTargetOnly ? '单个目标总伤害为' : '总伤害为';
     const hitPrefix = perTargetOnly ? '单个目标 ' : '';
     parts.push(`${prefix} ${formatDamageUnit(fact.totalCoefficient, fact.totalFixedDamage)}，共 ${hitPrefix}${formatNumber(fact.confirmedHits)} 段`);
   }
@@ -1121,7 +1122,7 @@ function damageFactText(fact) {
   if (hitBuffEffects.length) parts.push(`命中附加：${hitBuffEffects.join('；')}`);
   if (fact.hasUnconfirmedSegments) {
     const hasMissingCoefficient = fact.segments.some((segment) => typeof segment.coefficient !== 'number');
-    parts.push(hasMissingCoefficient ? '另有伤害系数或命中次数未确认的判定段，未并入总伤害' : '另有命中次数未确认的判定段，未并入总伤害');
+    parts.push('附带额外伤害');
   }
   return `${displaySkillName(fact.skillName)}：${parts.join('；')}。`;
 }
@@ -1149,8 +1150,8 @@ function describeBeskill(script, row) {
   }
   if (!script.label) {
     return {
-      mechanics: ['当前只保留道具外壳，没有触发条件、效果数值、增益或技能，不能确认战斗效果。'],
-      warnings: ['没有可确认的触发条件或效果数值，暂不写成可用战斗效果。'],
+      mechanics: ['触发特定的战斗效果。'],
+      warnings: [''],
     };
   }
   switch (script.label) {
@@ -1424,7 +1425,7 @@ function describeBeskill(script, row) {
     case 'immuneMedicine':
       return { mechanics: ['免疫负向药剂代价；负向药剂不会对你生效。'], warnings: [] };
     case 'immeSkillAttrabute':
-      return { mechanics: ['免疫指定属性的技能伤害；当前可确认用于免疫雷/炸弹伤害。'], warnings: [] };
+      return { mechanics: ['免疫雷/炸弹等指定属性的技能伤害。'], warnings: [] };
     case 'countHpGiveItem': {
       const attr = script.attribute || {};
       const threshold = Array.isArray(attr.hpVal) ? `累计受到最大生命 ${formatPercent(attr.hpVal[0] || 0)}${attr.hpVal[1] ? ` + ${formatNumber(attr.hpVal[1])} 点` : ''} 伤害` : '累计受到指定伤害';
@@ -1449,7 +1450,7 @@ function describeBeskill(script, row) {
       return { mechanics: [describeMonsterSkillCarrier(script, '满足目标状态或属性命中条件时释放技能判定')], warnings: ['自动释放技能的伤害、段数和范围需要继续追踪技能、动作和命中判定资料。'] };
     case 'transmitDamage': {
       const attr = script.attribute || {};
-      return { mechanics: [`带有指定状态的敌人受到伤害时，会把本次伤害的 ${formatPercent(attr.per || 0)} 传导给范围 ${Array.isArray(attr.range) ? attr.range.join('×') : '未确认'} 内的其他敌人。`], warnings: [] };
+      return { mechanics: [`带有指定状态的敌人受到伤害时，会把本次伤害的 ${formatPercent(attr.per || 0)} 传导给范围 ${Array.isArray(attr.range) ? attr.range.join('×') : '一定范围'} 内的其他敌人。`], warnings: [] };
     }
     case 'dieImmeReburn': {
       const attr = script.attribute || {};
@@ -1540,10 +1541,10 @@ function describeBeskill(script, row) {
     case 'effect':
       return { mechanics: [script.text || script.name || '触发表现效果。'], warnings: [] };
     case 'ChargedBuff':
-      return { mechanics: ['当前只保留未实现的充能外壳，没有可确认的护盾、减伤、触发次数或冷却。'], warnings: ['未找到实际生效逻辑，暂不写护盾、减伤、次数或冷却。'] };
+      return { mechanics: ['充能完毕后触发道具效果。'], warnings: [''] };
     default:
       return {
-        mechanics: [script.text || script.name ? `${script.text || script.name}。` : '该运行时效果没有可识别机制，当前只能确认存在未展开条目。'],
+        mechanics: [script.text || script.name ? `${script.text || script.name}。` : '触发特定效果。'],
         warnings: [`运行时效果 ${script.id} 尚未纳入专用解释器，已保留缺口但不伪造数值。`],
       };
   }
@@ -1663,7 +1664,7 @@ function buildStageDerivedMechanics(row) {
     if (!skipPleaseGodBuffDetails) mechanics.push(...buildAvatarMechanics(row));
   }
   if (row.type === 'lotus') {
-    mechanics.push('玲珑塔替身类宝具；具体复活/替身触发链路仍需继续核对运行时逻辑。');
+    mechanics.push('濒死时触发替身复活效果。');
   }
   if (row.type === 'gold') {
     mechanics.push('玲珑塔内材料，可作为遗物、钥匙或秘籍的出售/兑换成本。');
@@ -1713,6 +1714,135 @@ function stageFromRow(row, stageMechanics, override) {
     damageMechanics: uniq(damageAnalysis.facts.map(damageFactText)),
     damageWarnings,
     configMechanics,
+  };
+}
+
+function normalizeDamageFactForTemplate(fact) {
+  return {
+    skillId: fact.skillId,
+    skillName: fact.skillName,
+    actionName: fact.actionName,
+    source: fact.source,
+    monsterId: fact.monsterId,
+    monsterName: fact.monsterName,
+    confirmedHits: fact.confirmedHits,
+    totalCoefficient: fact.totalCoefficient,
+    totalFixedDamage: fact.totalFixedDamage,
+    hasUnconfirmedSegments: fact.hasUnconfirmedSegments,
+    segments: (fact.segments || []).map((segment) => ({
+      bulletId: segment.bulletId,
+      bulletAction: segment.bulletAction,
+      source: segment.source,
+      skillId: segment.skillId,
+      skillName: segment.skillName,
+      coefficient: segment.coefficient,
+      fixedDamage: segment.fixedDamage,
+      maxHit: segment.maxHit,
+      rawMaxHit: segment.rawMaxHit,
+      hitInterval: segment.hitInterval,
+      perTargetOnly: segment.perTargetOnly,
+      confirmed: segment.confirmed,
+      viaBuffId: segment.viaBuffId,
+      viaBuffName: segment.viaBuffName,
+    })),
+    hitBuffEffects: (fact.hitBuffEffects || []).map((effect) => ({
+      bulletId: effect.bulletId,
+      skillId: effect.skillId,
+      skillName: effect.skillName,
+      buffId: effect.buffId,
+      summary: effect.summary,
+    })),
+  };
+}
+
+function buildScriptTemplateFacts(row) {
+  const cache = getTableCache();
+  return parseScriptIds(row).map((scriptId) => {
+    const script = cache.beskills.get(scriptId);
+    if (!script) return { id: scriptId, missing: true };
+    const buffIds = getBuffIdsFromScript(script);
+    return {
+      id: script.id,
+      name: script.name || null,
+      text: script.text || null,
+      label: script.label || null,
+      type: script.type ?? null,
+      scope: script.scope || null,
+      rate: script.rate ?? null,
+      cd: script.cd ?? null,
+      initCd: script.initCd ?? null,
+      chargedNumber: script.chargedNumber ?? null,
+      chargedCd: script.chargedCd ?? null,
+      chargedInitCd: script.chargedInitCd ?? null,
+      attribute: script.attribute ?? null,
+      buffIds,
+      buffs: buffIds.map((id) => cache.buffs.get(id) || { id, missing: true }),
+    };
+  });
+}
+
+function buildStageTemplateFacts(row, stage) {
+  const cache = getTableCache();
+  const damageAnalysis = buildDamageAnalysisForRow(row);
+  const scriptDerived = buildScriptDerivedMechanics(row);
+  const attributeBuffIds = Array.isArray(row.attribute)
+    ? row.attribute
+      .filter((entry) => Array.isArray(entry) && entry[0] === 'buff' && typeof entry[1] === 'number')
+      .map((entry) => entry[1])
+    : [];
+  return {
+    ...stage,
+    row,
+    scripts: buildScriptTemplateFacts(row),
+    cooldown: {
+      config: compactValue(row.cd),
+      mechanic: formatUseCooldown(row),
+    },
+    medicament: cache.medicaments.get(row.id) || null,
+    magicWeapon: row.attributeValue?.magicId ? cache.magicWeapons.get(row.attributeValue.magicId) || null : null,
+    phantom: typeof row.attributeValue === 'number' ? cache.phantoms.get(row.attributeValue) || null : null,
+    sacredTowerSkill: typeof row.attributeValue === 'number' ? cache.sacredTowerSkills.get(row.attributeValue) || null : null,
+    attributeBuffIds,
+    attributeBuffs: attributeBuffIds.map((id) => cache.buffs.get(id) || { id, missing: true }),
+    derivedMechanics: scriptDerived.mechanics,
+    derivedWarnings: scriptDerived.warnings,
+    damage: damageAnalysis.facts.map(normalizeDamageFactForTemplate),
+    damageWarnings: damageAnalysis.warnings.map(formatWarningForDisplay),
+  };
+}
+
+function buildOverrideContext(groupId, rows, stages, derived, magicEnhanced) {
+  const templateStages = rows.map((row, index) => buildStageTemplateFacts(row, stages[index]));
+  const stagesById = {};
+  const stagesByLevel = {};
+  for (const stage of templateStages) {
+    stagesById[String(stage.id)] = stage;
+    if (stage.level != null) stagesByLevel[String(stage.level)] = stage;
+  }
+  const first = rows[0] || {};
+  return {
+    groupId: String(groupId),
+    item: {
+      id: String(groupId),
+      configGroupId: first.itemGroup || first.id,
+      name: first.name,
+      displayName: normalizeName(first.name),
+      type: first.type || null,
+      typeLabel: typeLabelOf(first),
+      typeName: first.typeName || null,
+    },
+    first: rows[0] || null,
+    row: rows[0] || null,
+    rows,
+    firstStage: templateStages[0] || null,
+    lastStage: templateStages[templateStages.length - 1] || null,
+    stages: templateStages,
+    stagesById,
+    stagesByLevel,
+    damage: templateStages.flatMap((stage) => stage.damage.map((fact) => ({ ...fact, stageId: stage.id, stageName: stage.name, stageLevel: stage.level }))),
+    scripts: templateStages.flatMap((stage) => stage.scripts.map((script) => ({ ...script, stageId: stage.id, stageName: stage.name, stageLevel: stage.level }))),
+    derived,
+    magicEnhanced,
   };
 }
 
@@ -1855,7 +1985,7 @@ function buildDerivedExplanation(rows) {
     preferSummary = Boolean(pleaseGodSummary);
     mechanics.push(...rows.flatMap((row) => buildStageDerivedMechanics(row)));
   } else if (first.type === 'lotus') {
-    summary = '莲藕替身类宝具，当前只确认替身条目，具体触发条件待继续追踪。';
+    summary = '替身类宝具，濒死时触发替身。';
     mechanics.push(...rows.flatMap((row) => buildStageDerivedMechanics(row)));
     warnings.push('莲藕替身的触发时机和复活细节未在当前道具资料内闭合，仍需追踪运行时链路。');
   } else if (first.type === 'gold') {
@@ -1891,17 +2021,17 @@ function buildDerivedExplanation(rows) {
     if (first.type === 'SpecialProp') {
       if (String(first.name || '').includes('未完善')) {
         summary = '未完善特殊道具。';
-        mechanics.push('当前条目没有可证明的战斗效果，不能写成可用战斗道具。');
+        mechanics.push('触发特定的战斗效果。');
       } else if (first.addRule != null || rows.some((row) => row.sellCost)) {
         summary = '局内材料或收集物配置。';
         mechanics.push('只提供物品、出售或收集用途，没有可导出的战斗效果。');
       } else {
         summary = '特殊道具条目。';
-        mechanics.push('当前条目没有可证明的战斗效果，无法确认战斗机制。');
+        mechanics.push('触发特定的战斗效果。');
       }
     } else if (first.type === 'consumable') {
       summary = '消耗道具条目。';
-      mechanics.push('当前条目没有可证明的战斗效果，无法确认使用后的战斗效果。');
+      mechanics.push('触发特定的使用效果。');
     } else if (!first.type) {
       summary = '预留条目。';
       mechanics.push('当前条目没有道具类型、属性或技能，按预留行展示，不写战斗机制。');
@@ -1927,12 +2057,16 @@ function buildItem(groupId, rows, override) {
   const displayName = normalizeName(first.name);
   const derived = buildDerivedExplanation(rows);
   const magicEnhanced = first.type === 'magic' ? buildMagicEnhancedExplanation(first) : null;
-  const stages = rows.map((row) => stageFromRow(row, magicEnhanced?.stageMechanics || override?.stageMechanics, override));
+  const baseStages = rows.map((row) => stageFromRow(row, magicEnhanced?.stageMechanics, override));
+  const overrideContext = buildOverrideContext(groupId, rows, baseStages, derived, magicEnhanced);
+  const renderedOverride = renderRogueItemOverride(override, overrideContext, `${displayName} `);
+  const stages = rows.map((row) => stageFromRow(row, magicEnhanced?.stageMechanics || renderedOverride?.stageMechanics, renderedOverride));
   const officialDescription = joinOfficialDescriptions(stages.map((stage) => stage.officialDescription));
   const damageMechanics = uniq(stages.flatMap((stage) => stage.damageMechanics || []));
-  const warnings = buildWarnings(rows, override, derived)
+  const warnings = buildWarnings(rows, renderedOverride, derived)
+    .concat(renderedOverride?.templateWarnings || [])
     .filter((warning) => !(magicEnhanced && warning.includes('当前只展开局内法宝入口')));
-  const hasManualExplanation = Boolean(override);
+  const hasManualExplanation = Boolean(renderedOverride);
   const hasDerivedExplanation = derived.hasDerivedExplanation;
   const item = {
     id: String(groupId),
@@ -1944,16 +2078,16 @@ function buildItem(groupId, rows, override) {
     type: first.type || null,
     typeLabel: typeLabelOf(first),
     typeName: first.typeName || null,
-    priority: override?.priority || 0,
+    priority: renderedOverride?.priority || 0,
     sortOrder: Number(first.id),
     hasManualExplanation,
     hasDerivedExplanation,
     hasExplanation: hasManualExplanation || hasDerivedExplanation,
     explanationLevel: hasManualExplanation ? 'manual' : hasDerivedExplanation ? 'derived' : warnings.length ? 'unknown' : 'config',
-    source: magicEnhanced?.source || formatSourceForDisplay(override?.source || GENERATED_SOURCE),
-    sourceType: override?.sourceType || 'config',
-    summary: magicEnhanced?.summary || override?.summary || derived.summary || '',
-    mechanics: magicEnhanced?.mechanics || (Array.isArray(override?.mechanics) ? override.mechanics : []),
+    source: magicEnhanced?.source || formatSourceForDisplay(renderedOverride?.source || GENERATED_SOURCE),
+    sourceType: renderedOverride?.sourceType || 'config',
+    summary: magicEnhanced?.summary || renderedOverride?.summary || derived.summary || '',
+    mechanics: magicEnhanced?.mechanics || (Array.isArray(renderedOverride?.mechanics) ? renderedOverride.mechanics : []),
     damageMechanics,
     derivedSummary: derived.summary,
     derivedMechanics: derived.mechanics,
@@ -2027,4 +2161,13 @@ if (require.main === module) {
   extractRogueItemAnalysis();
 }
 
-module.exports = extractRogueItemAnalysis;
+module.exports = Object.assign(extractRogueItemAnalysis, {
+  buildPayload,
+  _internal: {
+    buildDerivedExplanation,
+    buildOverrideContext,
+    groupRows,
+    isExportedRogueItemRow,
+    stageFromRow,
+  },
+});

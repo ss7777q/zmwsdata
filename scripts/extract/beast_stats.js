@@ -269,6 +269,16 @@ function buildLineupAnalysisPayload(records, seasonList) {
   };
 }
 
+function compareSeasonWin(left, right) {
+  return left.season - right.season || left.sid - right.sid;
+}
+
+function getLatestChampionSeason(player) {
+  const latestWin = player.seasonWins[player.seasonWins.length - 1];
+  assert(latestWin, `player ${player.uid} has no champion season wins`);
+  return latestWin.season;
+}
+
 function buildPlayerAnalysisPayload(records) {
   const playerMap = new Map();
 
@@ -302,9 +312,13 @@ function buildPlayerAnalysisPayload(records) {
   }
 
   const rows = [...playerMap.values()]
+    .map((player) => {
+      player.seasonWins.sort(compareSeasonWin);
+      return player;
+    })
     .sort((left, right) => {
-      const leftLatestSeason = left.seasonWins[left.seasonWins.length - 1]?.season || 0;
-      const rightLatestSeason = right.seasonWins[right.seasonWins.length - 1]?.season || 0;
+      const leftLatestSeason = getLatestChampionSeason(left);
+      const rightLatestSeason = getLatestChampionSeason(right);
       return right.championCount - left.championCount
         || rightLatestSeason - leftLatestSeason
         || left.uid.localeCompare(right.uid);

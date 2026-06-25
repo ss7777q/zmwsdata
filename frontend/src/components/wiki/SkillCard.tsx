@@ -47,6 +47,26 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
     return [...seen].map(([key, label]) => ({ key, label }));
   }, [card]);
 
+  const growthBuffGroups = useMemo(() => buildGrowthBuffGroups(card.levels || []), [card.levels]);
+
+  const { usedMetricKeys, mappedMetrics } = useMemo(() => {
+    const used = new Set<string>();
+    const mapped = new Map<string, { key: string; label: string }>();
+    for (const group of growthBuffGroups) {
+      const baseName = group.effectName.replace(/(强化|弱化|等级\d+.*|状态)/g, '');
+      const expectedLabel1 = baseName + '率';
+      const expectedLabel2 = group.valueLabel?.replace(/值$/, '率');
+      const associatedMetric = metricCols.find(
+        (m) => !used.has(m.key) && (m.label === expectedLabel1 || m.label === expectedLabel2 || m.label === group.effectName + '率')
+      );
+      if (associatedMetric) {
+        used.add(associatedMetric.key);
+        mapped.set(group.key, associatedMetric);
+      }
+    }
+    return { usedMetricKeys: used, mappedMetrics: mapped };
+  }, [growthBuffGroups, metricCols]);
+
   // 列分流:耗蓝只有出现非零值才展示；源表给 0/null 时保持自动隐藏。
   const cols = useMemo(() => {
     const mp = rows.map((r) => r.consumeMp ?? null);
@@ -58,7 +78,7 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
       rows.length > 1 ? varies(vals) : vals.some((v) => v != null && v !== 0);
     const constNonZero = (vals: (number | string | null)[]) =>
       vals.length > 0 && !varies(vals) && vals[0] != null && vals[0] !== 0;
-    const dynamicMetrics = metricCols.filter((c) => dynamic(rows.map((r) => metricText(r, c.key))));
+    const dynamicMetrics = metricCols.filter((c) => !usedMetricKeys.has(c.key) && dynamic(rows.map((r) => metricText(r, c.key))));
     return {
       mp: mp.some((v) => typeof v === 'number' && v !== 0),
       per: dynamic(per),
@@ -70,11 +90,10 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
       baselineMultiplier: card.skillBaseline?.fixedMultiplierMode === 'growth' && hasSelectedBaseline,
       baselineCorrection: card.skillBaseline?.fixedMultiplierMode === 'growth' && hasSelectedBaseline,
       staticMetrics: metricCols.filter(
-        (c) => !dynamicMetrics.includes(c) && rows.some((r) => metricText(r, c.key) !== '—')
+        (c) => !usedMetricKeys.has(c.key) && !dynamicMetrics.includes(c) && rows.some((r) => metricText(r, c.key) !== '—')
       ),
     };
-  }, [rows, metricCols, card.skillBaseline?.fixedMultiplierMode, baselineLevelByLevel]);
-  const growthBuffGroups = useMemo(() => buildGrowthBuffGroups(card.levels || []), [card.levels]);
+  }, [rows, metricCols, card.skillBaseline?.fixedMultiplierMode, baselineLevelByLevel, usedMetricKeys]);
 
   const growthBuffEffects = useMemo<GrowthBuffEffectInfo[]>(() => {
     const allLevels = card.levels || [];
@@ -100,13 +119,19 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
     const cols: GrowthBuffColumn[] = [];
     for (const group of growthBuffGroups) {
       const matchingBuffs = (lv: SkillLevel) => (lv.growthBuffs || []).filter((buff) => growthBuffGroupKey(buff) === group.key);
+      const associatedMetric = mappedMetrics.get(group.key);
 
       if (group.dynamicVal) {
         const label = growthBuffColumnLabel(group.effectName, group.valueLabel, card.name);
-        const perLevel = new Map<number, string[]>();
+        const perLevel = new Map<number, (string | React.ReactNode)[]>();
         for (const lv of rows) {
           const texts = matchingBuffs(lv).map((buff) => fmtBuffVal(buff.value?.val, buff.displayText || group.sample.displayText));
-          perLevel.set(lv.level, texts.length ? texts : ['—']);
+          let extra: React.ReactNode = null;
+          if (associatedMetric) {
+            const rt = metricText(lv, associatedMetric.key);
+            if (rt !== '—') extra = <span className="text-emerald-500/90 dark:text-emerald-400/90 font-medium ml-1">({rt})</span>;
+          }
+          perLevel.set(lv.level, texts.length ? [<span key="1">{texts.join(' / ')}{extra}</span>] : ['—']);
         }
         cols.push({
           key: `${group.key}::val`,
@@ -118,7 +143,7 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
 
       if (group.dynamicPer) {
         const label = growthBuffColumnLabel(group.effectName, '比例', card.name);
-        const perLevel = new Map<number, string[]>();
+        const perLevel = new Map<number, (string | React.ReactNode)[]>();
         for (const lv of rows) {
           const texts = matchingBuffs(lv).map((buff) => fmtPercent(buff.value?.per));
           perLevel.set(lv.level, texts.length ? texts : ['—']);
@@ -132,7 +157,7 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
       }
     }
     return cols;
-  }, [card.name, growthBuffGroups, rows]);
+  }, [card.name, growthBuffGroups, rows, mappedMetrics]);
 
   const isSkillExtraCard = card.extraKind === 'skillExtra' || card.header.kind === 'skillExtra';
   const hasSkillExtraVal = isSkillExtraCard && rows.some((row) => row.totalVal != null);
@@ -312,7 +337,7 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
                   {cols.baselineCorrection && <Th>固伤修正</Th>}
                   {growthBuffCols.map((c) => (
                     <Th key={c.key}>
-                      <div className="flex min-w-[7rem] flex-col gap-0.5">
+                      <div className="flex min-w-[7rem] flex-col items-center justify-center gap-0.5">
                         <span>{c.label}</span>
                         {c.subLabel && <span className="text-[10px] font-normal text-textSub/70">{c.subLabel}</span>}
                       </div>
@@ -332,8 +357,17 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
                       {(cols.val || hasSkillExtraVal) && <Td>{fmt(lv.totalVal)}</Td>}
                       {cols.baselineMultiplier && <Td cta>{fmtX(baseline?.fixedMultiplier)}</Td>}
                       {cols.baselineCorrection && <Td cta>{fmtRatio(baseline?.correctionRatio)}</Td>}
-                      {growthBuffCols.map((c) => <Td key={c.key} cta>{(c.perLevel.get(lv.level) || ['—']).join(' / ')}</Td>)}
-                      {cols.metrics.map((c) => <Td key={c.key} cta wrap>{metricText(lv, c.key)}</Td>)}
+                      {growthBuffCols.map((c) => (
+                        <Td key={c.key} cta>
+                          {(c.perLevel.get(lv.level) || ['—']).map((node, i) => (
+                            <span key={i}>
+                              {i > 0 && ' / '}
+                              {node}
+                            </span>
+                          ))}
+                        </Td>
+                      ))}
+                      {cols.metrics.map((c) => <Td key={c.key} cta>{metricText(lv, c.key)}</Td>)}
                     </tr>
                   );
                 })}

@@ -656,6 +656,13 @@ function buffIntervalText(buff) {
   return secondsFromFrames(buff.interval);
 }
 
+function swordFlagValueText(value) {
+  if (value && typeof value === "object" && value.flag === "sword" && typeof value.val === "number") {
+    return `剑气值${value.val}`;
+  }
+  return null;
+}
+
 function extractedBuffValue(buff) {
   const value = buff?.value;
   const out = {
@@ -826,6 +833,25 @@ function buffText(buff, options = {}) {
       const base = `${interval ? `每${interval}` : "持续"}造成${values.length ? values.join(" + ") : "持续伤害"}`;
       return buffSentence(buff, [base], durationOptions);
     }
+    case 189: {
+      const interval = buffIntervalText(buff);
+      const swordText = swordFlagValueText(buff.value);
+      const attachText = idList(buff.attachBuff)
+        .map((id) => options.ctx?.buffById?.get(id))
+        .filter(Boolean)
+        .map((row) => {
+          const attached = extractedBuffValue(row);
+          return changeText(buffPropLabel(row), attached.per, attached.val);
+        })
+        .filter(Boolean)
+        .join("，");
+      const parts = [];
+      if (attachText) parts.push(attachText);
+      if (interval && swordText) parts.push(`每${interval}回复${swordText}`);
+      else if (swordText) parts.push(`回复${swordText}`);
+      else if (text) parts.push(text);
+      return buffSentence(buff, parts.length ? parts : ["获得剑气回复效果"], durationOptions);
+    }
     case 191: {
       const phrase = v.per != null ? `攻击霸体目标时吸血${pct(Math.abs(v.per))}` : text || "攻击霸体目标时吸血";
       return buffSentence(buff, [phrase], durationOptions);
@@ -865,11 +891,15 @@ function buffMetricLabel(be, buff) {
     case "appearBuff1":
       return "出场状态";
     default:
+      if (buff?.source === "maxPileDo") return "满层状态";
+      if (buff?.source === "attachBuff") return "附加状态";
+      if (buff?.source === "endBuff") return "结束状态";
       return buff?.source === "condition" ? "判定状态" : "状态效果";
   }
 }
 
 function shouldShowLinkedBuffMetric(be, buff) {
+  if (buff?.source === "attachBuff") return false;
   if (!buff || buff.source !== "condition") return true;
   return new Set([
     "atkBuffGroupDamage",
@@ -893,6 +923,15 @@ function pushBuffId(out, seen, ctx, id, source) {
   if (!buff || seen.has(`${source}:${id}`)) return;
   seen.add(`${source}:${id}`);
   out.push({ source, ...simplifyBuff(buff) });
+  pushBuffIds(out, seen, ctx, maxPileDoBuffIds(buff), "maxPileDo");
+  pushBuffIds(out, seen, ctx, buff.attachBuff, "attachBuff");
+  pushBuffIds(out, seen, ctx, buff.endBuff, "endBuff");
+}
+
+function maxPileDoBuffIds(buff) {
+  const rows = buff?.maxPileDo?.doVal;
+  if (!Array.isArray(rows)) return [];
+  return idList(rows.map((row) => (Array.isArray(row) ? row.slice(1) : row)));
 }
 
 function pushBuffIds(out, seen, ctx, ids, source) {
@@ -1292,6 +1331,7 @@ function simplifyBuff(buff) {
     value: summarizeValue(buff.value),
     attribute: summarizeValue(buff.attribute),
     maxPiles: buff.maxPiles ?? null,
+    maxPileDo: cloneSimple(buff.maxPileDo),
     attachBuff: cloneSimple(buff.attachBuff),
     endBuff: cloneSimple(buff.endBuff),
   };

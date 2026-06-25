@@ -5,7 +5,6 @@ const { createBattlefieldService } = require('../../server/battlefield-service')
 
 const ROOT = path.resolve(__dirname, '../..');
 const OUTPUT_PATH = path.join(ROOT, 'output', 'call_god_battlefield_source.json');
-const FUNCTION_SOURCE_PATH = path.join(ROOT, 'frontend', 'functions', 'api', '_shared', 'call-god-battlefield-source.js');
 
 const dataApiDir = process.argv[2];
 if (!dataApiDir) {
@@ -17,9 +16,11 @@ const config = service.getConfig();
 const battlefieldTiers = config.selectors.battlefieldTier.values;
 const bossStages = config.selectors.bossStage.values;
 const monsterIds = new Set();
+const battlefieldTierOffset = 6;
+const battlefieldSuffixWidth = 2;
 
 for (const tier of battlefieldTiers) {
-  const suffix = String(tier + 6).padStart(2, '0');
+  const suffix = String(tier + battlefieldTierOffset).padStart(battlefieldSuffixWidth, '0');
   for (const hero of config.rosters.heroes) monsterIds.add(`1${hero.baseId}${suffix}`);
   for (const mount of config.rosters.mounts) monsterIds.add(`${mount.baseId}${suffix}`);
   monsterIds.add(`${config.rosters.specials.nuBa.baseId}${suffix}`);
@@ -37,14 +38,14 @@ function requiredRows(index, ids, label) {
   });
 }
 
-const battlefieldLevels = battlefieldTiers.map((tier) => (tier + 6) * 10);
+const battlefieldLevels = battlefieldTiers.map((tier) => (tier + battlefieldTierOffset) * 10);
 const payload = {
   _meta: {
     name: 'call_god_battlefield_source',
     extractedAt: new Date().toISOString(),
     system: 'call_god',
     source: 'monster.*.json + monsterAttribute.*.json + godWarAttribute.*.json + godWarCrystal.*.json',
-    note: 'Compact source rows for Cloudflare Pages Functions battlefield calculation.',
+    note: 'Compact source rows for battlefield calculation.',
     sourceFiles: Object.fromEntries(
       Object.entries(config.source.files).map(([key, value]) => [key, path.basename(value)])
     ),
@@ -60,11 +61,4 @@ const payload = {
 
 fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true });
 fs.writeFileSync(OUTPUT_PATH, `${JSON.stringify(payload)}\n`, 'utf8');
-fs.mkdirSync(path.dirname(FUNCTION_SOURCE_PATH), { recursive: true });
-fs.writeFileSync(
-  FUNCTION_SOURCE_PATH,
-  `export default ${JSON.stringify(payload)};\n`,
-  'utf8'
-);
 console.log(`[call-god-battlefield-source] wrote ${OUTPUT_PATH}`);
-console.log(`[call-god-battlefield-source] wrote ${FUNCTION_SOURCE_PATH}`);

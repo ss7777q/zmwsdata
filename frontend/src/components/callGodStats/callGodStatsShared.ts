@@ -284,6 +284,52 @@ export interface BossAnalysisEntry {
   mechanismOverride?: { covered: boolean };
 }
 
+export interface BossCommonSkillFact {
+  label: string;
+  value: string;
+}
+
+export interface BossCommonSkillDamage {
+  skillId: number;
+  skillName: string;
+  formula: string;
+  total: string | null;
+  hitBuffIds?: number[];
+  impactTags?: string[];
+}
+
+export interface BossCommonSkillSummon {
+  id: number;
+  name: string;
+  effects: string[];
+  damage: BossCommonSkillDamage[];
+  warnings?: string[];
+}
+
+export interface BossCommonSkillAnalysis {
+  id: number;
+  sort: number;
+  group: number;
+  name: string;
+  icon: number;
+  officialText: string;
+  playerText: string;
+  facts: BossCommonSkillFact[];
+  actionEffects: string[];
+  summonEvents: Array<{
+    monsterIds: number[];
+    maxCount: number | null;
+    lifetimeSeconds: number | null;
+  }>;
+  summons: BossCommonSkillSummon[];
+  teleportEffects: string[];
+  source?: {
+    monsterId: number | null;
+    skillId: number | null;
+  };
+  warnings?: string[];
+}
+
 export interface OutputDataFile<T> {
   data?: T;
 }

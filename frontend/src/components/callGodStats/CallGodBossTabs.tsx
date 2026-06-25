@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { clsx } from 'clsx';
-import type { BossMechanismEntry, BossSkillAnalysis, BossAnalysisEntry, BossTalentAnalysis } from './callGodStatsShared';
+import type { BossCommonSkillAnalysis, BossMechanismEntry, BossSkillAnalysis, BossAnalysisEntry, BossTalentAnalysis } from './callGodStatsShared';
 import { FRAMES_PER_SECOND } from './callGodStatsShared';
 
 function formatCoefficientValue(value: number | null | undefined) {
@@ -404,4 +404,117 @@ export function BossTalentsTab({ talents }: { talents: BossTalentAnalysis[] }) {
   }
 
   return <BossTalentsTable talents={talents} />;
+}
+
+function CommonSkillFacts({ skill }: { skill: BossCommonSkillAnalysis }) {
+  const facts = skill.facts || [];
+  if (!facts.length) return null;
+  return (
+    <div className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border bg-border/60 text-sm sm:grid-cols-2">
+      {facts.map((fact) => (
+        <div key={`${skill.id}-${fact.label}`} className="bg-card px-3 py-2">
+          <div className="text-[11px] text-textSub">{fact.label}</div>
+          <div className="mt-0.5 break-words text-sm font-semibold text-textMain">{fact.value}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CommonSkillDamageList({ skill }: { skill: BossCommonSkillAnalysis }) {
+  const damageRows = (skill.summons || []).flatMap((summon) => (
+    (summon.damage || []).map((damage) => ({ ...damage, summonName: summon.name }))
+  ));
+  if (!damageRows.length) return null;
+  return (
+    <div className="space-y-2">
+      <div className="text-[11px] font-medium text-textSub">伤害拆分</div>
+      <div className="divide-y divide-border/60 overflow-hidden rounded-lg border border-border">
+        {damageRows.map((damage) => (
+          <div key={`${skill.id}-${damage.summonName}-${damage.skillId}`} className="grid grid-cols-[minmax(6rem,8rem)_1fr] gap-3 bg-card px-3 py-2 text-sm">
+            <div className="min-w-0">
+              <div className="break-words font-semibold text-textMain">{damage.skillName}</div>
+              <div className="mt-0.5 text-[11px] text-textSub">{damage.summonName}</div>
+            </div>
+            <div className="min-w-0 text-right">
+              <div className="break-words font-mono font-semibold text-rose-600 dark:text-rose-400">{damage.formula}</div>
+              {damage.total ? <div className="mt-0.5 text-[11px] text-textSub">总系数 {damage.total.replace(/系数$/, '')}</div> : null}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CommonSkillEffects({ skill }: { skill: BossCommonSkillAnalysis }) {
+  const effects = [
+    ...(skill.actionEffects || []),
+    ...(skill.teleportEffects || []),
+    ...(skill.summons || []).flatMap((summon) => summon.effects || []),
+  ].filter(Boolean);
+  const uniqueEffects = [...new Set(effects)];
+  if (!uniqueEffects.length) return null;
+  return (
+    <div className="space-y-2">
+      <div className="text-[11px] font-medium text-textSub">机制说明</div>
+      <div className="space-y-1.5">
+        {uniqueEffects.map((effect, index) => (
+          <div key={`${skill.id}-effect-${index}`} className="break-words rounded-lg bg-surface px-3 py-2 text-sm leading-6 text-textMain">
+            {effect}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CommonSkillCard({ skill }: { skill: BossCommonSkillAnalysis }) {
+  return (
+    <article className="flex flex-col gap-4 rounded-[20px] border border-border bg-card p-5 shadow-sm">
+      <div>
+        <div className="flex flex-wrap items-center gap-2">
+          <h4 className="break-words text-base font-semibold text-textMain">{skill.name}</h4>
+          <span className="rounded bg-surface px-2 py-0.5 text-[11px] text-textSub">#{skill.sort}</span>
+        </div>
+        <p className="mt-2 whitespace-pre-line break-words text-sm leading-6 text-textMain">{skill.playerText}</p>
+      </div>
+
+      <CommonSkillFacts skill={skill} />
+      <CommonSkillEffects skill={skill} />
+      <CommonSkillDamageList skill={skill} />
+
+      {skill.warnings?.length ? (
+        <details className="mt-auto border-t border-border pt-2">
+          <summary className="cursor-pointer text-xs text-amber-600 dark:text-amber-300">{skill.warnings.length} 条数据提示</summary>
+          <ul className="mt-2 space-y-1 text-[11px] leading-5 text-textSub">
+            {skill.warnings.map((warning, index) => <li key={index}>{warning}</li>)}
+          </ul>
+        </details>
+      ) : null}
+    </article>
+  );
+}
+
+export function BossCommonSkillsTab({ skills }: { skills: BossCommonSkillAnalysis[] }) {
+  const sortedSkills = useMemo(() => [...skills].sort((left, right) => Number(left.sort || 0) - Number(right.sort || 0)), [skills]);
+  if (sortedSkills.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border bg-card px-6 py-20 text-center text-textSub">
+        暂未生成通用魔王技能数据。执行神魔提取后会显示技能机制和数值。
+      </div>
+    );
+  }
+
+  return (
+    <section className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-lg font-semibold text-textMain">通用魔王技能</h3>
+        <span className="text-xs text-textSub">{sortedSkills.length} 个技能</span>
+      </div>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        {sortedSkills.map((skill) => <CommonSkillCard key={skill.id} skill={skill} />)}
+      </div>
+    </section>
+  );
 }

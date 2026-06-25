@@ -3,9 +3,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { apiUrl } from '../lib/api';
 import { AttributeTab } from '../components/callGodStats/CallGodAttributeTab';
-import { BossAnalysisTab, BossTalentsTab } from '../components/callGodStats/CallGodBossTabs';
+import { BossAnalysisTab, BossCommonSkillsTab, BossTalentsTab } from '../components/callGodStats/CallGodBossTabs';
 import { StoneRewardsTab } from '../components/callGodStats/CallGodStoneRewardsTab';
-import type { BattlefieldConfig, BattlefieldResult, BossAnalysisEntry, BossTalentAnalysis, OutputDataFile, Props, StoneRewardPayload } from '../components/callGodStats/callGodStatsShared';
+import type { BattlefieldConfig, BattlefieldResult, BossAnalysisEntry, BossCommonSkillAnalysis, BossTalentAnalysis, OutputDataFile, Props, StoneRewardPayload } from '../components/callGodStats/callGodStatsShared';
 
 export default function CallGodStats({ dataSources }: Props) {
   const location = useLocation();
@@ -14,6 +14,7 @@ export default function CallGodStats({ dataSources }: Props) {
     { key: 'stats', label: '神魔属性', path: '/call_god/stats' },
     { key: 'stones', label: '神/魔灵石获取详情', path: '/call_god/stones' },
     { key: 'boss', label: '魔王解析', path: '/call_god/boss' },
+    { key: 'common_skills', label: '通用魔王技能', path: '/call_god/common_skills' },
     { key: 'talents', label: '通用魔王天赋', path: '/call_god/talents' },
   ] as const, []);
   const activeTab = tabs.find((tab) => tab.path === location.pathname)?.key ?? 'stats';
@@ -38,6 +39,11 @@ export default function CallGodStats({ dataSources }: Props) {
 
   const bossTalentPayload = useMemo(() => {
     const source = dataSources.call_god_boss_talents as OutputDataFile<BossTalentAnalysis[]> | undefined;
+    return Array.isArray(source?.data) ? source.data : [];
+  }, [dataSources]);
+
+  const bossCommonSkillPayload = useMemo(() => {
+    const source = dataSources.call_god_boss_common_skills as OutputDataFile<BossCommonSkillAnalysis[]> | undefined;
     return Array.isArray(source?.data) ? source.data : [];
   }, [dataSources]);
 
@@ -147,6 +153,8 @@ export default function CallGodStats({ dataSources }: Props) {
         <StoneRewardsTab payload={stoneRewardPayload} />
       ) : activeTab === 'talents' ? (
         <BossTalentsTab talents={bossTalentPayload} />
+      ) : activeTab === 'common_skills' ? (
+        <BossCommonSkillsTab skills={bossCommonSkillPayload} />
       ) : (
         <BossAnalysisTab payload={bossAnalysisPayload} />
       )}

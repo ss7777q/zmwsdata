@@ -173,7 +173,7 @@ export interface GrowthBuffColumn {
   key: string;
   label: string;
   subLabel: string | null;
-  perLevel: Map<number, string[]>;
+  perLevel: Map<number, (string | React.ReactNode)[]>;
 }
 
 export interface GrowthBuffEffectInfo {

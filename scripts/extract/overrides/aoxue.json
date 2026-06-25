@@ -6,6 +6,19 @@
       "key": "toughnessRate",
       "label": "韧性率",
       "scope": "level",
+      "skill": 5001030,
+      "conv": {
+        "type": "resist",
+        "buff": "10001301",
+        "valuePath": "value.1"
+      },
+      "format": "pct",
+      "fixed": 1
+    },
+    {
+      "key": "toughnessRate",
+      "label": "韧性率",
+      "scope": "level",
       "skill": 5001031,
       "conv": {
         "type": "resist",
@@ -23,6 +36,58 @@
       "conv": {
         "type": "resist",
         "buff": "10001401",
+        "valuePath": "value.1"
+      },
+      "format": "pct",
+      "fixed": 1
+    },
+    {
+      "key": "toughnessWeakRate",
+      "label": "韧性弱化率",
+      "scope": "level",
+      "skill": 5001031,
+      "conv": {
+        "type": "resist",
+        "buff": "10001501",
+        "valuePath": "value.1"
+      },
+      "format": "pct",
+      "fixed": 1
+    },
+    {
+      "key": "guardRate",
+      "label": "守护率",
+      "scope": "level",
+      "skill": 5001030,
+      "conv": {
+        "type": "guard",
+        "buff": "12000801",
+        "valuePath": "value.1"
+      },
+      "format": "pct",
+      "fixed": 1
+    },
+    {
+      "key": "guardRate",
+      "label": "守护率",
+      "scope": "level",
+      "skill": 5001031,
+      "conv": {
+        "type": "guard",
+        "buff": "12000801",
+        "valuePath": "value.1"
+      },
+      "format": "pct",
+      "fixed": 1
+    },
+    {
+      "key": "guardRate",
+      "label": "守护率",
+      "scope": "level",
+      "skill": 5001035,
+      "conv": {
+        "type": "guard",
+        "buff": "12000801",
         "valuePath": "value.1"
       },
       "format": "pct",

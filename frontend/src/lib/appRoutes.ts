@@ -91,7 +91,7 @@ const VALID_PATHS: Record<string, string[]> = {
   pet: ['/pet/skill', '/pet/wiki', '/pet/star', '/pet/equip'],
   beast_stats: ['/pet_champion/detail', '/pet_champion/lineup', '/pet_champion/players'],
   ride: ['/ride/star', '/ride/skill', '/ride/wiki', '/ride/make', '/ride/upgrade'],
-  call_god: ['/call_god/stats', '/call_god/stones', '/call_god/boss', '/call_god/talents'],
+  call_god: ['/call_god/stats', '/call_god/stones', '/call_god/boss', '/call_god/common_skills', '/call_god/talents'],
   rogue_item: ['/rogue_item/list'],
   resist: ['/resist/standard'],
   player_lookup: ['/player_lookup/search'],
@@ -249,6 +249,7 @@ export function getRequiredDataFiles(system: string, pathname: string, rawSearch
   if (system === 'call_god') {
     if (normalized.endsWith('/stones')) return ['call_god_stone_rewards'];
     if (normalized.endsWith('/boss')) return ['call_god_boss_analysis'];
+    if (normalized.endsWith('/common_skills')) return ['call_god_boss_common_skills'];
     if (normalized.endsWith('/talents')) return ['call_god_boss_talents'];
     return [];
   }

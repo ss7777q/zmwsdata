@@ -45,6 +45,10 @@
   }
 }
 @layer base {
+  html {
+    font-size: 17px;
+  }
+
   :root {
     --primary: #6366F1;             /* 靛蓝色 */
     --secondary: #4F46E5;           /* 深靛蓝 */

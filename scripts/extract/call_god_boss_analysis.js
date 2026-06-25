@@ -7,6 +7,7 @@ const ENTITY_CTG_DIR = path.join(BATTLE_CONFIG_DIR, 'entityCtg');
 const BULLETS_PATH = path.join(BATTLE_CONFIG_DIR, 'bullets.json');
 const OVERRIDES_PATH = path.join(__dirname, 'call_god_boss_overrides.json');
 const JIAOCHONG_POISON_BUFF_ID = 1042401;
+const FRAMES_PER_SECOND = 30;
 
 const SKILL_SOURCE_GROUPS = [
   { key: 'normal', label: '普攻', fields: ['atkIds'], showAsSkillCard: true },
@@ -55,7 +56,7 @@ function formatCoefficient(value) {
 
 function formatSecondsFromFrames(frames) {
   if (typeof frames !== 'number' || !Number.isFinite(frames)) return null;
-  const seconds = frames / 30;
+  const seconds = frames / FRAMES_PER_SECOND;
   return Number.isInteger(seconds) ? String(seconds) : String(Number(seconds.toFixed(3)));
 }
 
@@ -257,6 +258,7 @@ function collectBulletHitFacts(bullet, spawnFrame, skillLevelRow) {
     .map((entry, hitIndex) => {
       const hitBuffIds = [];
       const hitBuffCounts = {};
+      const impactTags = [];
       for (const subEntry of entry.com || []) {
         if (Array.isArray(subEntry.hitBuff)) {
           hitBuffIds.push(...uniqueNumbers(subEntry.hitBuff));
@@ -265,6 +267,9 @@ function collectBulletHitFacts(bullet, spawnFrame, skillLevelRow) {
             hitBuffCounts[buffId] = (hitBuffCounts[buffId] || 0) + 1;
           }
         }
+        if (subEntry.causeState === 2) impactTags.push('击飞');
+        if (subEntry.forceAtk === 1) impactTags.push('强制受击');
+        if (Number(subEntry.stiff || 0) > 0 || Number(subEntry.stiffFm || 0) > 0) impactTags.push('僵直');
       }
       const coefficient = skillLevelCoefficient(skillLevelRow, bullet.id, hitIndex);
 
@@ -282,6 +287,7 @@ function collectBulletHitFacts(bullet, spawnFrame, skillLevelRow) {
         },
         hitBuffIds: [...new Set(hitBuffIds)],
         hitBuffCounts,
+        impactTags: [...new Set(impactTags)],
       };
     });
 }
@@ -659,6 +665,364 @@ function buildTalents(talentRows, talentGroupRows, beSkillById, buffById) {
   }).sort((left, right) => Number(left.talentGroup) - Number(right.talentGroup));
 }
 
+function secondsTextFromFrames(frames) {
+  const seconds = formatSecondsFromFrames(frames);
+  return seconds ? `${seconds}秒` : null;
+}
+
+function formatPercent(value) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null;
+  const percent = Math.abs(value) * 100;
+  return Number.isInteger(percent) ? String(percent) : String(Number(percent.toFixed(3)));
+}
+
+function formatDuration(buff, options = {}) {
+  if (typeof buff?.time !== 'number') return '';
+  if (buff.time === -1) return options.untilSourceDies ? `，持续到${options.sourceName || '来源'}消失` : '';
+  const seconds = secondsTextFromFrames(buff.time);
+  return seconds ? `，持续${seconds}` : '';
+}
+
+function buildBuffEffectText(buff, buffById, options = {}) {
+  if (!buff) return '';
+  const duration = formatDuration(buff, options);
+  const value = Array.isArray(buff.value) && typeof buff.value[0] === 'number' ? buff.value[0] : null;
+  const percent = formatPercent(value);
+
+  if (buff.type === 4 && percent) {
+    return `移速${value >= 0 ? '提升' : '降低'}${percent}%${duration}`;
+  }
+
+  if (buff.type === 143 && percent) {
+    return `跳跃力提升${percent}%${duration}`;
+  }
+
+  if (buff.type === 14 && percent) {
+    return `受到伤害降低${percent}%${duration}`;
+  }
+
+  if (buff.type === 114) {
+    const timeText = secondsTextFromFrames(buff.time);
+    const intervalText = secondsTextFromFrames(buff.interval);
+    const triggerCount = buff.time > 0 && buff.interval > 0 ? Math.floor(buff.time / buff.interval) : null;
+    const parts = [];
+    if (timeText) parts.push(`持续${timeText}`);
+    if (intervalText) parts.push(`每${intervalText}触发1次身体僵直`);
+    if (triggerCount) parts.push(`共${triggerCount}次`);
+    return `附加麻木${parts.length ? `，${parts.join('，')}` : ''}`;
+  }
+
+  if (buff.type === 147) {
+    const attachedBuffs = attachedBuffsFromIds(buff.attachBuff, buffById);
+    const speedBuff = attachedBuffs.find((item) => item.type === 4 && Array.isArray(item.value) && item.value[0] > 0);
+    const speedPercent = formatPercent(speedBuff?.value?.[0]);
+    const immunities = attachedBuffs
+      .map((item) => cleanText(item.name))
+      .filter((name) => /^免疫/.test(name))
+      .map((name) => name.replace(/^免疫/, ''))
+      .filter(Boolean);
+    const parts = ['获得超级霸体', '解除控制'];
+    if (immunities.length) parts.push(`免疫${immunities.join('、')}`);
+    if (speedPercent) parts.push(`移速提升${speedPercent}%`);
+    const timeText = secondsTextFromFrames(buff.time);
+    return `${parts.join('，')}${timeText ? `，持续${timeText}` : ''}`;
+  }
+
+  if (buff.type === 2 && /无敌|虚无/.test(`${buff.name || ''}${buff.text || ''}`)) {
+    return `身体虚无，不受任何攻击${duration}`;
+  }
+
+  const text = cleanText(buff.text) || cleanText(buff.name);
+  return text ? `${text}${duration}` : '';
+}
+
+function attachedBuffsFromIds(ids, buffById) {
+  return uniqueNumbers(ids || []).map((id) => buffById.get(id)).filter(Boolean);
+}
+
+function commonDamageFormula(segments) {
+  const groups = groupDamageSegments(segments || []);
+  if (!groups.length) return null;
+  return groups.map((group) => {
+    const hitText = group.unknownHits ? (group.hits > 0 ? `${group.hits}+未确认` : '未确认') : String(group.hits);
+    return `${formatCoefficient(group.coefficient)}×${hitText}连击`;
+  }).join(' + ');
+}
+
+function commonDamageTotal(segments) {
+  const total = (segments || []).reduce((sum, segment) => {
+    if (!segment.damage || typeof segment.damage.coefficient !== 'number') return sum;
+    if (!isConfirmedHitCount(segment.maxHit)) return sum;
+    return sum + segment.damage.coefficient * segment.maxHit;
+  }, 0);
+  return total > 0 ? coefficientNumber(total) : null;
+}
+
+function cleanCommonSkillName(value) {
+  return cleanText(value).replace(/^魔王技-/, '');
+}
+
+function commonImpactText(tags) {
+  const uniqueTags = [...new Set(tags || [])];
+  if (!uniqueTags.length) return '';
+  const hasLaunch = uniqueTags.includes('击飞');
+  const others = uniqueTags.filter((tag) => tag !== '击飞');
+  if (hasLaunch && others.length) return `命中会击飞目标，并造成${others.join('、')}`;
+  if (hasLaunch) return '命中会击飞目标';
+  return `命中会造成${uniqueTags.join('、')}`;
+}
+
+function commonDamageEntry(skill) {
+  const segments = (skill.damageSegments || []).filter((segment) => segment.damage);
+  const formula = commonDamageFormula(segments);
+  if (!formula) return null;
+  const total = commonDamageTotal(segments);
+  const hitBuffIds = uniqueNumbers(segments.flatMap((segment) => segment.hitBuffIds || []));
+  return {
+    skillId: skill.id,
+    skillName: cleanCommonSkillName(skill.name),
+    formula,
+    total: total ? `${total}系数` : null,
+    hitBuffIds,
+    impactTags: [...new Set(segments.flatMap((segment) => segment.impactTags || []))],
+  };
+}
+
+function buildSkillContextForMonster(monster, source) {
+  const cfgFile = monster?.cfgFile || null;
+  const entityConfig = cfgFile ? loadJsonIfExists(path.join(ENTITY_CTG_DIR, `${cfgFile}.json`)) : null;
+  return {
+    skillById: source.skillById,
+    skillLevelById: source.skillLevelById,
+    beSkillById: source.beSkillById,
+    buffById: source.buffById,
+    bulletById: source.bulletById,
+    entityConfig,
+    cfgFile,
+  };
+}
+
+function resolveMonsterSkillAnalyses(monster, source, fields = ['skillIds']) {
+  if (!monster) return [];
+  const context = buildSkillContextForMonster(monster, source);
+  const group = { key: 'commonSkill', label: '通用技能', showAsSkillCard: false };
+  return collectMonsterSkillIds(monster, fields).map((skillId) => resolveSkill(skillId, context, group));
+}
+
+function collectActionEventsForSkill(skill, monster, source) {
+  const context = buildSkillContextForMonster(monster, source);
+  const actionConfig = getActionConfig(context.entityConfig, skill?.entityAction);
+  return Array.isArray(actionConfig?.com) ? actionConfig.com : [];
+}
+
+function buildActionBuffEffects(skill, monster, source) {
+  const buffIds = collectActionEventsForSkill(skill, monster, source).flatMap(collectBuffIdsFromEvent);
+  return uniqueNumbers(buffIds)
+    .map((id) => buildBuffEffectText(source.buffById.get(id), source.buffById))
+    .filter(Boolean);
+}
+
+function buildCrystalBuffEffects(skill, monster, source) {
+  return collectActionEventsForSkill(skill, monster, source)
+    .filter((event) => event?.type === 18 && event.crystal && Array.isArray(event.buff))
+    .flatMap((event) => uniqueNumbers(event.buff).map((buffId) => {
+      const buff = source.buffById.get(buffId);
+      const effect = buildBuffEffectText(buff, source.buffById, {
+        untilSourceDies: event.dieRemove === 1,
+        sourceName: monster?.name || '召唤物',
+      });
+      return effect ? `随机一个存活水晶${effect}` : '';
+    }))
+    .filter(Boolean);
+}
+
+function buildInitBeSkillEffects(monster, source) {
+  return uniqueNumbers(monster?.initBeSkill || []).map((id) => {
+    const row = source.beSkillById.get(id);
+    const rate = typeof row?.attribute?.rate === 'number' ? formatPercent(row.attribute.rate) : null;
+    if (!rate) return buildBeSkillPlayerText(row);
+    if (row.label === 'toHorseDamageAdd') return `对坐骑造成的伤害提高${rate}%`;
+    if (row.label === 'toNeutraDamageAdd') return `对中立怪物造成的伤害提高${rate}%`;
+    if (row.label === 'toStageObjDamageAdd') return `对土堡等场景物件造成的伤害提高${rate}%`;
+    return buildBeSkillPlayerText(row);
+  }).filter(Boolean);
+}
+
+function buildTeleportEffects(monster, source) {
+  const skills = resolveMonsterSkillAnalyses(monster, source, ['vSkill']);
+  const teleportEffects = [];
+  const buffEffects = [];
+  for (const skill of skills) {
+    const events = collectActionEventsForSkill(source.skillById.get(skill.id), monster, source);
+    for (const event of events) {
+      if (event?.type === 22 && event.posType === 99) {
+        const delay = secondsTextFromFrames(event.t || 0);
+        teleportEffects.push(`${delay ? `引导${delay}后` : ''}传送到已选择的存活水晶位置`);
+      }
+      for (const buffId of collectBuffIdsFromEvent(event)) {
+        const buff = source.buffById.get(buffId);
+        if (!buff || !/无敌|虚无/.test(`${buff.name || ''}${buff.text || ''}`)) continue;
+        const text = buildBuffEffectText(buff, source.buffById);
+        if (text) buffEffects.push(text);
+      }
+    }
+  }
+  return [...new Set([...teleportEffects, ...buffEffects])];
+}
+
+function buildSummonEvents(skill, monster, source) {
+  return collectActionEventsForSkill(skill, monster, source)
+    .filter((event) => event?.type === 13 && Array.isArray(event.mIds))
+    .map((event) => ({
+      monsterIds: uniqueNumbers(event.mIds),
+      maxCount: typeof event.maxCount === 'number' ? event.maxCount : null,
+      lifetimeSeconds: typeof event.time === 'number' && event.time >= 0 ? event.time : null,
+    }));
+}
+
+function buildSummonAnalysis(monster, source) {
+  const skillAnalyses = resolveMonsterSkillAnalyses(monster, source, ['skillIds', 'appearSkill', 'dieSkill']);
+  const damage = skillAnalyses.map(commonDamageEntry).filter(Boolean);
+  const effects = [];
+  for (const skillAnalysis of skillAnalyses) {
+    const skill = source.skillById.get(skillAnalysis.id);
+    effects.push(...buildCrystalBuffEffects(skill, monster, source));
+    for (const damageEntry of [commonDamageEntry(skillAnalysis)].filter(Boolean)) {
+      effects.push(`${damageEntry.skillName}造成${damageEntry.formula}${damageEntry.total ? `，总系数${damageEntry.total.replace(/系数$/, '')}` : ''}`);
+      const impactText = commonImpactText(damageEntry.impactTags);
+      if (impactText) effects.push(impactText);
+      for (const buffId of damageEntry.hitBuffIds || []) {
+        const buffText = buildBuffEffectText(source.buffById.get(buffId), source.buffById);
+        if (buffText) effects.push(buffText);
+      }
+    }
+  }
+  effects.push(...buildInitBeSkillEffects(monster, source));
+  const damagingSkills = skillAnalyses.filter((skill) => (skill.damageSegments || []).some((segment) => segment.damage));
+  return {
+    id: monster.id,
+    name: monster.name,
+    effects: [...new Set(effects)],
+    damage,
+    warnings: damagingSkills.flatMap((skill) => skill.warnings || []),
+  };
+}
+
+function buildUnlockText(row) {
+  if (Array.isArray(row.unlockLimit) && row.unlockLimit[0] === 1 && typeof row.unlockLimit[1] === 'number') {
+    return `达到${row.unlockLimit[1]}级后可解锁`;
+  }
+  return '默认开放';
+}
+
+function buildChargeText(row, skill) {
+  if (row.cdNotRecovery === 1) {
+    const parts = ['不自动恢复'];
+    if (typeof row.cdRate === 'number' && row.cdRate > 0) parts.push(`水晶进度每1%充能${coefficientNumber(row.cdRate)}%`);
+    return parts.join('，');
+  }
+  if (typeof skill?.cd === 'number') return `${coefficientNumber(skill.cd)}秒`;
+  return '';
+}
+
+function buildCommonSkillPlayerText({ row, mainSkill, actionEffects, summonEvents, summons, teleportEffects }) {
+  if (teleportEffects.length) {
+    return `打开小地图选择存活水晶，${teleportEffects.join('；')}。冷却${buildChargeText(row, mainSkill)}。`;
+  }
+  if (summons.length) {
+    const summonNames = summons.map((item) => item.name).join('、');
+    const summonText = summonEvents.length
+      ? `召唤${summonEvents[0].maxCount || 1}个${summonNames}`
+      : `召唤${summonNames}`;
+    const effects = summons.flatMap((item) => item.effects);
+    const chargeText = buildChargeText(row, mainSkill);
+    const cooldownText = chargeText ? (row.cdNotRecovery === 1 ? chargeText : `冷却${chargeText}`) : '';
+    return `${summonText}。${effects.join('；')}。${cooldownText ? `${cooldownText}。` : ''}`.replace(/。+/g, '。');
+  }
+  if (actionEffects.length) {
+    const chargeText = buildChargeText(row, mainSkill);
+    return `${actionEffects.join('；')}。${chargeText ? `冷却${chargeText}。` : ''}`;
+  }
+  return cleanText(row.text);
+}
+
+function buildCommonSkillFacts(row, mainSkill) {
+  const facts = [
+    { label: '解锁', value: buildUnlockText(row) },
+  ];
+  const chargeText = buildChargeText(row, mainSkill);
+  if (chargeText) facts.push({ label: row.cdNotRecovery === 1 ? '充能' : '冷却', value: chargeText });
+  if (typeof row.releaseCount === 'number') facts.push({ label: '最多储存', value: `${row.releaseCount}次` });
+  if (Array.isArray(row.godWarStage) && row.godWarStage.length) facts.push({ label: '适用战场', value: row.godWarStage.join('、') });
+  return facts;
+}
+
+function buildCommonSkill(row, source) {
+  const warnings = [];
+  const mainMonster = source.monsterById.get(Number(row.monsterId));
+  if (!mainMonster) warnings.push(`${row.name} 找不到 monster ${row.monsterId}`);
+  const mainSkillId = collectMonsterSkillIds(mainMonster, ['skillIds'])[0];
+  const mainSkill = source.skillById.get(Number(mainSkillId));
+  if (!mainSkill) warnings.push(`${row.name} 找不到入口 skill ${mainSkillId}`);
+
+  const actionEffects = buildActionBuffEffects(mainSkill, mainMonster, source);
+  const summonEvents = buildSummonEvents(mainSkill, mainMonster, source);
+  const summonIds = uniqueNumbers([
+    ...(mainMonster?.linkMonster || []),
+    ...summonEvents.flatMap((event) => event.monsterIds),
+  ]);
+  const summons = summonIds
+    .map((id) => source.monsterById.get(id))
+    .filter(Boolean)
+    .map((monster) => buildSummonAnalysis(monster, source));
+  const teleportEffects = buildTeleportEffects(mainMonster, source);
+  for (const summon of summons) warnings.push(...(summon.warnings || []));
+
+  const playerText = buildCommonSkillPlayerText({
+    row,
+    mainSkill,
+    actionEffects,
+    summonEvents,
+    summons,
+    teleportEffects,
+  });
+
+  return {
+    id: row.id,
+    sort: row.sort,
+    group: row.group,
+    name: row.name,
+    icon: row.icon,
+    officialText: cleanText(row.text),
+    playerText,
+    facts: buildCommonSkillFacts(row, mainSkill),
+    actionEffects,
+    summonEvents,
+    summons,
+    teleportEffects,
+    source: {
+      monsterId: row.monsterId ?? null,
+      skillId: mainSkill?.id ?? null,
+    },
+    warnings: [...new Set(warnings)],
+  };
+}
+
+function buildBossCommonSkillPayload() {
+  const source = {
+    monsterById: indexById(u.loadTable('monster')),
+    skillById: indexById(u.loadTable('skill')),
+    skillLevelById: indexById(u.loadTable('skillLevel')),
+    beSkillById: indexById(u.loadTable('beskill')),
+    buffById: indexById(u.loadTable('buff')),
+    bulletById: indexById(loadJsonIfExists(BULLETS_PATH) || []),
+  };
+  return u.loadTable('bossMagicWeapon')
+    .slice()
+    .sort((left, right) => Number(left.sort || 0) - Number(right.sort || 0) || Number(left.id || 0) - Number(right.id || 0))
+    .map((row) => buildCommonSkill(row, source));
+}
+
 function skillOverrideFor(skill, bossOverride) {
   if (!bossOverride?.skills) return null;
   return bossOverride.skills[skill.name] || bossOverride.skills[String(skill.id)] || null;
@@ -810,6 +1174,11 @@ function extractCallGodBossAnalysis() {
   u.saveOutput('call_god_boss_talents', buildBossTalentPayload(), {
     system: 'call_god',
     source: 'godWarBossTalent.*.json + godWarBossTalentGroup.*.json + beskills',
+  });
+  u.saveOutput('call_god_boss_common_skills', buildBossCommonSkillPayload(), {
+    system: 'call_god',
+    source: 'bossMagicWeapon.*.json + monster.*.json + skill.*.json + skillLevel.*.json + beskills/buffs + file/battle-config',
+    wordingPolicy: '玩家文案按 .agents/AGENTS.md 清洗：时间显示秒，机制说明不透出开发字段。',
   });
 }
 

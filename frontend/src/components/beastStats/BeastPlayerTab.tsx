@@ -2,6 +2,19 @@ import { useEffect, useMemo, useState } from 'react';
 import type { BeastDetailResponse, BeastPlayerAnalysisResponse } from '../../lib/api';
 import { DETAIL_PAGE_SIZE, EmptyState, formatSeasonLabel, getPetSpeciesName, normalizeAliasList } from './beastStatsShared';
 
+type PlayerSeasonWin = { season: number; sid: number; winnerNameAtThatTime: string };
+
+function compareSeasonWin(left: PlayerSeasonWin, right: PlayerSeasonWin) {
+  return left.season - right.season || left.sid - right.sid;
+}
+
+function compareNullableSeasonDesc(left: number | null, right: number | null) {
+  if (left == null && right == null) return 0;
+  if (left == null) return 1;
+  if (right == null) return -1;
+  return right - left;
+}
+
 export function PlayerTab({ source, detailSource }: { source: BeastPlayerAnalysisResponse; detailSource: BeastDetailResponse }) {
   const petSpeciesNameById = detailSource.summary.petSpeciesNameById;
   const [selectedSeason, setSelectedSeason] = useState<string>('all');
@@ -48,7 +61,7 @@ export function PlayerTab({ source, detailSource }: { source: BeastPlayerAnalysi
       currentName: string;
       winnerAliasList: string[];
       championCount: number;
-      seasonWins: Array<{ season: number; sid: number; winnerNameAtThatTime: string }>;
+      seasonWins: PlayerSeasonWin[];
       sidCoverage: number[];
       firstChampionSeason: number | null;
       latestChampionSeason: number | null;
@@ -64,8 +77,8 @@ export function PlayerTab({ source, detailSource }: { source: BeastPlayerAnalysi
           championCount: 1,
           seasonWins: [{ season: record.season, sid: record.sid, winnerNameAtThatTime: record.winnerNameAtThatTime }],
           sidCoverage: [record.sid],
-          firstChampionSeason: record.season,
-          latestChampionSeason: record.season,
+          firstChampionSeason: null,
+          latestChampionSeason: null,
         });
         continue;
       }
@@ -82,12 +95,21 @@ export function PlayerTab({ source, detailSource }: { source: BeastPlayerAnalysi
           existing.winnerAliasList.push(alias);
         }
       }
-      existing.firstChampionSeason = existing.seasonWins[0]?.season ?? null;
-      existing.latestChampionSeason = existing.seasonWins[existing.seasonWins.length - 1]?.season ?? null;
     }
 
-    return [...playerMap.values()]
-      .sort((left, right) => right.championCount - left.championCount || (right.latestChampionSeason ?? 0) - (left.latestChampionSeason ?? 0) || left.uid.localeCompare(right.uid))
+    const playerRows = [...playerMap.values()].map((row) => {
+      const seasonWins = [...row.seasonWins].sort(compareSeasonWin);
+
+      return {
+        ...row,
+        seasonWins,
+        firstChampionSeason: seasonWins[0]?.season ?? null,
+        latestChampionSeason: seasonWins[seasonWins.length - 1]?.season ?? null,
+      };
+    });
+
+    return playerRows
+      .sort((left, right) => right.championCount - left.championCount || compareNullableSeasonDesc(left.latestChampionSeason, right.latestChampionSeason) || left.uid.localeCompare(right.uid))
       .map((row, index) => ({
         ...row,
         winnerAliasList: normalizeAliasList(row.winnerAliasList),
