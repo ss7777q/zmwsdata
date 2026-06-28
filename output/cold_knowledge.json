@@ -2,7 +2,7 @@
   "_meta": {
     "name": "cold_knowledge",
     "system": "cold_knowledge",
-    "extractedAt": "2026-06-25T00:35:46.392Z",
+    "extractedAt": "2026-06-28T14:51:58.168Z",
     "source": "scripts/extract/cold_knowledge/*.md"
   },
   "data": []
