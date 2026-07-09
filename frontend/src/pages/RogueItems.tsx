@@ -284,31 +284,37 @@ export default function RogueItems({ dataSources }: Props) {
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-        <aside className="rounded-lg border border-border bg-card p-3 shadow-sm xl:sticky xl:top-6 xl:max-h-[calc(100vh-8rem)] xl:overflow-auto">
+        <aside className="min-w-0 rounded-lg border border-border bg-card p-3 shadow-sm xl:sticky xl:top-6 xl:max-h-[calc(100vh-8rem)] xl:overflow-auto">
           <div className="mb-2 px-2 py-2 text-sm font-semibold text-textMain">道具列表</div>
-          <div className="space-y-2">
-            {filteredItems.map((item) => {
-              const selected = item.id === activeItem?.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setSelectedId(item.id)}
-                  className={clsx('w-full rounded-lg border px-4 py-3 text-left transition-colors', selected ? 'border-primary bg-primary/10' : 'border-border bg-surface/45 hover:border-primary/40 hover:bg-surface')}
-                >
-                  <div className="flex items-center justify-between gap-3 text-xs text-textSub">
-                    <span>{item.typeLabel}</span>
-                    <span>{item.stages.length} 阶段</span>
-                  </div>
-                  <div className="mt-2 flex items-center gap-2">
-                    {item.hasExplanation ? <CheckCircle2 className={clsx('h-4 w-4 shrink-0', item.hasManualExplanation ? 'text-emerald-500' : 'text-primary')} /> : <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />}
-                    <span className="text-sm font-semibold leading-6 text-textMain">{item.displayName || item.name}</span>
-                  </div>
-                  <div className="mt-2 line-clamp-2 text-xs leading-5 text-textSub">{item.summary || item.derivedSummary || item.warnings[0] || '阶段已聚合，机制说明待补充。'}</div>
-                </button>
-              );
-            })}
-            {filteredItems.length === 0 ? <div className="rounded-lg border border-dashed border-border px-4 py-10 text-center text-sm text-textSub">没有匹配的局内道具</div> : null}
+          <div className="mobile-scroll-container">
+            <div className="mobile-scroll-list-xl custom-scrollbar">
+              {filteredItems.map((item) => {
+                const selected = item.id === activeItem?.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setSelectedId(item.id)}
+                    className={clsx(
+                      'mobile-scroll-item-xl rounded-lg border px-4 py-3 text-left transition-colors',
+                      selected ? 'border-primary bg-primary/10' : 'border-border bg-surface/45 hover:border-primary/40 hover:bg-surface'
+                    )}
+                  >
+                    <div className="flex items-center justify-between gap-3 text-xs text-textSub">
+                      <span>{item.typeLabel}</span>
+                      <span>{item.stages.length} 阶段</span>
+                    </div>
+                    <div className="mt-2 flex items-center gap-2">
+                      {item.hasExplanation ? <CheckCircle2 className={clsx('h-4 w-4 shrink-0', item.hasManualExplanation ? 'text-emerald-500' : 'text-primary')} /> : <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />}
+                      <span className="text-sm font-semibold leading-6 text-textMain">{item.displayName || item.name}</span>
+                    </div>
+                    <div className="mt-2 line-clamp-2 text-xs leading-5 text-textSub">{item.summary || item.derivedSummary || item.warnings[0] || '阶段已聚合，机制说明待补充。'}</div>
+                  </button>
+                );
+              })}
+              {filteredItems.length === 0 ? <div className="w-full rounded-lg border border-dashed border-border px-4 py-10 text-center text-sm text-textSub">没有匹配的局内道具</div> : null}
+            </div>
+            <div className="mobile-scroll-mask-xl" />
           </div>
         </aside>
 

@@ -6,6 +6,15 @@
   <link rel="icon" type="image/svg+xml" href="/favicon2.ico" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>造梦无双全系统数值展示</title>
+  <script>
+    (function () {
+      try {
+        var savedTheme = window.localStorage.getItem('theme');
+        var shouldUseDark = savedTheme === 'dark' || (savedTheme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.toggle('dark', shouldUseDark);
+      } catch (error) {}
+    })();
+  </script>
 </head>
 
 <body>

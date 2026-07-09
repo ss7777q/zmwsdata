@@ -885,6 +885,33 @@ function createFallbackBossEntries(stage) {
   }));
 }
 
+function dedupeBossEntriesByBossId(entries) {
+  const uniqueEntries = [];
+  const seenBossIds = new Set();
+
+  for (const entry of Array.isArray(entries) ? entries : []) {
+    const rawBossId = entry?.bossId ?? entry?.id;
+    const bossIdKey = rawBossId == null ? '' : String(rawBossId);
+    if (!bossIdKey || seenBossIds.has(bossIdKey)) {
+      continue;
+    }
+
+    seenBossIds.add(bossIdKey);
+    uniqueEntries.push(entry);
+  }
+
+  return uniqueEntries;
+}
+
+function dedupeStageReportBossData(stageReport) {
+  if (!stageReport || !Array.isArray(stageReport.bossData)) {
+    return stageReport;
+  }
+
+  stageReport.bossData = dedupeBossEntriesByBossId(stageReport.bossData);
+  return stageReport;
+}
+
 function buildStageGroups(stageReports) {
   const groupMap = new Map();
 
@@ -1030,6 +1057,7 @@ function buildLeagueBossStageReports(stages, context) {
       stageReport.status = 'partial_error';
     }
 
+    dedupeStageReportBossData(stageReport);
     if (stageReport.bossData.length > 0) {
       stageReports.push(stageReport);
     }
@@ -1084,7 +1112,9 @@ function buildIllusionStageReport(stage, context) {
   const finalBossStage = finalBossStageId != null ? context.stageById.get(finalBossStageId) : null;
   const stageLevel = toNumber(stage.lv, 1);
   const mapBossEntries = context.mapParser.getBossEntriesByMapNames(finalBossStage?.map);
-  const bossEntries = mapBossEntries.length > 0 ? mapBossEntries : createFallbackBossEntries(finalBossStage || stage);
+  const bossEntries = dedupeBossEntriesByBossId(
+    mapBossEntries.length > 0 ? mapBossEntries : createFallbackBossEntries(finalBossStage || stage)
+  );
 
   if (bossEntries.length === 0) {
     return null;
@@ -1149,6 +1179,7 @@ function buildIllusionStageReport(stage, context) {
     }
   }
 
+  dedupeStageReportBossData(stageReport);
   return stageReport.bossData.length > 0 ? stageReport : null;
 }
 
@@ -1156,9 +1187,11 @@ function buildStarHavocStageReport(stage, context) {
   const defaultLevel = context.defaultLevel;
   const bossEntriesFromMap = context.mapParser.getBossEntriesByMapNames(stage.map);
   const bossEntriesFromEvent = context.starHavocEventBossEntriesByStage.get(stage.id) || [];
-  const bossEntries = bossEntriesFromMap.length > 0
-    ? bossEntriesFromMap
-    : (bossEntriesFromEvent.length > 0 ? bossEntriesFromEvent : createFallbackBossEntries(stage));
+  const bossEntries = dedupeBossEntriesByBossId(
+    bossEntriesFromMap.length > 0
+      ? bossEntriesFromMap
+      : (bossEntriesFromEvent.length > 0 ? bossEntriesFromEvent : createFallbackBossEntries(stage))
+  );
 
   if (bossEntries.length === 0) {
     return null;
@@ -1209,6 +1242,7 @@ function buildStarHavocStageReport(stage, context) {
     }
   }
 
+  dedupeStageReportBossData(stageReport);
   return stageReport.bossData.length > 0 ? stageReport : null;
 }
 
@@ -1461,7 +1495,9 @@ function extractBossStats(options = {}) {
       ? maxConfiguredLevel
       : toNumber(stage.lv, 1);
     const mapBossEntries = mapParser.getBossEntriesByMapNames(stage.map);
-    const bossEntries = mapBossEntries.length > 0 ? mapBossEntries : createFallbackBossEntries(stage);
+    const bossEntries = dedupeBossEntriesByBossId(
+      mapBossEntries.length > 0 ? mapBossEntries : createFallbackBossEntries(stage)
+    );
     if (bossEntries.length === 0) {
       continue;
     }
@@ -1537,6 +1573,7 @@ function extractBossStats(options = {}) {
       }
     }
 
+    dedupeStageReportBossData(stageReport);
     if (stageReport.bossData.length > 0) {
       results.push(stageReport);
     }

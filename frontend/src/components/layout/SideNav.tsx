@@ -1,4 +1,4 @@
-import { Award, BookOpenText, Box, CircleHelp, ChevronLeft, ChevronRight, Dog, Flame, Gauge, PackageOpen, Search, ServerCog, Shield, Skull, Star, Trophy, User, Zap, Sliders } from 'lucide-react';
+import { Award, BookOpenText, Box, CircleHelp, ChevronLeft, ChevronRight, Dog, Flame, Gauge, Gift, PackageOpen, Search, ServerCog, Shield, Skull, Star, Trophy, User, Zap, Sliders } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface SideNavProps {
@@ -25,6 +25,7 @@ const menuItems = [
   { id: 'ride', label: '坐骑系统', icon: Box },
   { id: 'call_god', label: '神魔相关', icon: Flame },
   { id: 'rogue_item', label: '局内道具', icon: PackageOpen },
+  { id: 'stage_rewards', label: '关卡奖励', icon: Gift },
   { id: 'boss', label: 'BOSS 属性', icon: Skull },
   { id: 'resist', label: '抗值标准', icon: Shield },
   { id: 'player_lookup', label: '玩家改名记录', icon: Search },

@@ -4,7 +4,7 @@
   "metrics": [
     {
       "key": "tenacityRate",
-      "label": "韧性/通抗",
+      "label": "负暴击率",
       "scope": "level",
       "skill": 20629020201,
       "conv": {
@@ -18,7 +18,7 @@
     },
     {
       "key": "guardianRate",
-      "label": "守护/通抗",
+      "label": "暴击免伤率",
       "scope": "level",
       "skill": 20629020201,
       "conv": {
@@ -32,7 +32,7 @@
     },
     {
       "key": "tenacityRate",
-      "label": "韧性/通抗",
+      "label": "负暴击率",
       "scope": "level",
       "skill": 20629030201,
       "conv": {
@@ -46,7 +46,7 @@
     },
     {
       "key": "guardianRate",
-      "label": "守护/通抗",
+      "label": "暴击免伤率",
       "scope": "level",
       "skill": 20629030201,
       "conv": {

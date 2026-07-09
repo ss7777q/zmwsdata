@@ -699,6 +699,7 @@ function buildSkillCard(displaySkillId, slot, ctx) {
           consumeMp: l.consumeMp,
           totalPer: l.totalPer,
           totalVal: l.totalVal,
+          growthBuffs: l.growthBuffs || [],
           healVal: displaySkillId === QICAI_STONE_SKILL_ID ? qicaiHealValue(ctx, l.level) : null,
           releaseSeconds: rel.releaseSeconds,
           segCount: l.segments.reduce((a, s) => a + s.maxHit, 0),

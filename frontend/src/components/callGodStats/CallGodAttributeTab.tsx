@@ -71,7 +71,7 @@ export function ScrollTableFrame({
       onMouseUp={handleMouseUp}
       onMouseMove={handleMouseMove}
       className={clsx(
-        'overflow-auto max-h-[70vh] custom-scrollbar relative bg-surface rounded-b-2xl',
+        'overflow-auto custom-scrollbar relative bg-surface rounded-b-2xl',
         isDragging ? 'cursor-grabbing select-none' : 'cursor-auto',
         minWidthClassName
       )}

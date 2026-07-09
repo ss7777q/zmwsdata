@@ -474,7 +474,7 @@ function buildSkillCard(displaySkillId, slot, ctx) {
       growthBuffs: l.growthBuffs || [],
       metrics: metrics.computeMetrics(
         ctx.metricDefs, "level",
-        { skillId: displaySkillId, level: l.level, roleLevel: l.roleLevel, consumeMp: l.consumeMp, totalPer: l.totalPer, totalVal: l.totalVal, releaseSeconds: rel.releaseSeconds, segCount: l.segments.reduce((a, s) => a + s.maxHit, 0) },
+        { skillId: displaySkillId, level: l.level, roleLevel: l.roleLevel, consumeMp: l.consumeMp, totalPer: l.totalPer, totalVal: l.totalVal, growthBuffs: l.growthBuffs || [], releaseSeconds: rel.releaseSeconds, segCount: l.segments.reduce((a, s) => a + s.maxHit, 0) },
         ctx.helpers, l.level === 1 ? warnings : [],
       ),
     })),

@@ -116,7 +116,11 @@ function readVirtualSkillAction(ctx, skillId, warnings) {
     return null;
   }
   const monsters = ctx.monsterById ? [...ctx.monsterById.values()] : [];
-  const owner = monsters.find((monster) => idList(monster.vSkill).includes(skillId));
+  let owner = monsters.find((monster) => idList(monster.vSkill).includes(skillId));
+  if (!owner) {
+    const roleId = Math.floor(skillId / 1000000);
+    owner = ctx.monsterById?.get(roleId);
+  }
   if (!owner?.cfgFile) {
     warnings.push({ code: "MISSING_VIRTUAL_SKILL_OWNER", detail: `虚拟技 ${skillId} 找不到所属实体配置` });
     return null;
@@ -1009,6 +1013,20 @@ function linkedBuffsFromBeskill(record, ctx) {
     case "aetialGliding":
       pushBuffIds(out, seen, ctx, a?.enterBuffs, "effect");
       break;
+    case "hurtDealSameThing": {
+      const vskillId = a?.vskill || a?.toVskill;
+      if (vskillId) {
+        const resolved = readVirtualSkillAction(ctx, vskillId, []);
+        if (resolved?.action?.com) {
+          for (const com of resolved.action.com) {
+            if (com?.type === 1 && com.buff) {
+              pushBuffIds(out, seen, ctx, com.buff, "effect");
+            }
+          }
+        }
+      }
+      break;
+    }
     default:
       break;
   }

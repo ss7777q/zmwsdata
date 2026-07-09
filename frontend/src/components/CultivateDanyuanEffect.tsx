@@ -185,6 +185,12 @@ function levelValueFor(payload: DanyuanQualityLevel | null | undefined, sourceLa
     return effectValuesOf(payload).find((item) => item.label === sourceLabel) ?? null;
 }
 
+function displayLevelValue(payload: DanyuanQualityLevel | null | undefined, column: LevelDisplayColumn) {
+    const value = levelValueFor(payload, column.sourceLabel);
+    if (!value) return null;
+    return column.mode === 'fixed' ? fixedPartOf(value.value) : value.value;
+}
+
 function makeFixedColumnLabel(sourceLabel: string) {
     const metric = stripMetricPrefix(sourceLabel);
     if (/常驻每层攻击/.test(sourceLabel)) return '常驻每层攻击固定值';
@@ -235,6 +241,28 @@ function buildLevelColumnGroups(family: DanyuanFamily): LevelColumnGroup[] {
         } satisfies LevelDisplayColumn;
     });
 
+    const canMergeQualities = family.qualities.length > 1 && family.levels.every((level) => {
+        const [baseQuality, ...otherQualities] = family.qualities;
+        const basePayload = level.qualities[String(baseQuality.quality)];
+        if (!basePayload) return false;
+        return columns.every((column) => {
+            const baseValue = displayLevelValue(basePayload, column);
+            if (baseValue == null) return false;
+            return otherQualities.every((quality) => {
+                const payload = level.qualities[String(quality.quality)];
+                return payload ? displayLevelValue(payload, column) === baseValue : false;
+            });
+        });
+    });
+
+    if (canMergeQualities) {
+        return [{
+            quality: family.qualities[0].quality,
+            name: '全部品质',
+            columns
+        }];
+    }
+
     return family.qualities.map((quality) => ({
         quality: quality.quality,
         name: quality.name,
@@ -243,9 +271,12 @@ function buildLevelColumnGroups(family: DanyuanFamily): LevelColumnGroup[] {
 }
 
 function renderLevelCell(payload: DanyuanQualityLevel | null | undefined, column: LevelDisplayColumn) {
-    const value = levelValueFor(payload, column.sourceLabel);
-    if (!value) return <span className="text-amber-500/80 font-bold">缺失</span>;
-    return column.mode === 'fixed' ? fixedPartOf(value.value) ?? <span className="text-amber-500/80 font-bold">格式异常</span> : value.value;
+    const displayValue = displayLevelValue(payload, column);
+    if (displayValue == null) {
+        const value = levelValueFor(payload, column.sourceLabel);
+        return value ? <span className="text-amber-500/80 font-bold">格式异常</span> : <span className="text-amber-500/80 font-bold">缺失</span>;
+    }
+    return displayValue;
 }
 
 export default function CultivateDanyuanEffect({ dataSources }: Props) {

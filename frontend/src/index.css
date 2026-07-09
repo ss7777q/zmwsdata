@@ -155,6 +155,10 @@
     transform-origin: top center;
   }
 
+  .app-main-scroll {
+    overflow-anchor: none;
+  }
+
   .animate-in,
   .animate-fade-in {
     animation: content-soft-enter var(--motion-enter-duration) var(--ease-out-quart) both;
@@ -289,6 +293,126 @@
     transform: translateY(-1px);
   }
 
+  .cold-knowledge-markdown {
+    @apply text-textSub break-words;
+  }
+
+  .cold-knowledge-markdown > * + * {
+    margin-top: 0.85rem;
+  }
+
+  .cold-knowledge-markdown p {
+    @apply leading-7;
+  }
+
+  .cold-knowledge-markdown strong {
+    @apply font-bold text-textMain;
+  }
+
+  .cold-knowledge-markdown em {
+    @apply text-textMain;
+    font-style: italic;
+  }
+
+  .cold-knowledge-markdown code {
+    @apply rounded-md border border-border bg-surface px-1.5 py-0.5 font-mono text-xs text-textMain;
+  }
+
+  .cold-knowledge-markdown h1,
+  .cold-knowledge-markdown h2,
+  .cold-knowledge-markdown h3,
+  .cold-knowledge-markdown h4,
+  .cold-knowledge-markdown h5,
+  .cold-knowledge-markdown h6 {
+    @apply font-semibold leading-7 text-textMain;
+  }
+
+  .cold-knowledge-markdown h1 {
+    @apply border-b border-border pb-3 text-2xl leading-9;
+  }
+
+  .cold-knowledge-markdown h2 {
+    @apply border-b border-border pb-2 text-xl leading-8;
+  }
+
+  .cold-knowledge-markdown h3 {
+    @apply text-lg leading-8;
+  }
+
+  .cold-knowledge-markdown h4 {
+    @apply text-base;
+  }
+
+  .cold-knowledge-markdown ul,
+  .cold-knowledge-markdown ol {
+    @apply space-y-2 pl-5 leading-7;
+    white-space: normal !important;
+  }
+
+  .cold-knowledge-markdown li > ul,
+  .cold-knowledge-markdown li > ol {
+    @apply mt-2 pl-6;
+  }
+
+  .cold-knowledge-markdown li > p {
+    @apply my-0;
+  }
+
+  .cold-knowledge-markdown ul {
+    list-style: disc;
+  }
+
+  .cold-knowledge-markdown ol {
+    list-style: decimal;
+  }
+
+  .cold-knowledge-markdown li {
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+
+  .cold-knowledge-markdown li::marker {
+    @apply text-primary;
+  }
+
+  .cold-knowledge-markdown .katex-display {
+    margin: 0.85rem 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.25rem 0;
+  }
+
+  .cold-knowledge-markdown .markdown-table-wrap {
+    @apply overflow-x-auto rounded-lg border border-border bg-surface/60;
+    max-width: 100%;
+  }
+
+  .cold-knowledge-markdown table {
+    @apply border-0 bg-card text-sm;
+    min-width: 44rem !important;
+  }
+
+  .cold-knowledge-markdown table th,
+  .cold-knowledge-markdown table td {
+    @apply border-b border-border px-3 py-2.5 align-top leading-6;
+    white-space: normal !important;
+    text-align: left !important;
+  }
+
+  .cold-knowledge-markdown table th {
+    @apply bg-surface font-semibold text-textMain;
+  }
+
+  .cold-knowledge-markdown table td:first-child,
+  .cold-knowledge-markdown table th:first-child {
+    @apply w-36;
+    white-space: nowrap !important;
+  }
+
+  .cold-knowledge-markdown table tr:last-child td {
+    border-bottom: 0;
+  }
+
   /* 全局自适应表格优化 (网页版/PC端与移动端通用) */
   table {
     table-layout: auto !important;
@@ -360,5 +484,34 @@
     .sidebar-resizable:not(.sidebar-collapsed) {
       width: var(--sidebar-width, 16rem) !important;
     }
+  }
+
+  /* 移动端横向滚动aside布局通用类 (基于 xl 桌面端断点) */
+  .mobile-scroll-container {
+    position: relative;
+  }
+  .mobile-scroll-list-xl {
+    @apply flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory;
+    @apply xl:flex-col xl:overflow-x-visible xl:pb-0 xl:space-y-2 xl:snap-none;
+  }
+  .mobile-scroll-item-xl {
+    @apply shrink-0 w-[280px] snap-start;
+    @apply xl:w-full xl:shrink;
+  }
+  .mobile-scroll-mask-xl {
+    @apply pointer-events-none absolute bottom-3 right-0 top-0 w-12 bg-gradient-to-l from-card to-transparent xl:hidden;
+  }
+
+  /* 移动端横向滚动aside布局通用类 (基于 lg 桌面端断点) */
+  .mobile-scroll-list-lg {
+    @apply flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory;
+    @apply lg:flex-col lg:overflow-x-visible lg:pb-0 lg:space-y-2 lg:snap-none;
+  }
+  .mobile-scroll-item-lg {
+    @apply shrink-0 w-[280px] snap-start;
+    @apply lg:w-full lg:shrink;
+  }
+  .mobile-scroll-mask-lg {
+    @apply pointer-events-none absolute bottom-3 right-0 top-0 w-12 bg-gradient-to-l from-card to-transparent lg:hidden;
   }
 }

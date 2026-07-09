@@ -336,7 +336,7 @@ const ACTIVE_GUIDES = {
   21001: {
     summary: '驱散最近获得的一个负面异常，并短时间免疫同类异常。',
     tags: ['驱散', '回魔提升'],
-    active: ['驱散自身最近获得的 1个负面异常，并在后续 7.5秒内免疫同类异常；同时获得约 30秒回魔属性提升，提升幅度随法宝等级成长。']
+    active: ['驱散自身最近获得的 1个负面异常，并在后续 7.5秒内免疫同类异常；同时获得 30秒回魔提升，每次回魔额外增加自身最大魔法值的一定比例，提升幅度随法宝等级成长。']
   },
   22001: {
     summary: '移动时留下火焰轨迹，叠满灼烧点后触发爆燃。',
@@ -356,7 +356,7 @@ const ACTIVE_GUIDES = {
   25001: {
     summary: '一段时间内免疫减益，并提升回血属性。',
     tags: ['免疫减益', '回血提升'],
-    active: ['使用后进入减益免疫状态并提升回血属性；首次免疫不缩短持续时间，之后每次免疫与之前不同类型的减益，会按比例压缩剩余免疫时长，最少保留 1秒；同类型减益不会重复扣时长。免疫时长、扣时后保留比例和回血提升都随法宝等级成长。']
+    active: ['使用后进入减益免疫状态并提升回血属性；首次免疫不缩短持续时间，之后每次免疫与之前不同类型的减益，会按比例压缩剩余免疫时长，最少保留 1秒；同类型减益不会重复扣时长。免疫时长、每次扣除比例和回血提升都随法宝等级成长。']
   },
   26001: {
     summary: '敲出雷音攻击范围敌人并造成晕眩。',
@@ -419,8 +419,8 @@ function activeGrowthTable(weaponId, skillRows, buffMap, beskillMap, monsterMap)
       ], buffSeries(buffMap, 202000101), ACTIVE_NO_GROWTH_TEXT);
     case 16001:
       return table('主动技能成长表', [
-        { label: '隐身前1.5秒闪避提升', value: row => pct(row.early.buff.value[0]) },
-        { label: '隐身后段闪避提升', value: row => pct(row.late.buff.value[0]) }
+        { label: '隐身前1.5秒闪避率提升', value: row => pct(row.early.buff.value[0]) },
+        { label: '隐身后段闪避率提升', value: row => pct(row.late.buff.value[0]) }
       ], buffSeries(buffMap, 60001101).map((row, idx) => ({ level: row.level, early: row, late: buffSeries(buffMap, 8001901)[idx] })), ACTIVE_NO_GROWTH_TEXT);
     case 17001:
       return table('主动技能成长表', [
@@ -450,7 +450,7 @@ function activeGrowthTable(weaponId, skillRows, buffMap, beskillMap, monsterMap)
         { label: '按敌方韧性降低韧性', value: row => signedPct(row.tenacity.buff.value.targetProps[0][1]) }
       ], buffSeries(buffMap, 4045001).map((row, idx) => ({ level: row.level, slow: row, tenacity: buffSeries(buffMap, 245000101)[idx] })), ACTIVE_NO_GROWTH_TEXT);
     case 21001:
-      return simpleBuffPairTable('主动技能成长表', buffSeries(buffMap, 279000101), '回魔属性提升', ACTIVE_NO_GROWTH_TEXT);
+      return simpleBuffPairTable('主动技能成长表', buffSeries(buffMap, 279000101), '回魔提升（占最大魔法比例）', ACTIVE_NO_GROWTH_TEXT);
     case 22001:
       return table('主动技能成长表', [
         { label: '轨迹单次伤害', value: row => formatDamage(Math.abs(row.track.buff.value[0][0]), Math.abs(row.track.buff.value[0][1])) },
@@ -474,7 +474,7 @@ function activeGrowthTable(weaponId, skillRows, buffMap, beskillMap, monsterMap)
     case 25001:
       return table('主动技能成长表', [
         { label: '减益免疫初始时长', value: row => secondsFromFrames(row.immune.buff.time) },
-        { label: '不同减益后保留剩余时长', value: row => pct(row.immune.buff.custom.useSubFrame.per, 4) },
+        { label: '每次扣除剩余时长比例', value: row => pct(row.immune.buff.custom.useSubFrame.per, 4) },
         { label: '回血属性提升', value: row => formatBuffPair(row.heal.buff.value) }
       ], buffSeries(buffMap, 41003001).map((row, idx) => ({ level: row.level, immune: row, heal: buffSeries(buffMap, 297000101)[idx] })), ACTIVE_NO_GROWTH_TEXT);
     case 26001:
@@ -591,8 +591,8 @@ function soulGrowthTable(groupId, soulRows, beskillMap, buffMap) {
     case 'invisible':
       return table('器魂被动成长表', [
         { label: '触发概率', value: row => pct(firstBe(row).rate) },
-        { label: '隐身前1.5秒闪避提升', value: row => pct(buffById(buffMap, buffById(buffMap, firstBe(row).attribute[0]).attachBuff[0]).value[0]) },
-        { label: '隐身后段闪避提升', value: row => pct(buffById(buffMap, buffById(buffMap, firstBe(row).attribute[0]).attachBuff[1]).value[0]) },
+        { label: '隐身前1.5秒闪避率提升', value: row => pct(buffById(buffMap, buffById(buffMap, firstBe(row).attribute[0]).attachBuff[0]).value[0]) },
+        { label: '隐身后段闪避率提升', value: row => pct(buffById(buffMap, buffById(buffMap, firstBe(row).attribute[0]).attachBuff[1]).value[0]) },
         { label: '触发机会恢复时间', value: row => chargeRecoveryText(firstBe(row)) }
       ], rows, '当前配置没有可展示的器魂被动成长项。');
     case 'shield':

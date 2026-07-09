@@ -22,6 +22,14 @@ export function PlayerTab({ source, detailSource }: { source: BeastPlayerAnalysi
   const [expandedUid, setExpandedUid] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
+  const canonicalCurrentNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const row of source.rows) {
+      map.set(row.uid, row.currentName);
+    }
+    return map;
+  }, [source.rows]);
+
   const championLineupMap = useMemo(() => {
     const map = new Map<string, string>();
     for (const row of detailSource.rows) {
@@ -72,7 +80,7 @@ export function PlayerTab({ source, detailSource }: { source: BeastPlayerAnalysi
       if (!existing) {
         playerMap.set(record.uid, {
           uid: record.uid,
-          currentName: record.currentName,
+          currentName: canonicalCurrentNameMap.get(record.uid) || record.currentName,
           winnerAliasList: normalizeAliasList(aliasMap.get(record.uid), record.winnerNameAtThatTime),
           championCount: 1,
           seasonWins: [{ season: record.season, sid: record.sid, winnerNameAtThatTime: record.winnerNameAtThatTime }],
@@ -83,7 +91,6 @@ export function PlayerTab({ source, detailSource }: { source: BeastPlayerAnalysi
         continue;
       }
 
-      existing.currentName = record.currentName;
       existing.championCount += 1;
       existing.seasonWins.push({ season: record.season, sid: record.sid, winnerNameAtThatTime: record.winnerNameAtThatTime });
       if (!existing.sidCoverage.includes(record.sid)) {
@@ -115,7 +122,7 @@ export function PlayerTab({ source, detailSource }: { source: BeastPlayerAnalysi
         winnerAliasList: normalizeAliasList(row.winnerAliasList),
         rank: index + 1,
       }));
-  }, [aliasMap, detailSource.rows, selectedSeason, selectedServer]);
+  }, [aliasMap, canonicalCurrentNameMap, detailSource.rows, selectedSeason, selectedServer]);
 
   const totalPages = Math.max(1, Math.ceil(rows.length / DETAIL_PAGE_SIZE));
   const safePage = Math.min(page, totalPages);

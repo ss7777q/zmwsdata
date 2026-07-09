@@ -801,6 +801,7 @@ function buildSkillCard(displaySkillId, slot, ctx) {
             totalPer: l.totalPer,
             metricTotalPer: l.totalPer,
             totalVal: l.totalVal,
+            growthBuffs: l.growthBuffs || [],
             releaseSeconds: rel.releaseSeconds,
             segCount: l.segments.reduce((a, s) => a + s.maxHit, 0),
           },

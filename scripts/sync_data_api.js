@@ -5,10 +5,14 @@ const vm = require('vm');
 
 const ROOT = path.resolve(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'dataApi');
+const RUNTIME_DIR = path.join(ROOT, 'data', 'runtime');
+const RUNTIME_MAIN_INDEX_PATH = path.join(RUNTIME_DIR, 'main-index.js');
+const RUNTIME_MAIN_META_PATH = path.join(RUNTIME_DIR, 'main-index.meta.json');
 const CLIENT_URL = process.argv[2] || 'https://client-zmxyol.3304399.net/client/';
 const CONCURRENCY = 8;
 const ROGUE_ITEM_FILENAME_RE = /^rogueItem\./;
 const ROGUE_ITEM_OFFICIAL_DESCRIPTION_COLUMN_INDEX = 4;
+const RUNTIME_EMBEDDED_TABLES = ['breathing', 'breathingAcupoint'];
 
 async function fetchText(url) {
   const res = await fetch(url);
@@ -46,6 +50,11 @@ function pickDownloadEntries(jsList) {
   });
 }
 
+function resolveMainBundleEntry(settings) {
+  const mainVersion = settings && settings.bundleVers && settings.bundleVers.main;
+  return mainVersion ? `assets/main/index.${mainVersion}.js` : null;
+}
+
 function cleanDataDir() {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -79,6 +88,67 @@ function normalizeHeaders(headers, filename) {
   return normalized;
 }
 
+function extractBracketLiteral(text, startIndex, label) {
+  let depth = 0;
+  let quote = null;
+  let escaped = false;
+
+  for (let index = startIndex; index < text.length; index += 1) {
+    const ch = text[index];
+
+    if (quote) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === '\\') {
+        escaped = true;
+      } else if (ch === quote) {
+        quote = null;
+      }
+      continue;
+    }
+
+    if (ch === '"' || ch === "'") {
+      quote = ch;
+      continue;
+    }
+    if (ch === '[') depth += 1;
+    if (ch === ']') {
+      depth -= 1;
+      if (depth === 0) return text.slice(startIndex, index + 1);
+    }
+  }
+
+  throw new Error(`${label} 数组字面量未闭合`);
+}
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function extractRuntimeEmbeddedTable(runtimeCode, tableName) {
+  const moduleRe = new RegExp(`(?:^|[,{])\\s*${escapeRegExp(tableName)}\\s*:\\s*\\[function\\s*\\([^)]*\\)\\s*\\{`, 'g');
+  const moduleMatch = moduleRe.exec(runtimeCode);
+  if (!moduleMatch) {
+    throw new Error(`运行时主程序未找到内嵌表模块: ${tableName}`);
+  }
+
+  const moduleStart = moduleMatch.index;
+  const varRe = /\bvar\s+([A-Za-z_$][\w$]*)\s*=\s*\[/g;
+  varRe.lastIndex = moduleStart;
+  const varMatch = varRe.exec(runtimeCode);
+  if (!varMatch) {
+    throw new Error(`运行时内嵌表 ${tableName} 未找到数组变量`);
+  }
+
+  const arrayStart = varRe.lastIndex - 1;
+  const literal = extractBracketLiteral(runtimeCode, arrayStart, `runtime.${tableName}`);
+  const matrix = vm.runInNewContext(literal, Object.create(null), { timeout: 5000, filename: `runtime.${tableName}.js` });
+  if (!Array.isArray(matrix) || !Array.isArray(matrix[0])) {
+    throw new Error(`运行时内嵌表 ${tableName} 不是表头数组格式`);
+  }
+  return matrix;
+}
+
 function tableToObjects(table, filename) {
   const headers = normalizeHeaders(table[0], filename);
   const rows = table.slice(1);
@@ -102,6 +172,40 @@ async function runPool(items, worker, concurrency) {
     }
   });
   await Promise.all(workers);
+}
+
+async function syncRuntimeEmbeddedTables(settingsUrl, settings) {
+  const mainBundleEntry = resolveMainBundleEntry(settings);
+  if (!mainBundleEntry) {
+    console.warn('未在 settings.bundleVers 中找到 main bundle 版本，跳过运行时内嵌表同步');
+    return;
+  }
+
+  const mainBundleUrl = resolveUrl(settingsUrl, `../${mainBundleEntry}`);
+  let runtimeCode;
+  try {
+    runtimeCode = await fetchText(mainBundleUrl);
+  } catch (error) {
+    console.warn(`无法下载运行时主程序，跳过内嵌表同步: ${error.message}`);
+    return;
+  }
+
+  fs.mkdirSync(RUNTIME_DIR, { recursive: true });
+  fs.writeFileSync(RUNTIME_MAIN_INDEX_PATH, runtimeCode, 'utf8');
+  fs.writeFileSync(RUNTIME_MAIN_META_PATH, `${JSON.stringify({
+    sourceUrl: mainBundleUrl,
+    bundleVersion: settings.bundleVers.main,
+    syncedAt: new Date().toISOString(),
+    embeddedTables: RUNTIME_EMBEDDED_TABLES,
+  }, null, 2)}\n`, 'utf8');
+
+  for (const tableName of RUNTIME_EMBEDDED_TABLES) {
+    const table = extractRuntimeEmbeddedTable(runtimeCode, tableName);
+    const json = tableToObjects(table, `${tableName}.runtime.js`);
+    const jsonPath = path.join(DATA_DIR, `${tableName}.runtime.json`);
+    fs.writeFileSync(jsonPath, `${JSON.stringify(json, null, 2)}\n`, 'utf8');
+    console.log(`已从运行时提取 ${tableName}: ${json.length} 行`);
+  }
 }
 
 async function main() {
@@ -144,6 +248,8 @@ async function main() {
       console.log(`已完成 ${downloaded}/${downloads.length}`);
     }
   }, CONCURRENCY);
+
+  await syncRuntimeEmbeddedTables(settingsUrl, settings);
 
   console.log(`同步完成: ${DATA_DIR}`);
 }

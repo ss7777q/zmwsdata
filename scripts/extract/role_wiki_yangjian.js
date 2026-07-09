@@ -489,6 +489,7 @@ function buildSkillCard(spec, ctx) {
         consumeMp: l.consumeMp,
         totalPer: l.totalPer,
         totalVal: l.totalVal,
+        growthBuffs: l.growthBuffs || [],
         releaseSeconds: rel.releaseSeconds,
         segCount: l.segments.reduce((a, s) => a + s.maxHit, 0),
       }, l.level === 1 ? warnings : []),

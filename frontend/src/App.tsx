@@ -1,11 +1,10 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import SideNav from './components/layout/SideNav';
 import TopBar from './components/layout/TopBar';
 import SearchResults from './components/ui/SearchResults';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import { useDataFiles } from './hooks/useGameData';
-import { useVisitorStats } from './hooks/useVisitorStats';
 import { searchDataSources } from './lib/search';
 import { apiUrl } from './lib/api';
 import {
@@ -20,6 +19,7 @@ import {
   OPS_SYSTEM,
   PLAYER_LOOKUP_SYSTEM,
   resolveSystemFromPath,
+  STAGE_REWARDS_SYSTEM,
   supportsGlobalSearch,
 } from './lib/appRoutes';
 
@@ -37,6 +37,7 @@ const RoleExtremeStats = lazy(() => import('./pages/RoleExtremeStats'));
 const BossStats = lazy(() => import('./pages/BossStats'));
 const CallGodStats = lazy(() => import('./pages/CallGodStats'));
 const RogueItems = lazy(() => import('./pages/RogueItems'));
+const StageRewards = lazy(() => import('./pages/StageRewards'));
 const ResistStats = lazy(() => import('./pages/ResistStats'));
 const PlayerLookup = lazy(() => import('./pages/PlayerLookup'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter'));
@@ -59,6 +60,7 @@ const SYSTEM_META: Record<string, { title: string; description: string }> = {
   ride: { title: '坐骑系统', description: '查看坐骑技能、装备与升星数据。' },
   call_god: { title: '神魔属性/神石获取', description: '查看神魔模板属性、倍率规则与最终属性预览。' },
   rogue_item: { title: '局内道具', description: '聚合局内道具阶段配置与已验证的人话机制说明。' },
+  stage_rewards: { title: '关卡奖励', description: '查看主线、罗汉堂和噩梦关卡的基础经验与灵魂。' },
   boss: { title: 'BOSS 属性', description: '按关卡 Type 分类展示各关卡 Boss 的属性数据。' },
   resist: { title: '抗值标准', description: '查看 exp.json 中的防御抗值和通用抗值标准值。' },
   player_lookup: { title: '玩家改名记录', description: '按 UID 查看历史名字记录。' },
@@ -79,7 +81,8 @@ function NoticeBanner() {
   );
 }
 
-const KNOWN_SYSTEMS = ['role_wiki', 'role_equip', 'role_spiritual', 'role_starstone', 'role_wing', 'role_cultivate', 'pet', 'beast_stats', 'ride', 'role_fashion', 'role_honor', 'role_extreme_stats', 'call_god', 'rogue_item', 'boss', 'resist', 'player_lookup', 'cold_knowledge', 'help', 'ops'] as const;
+const KNOWN_SYSTEMS = ['role_wiki', 'role_equip', 'role_spiritual', 'role_starstone', 'role_wing', 'role_cultivate', 'pet', 'beast_stats', 'ride', 'role_fashion', 'role_honor', 'role_extreme_stats', 'call_god', 'rogue_item', 'stage_rewards', 'boss', 'resist', 'player_lookup', 'cold_knowledge', 'help', 'ops'] as const;
+const COPY_POLLUTION_TEXT = 'data.zmwsrank.top';
 
 function PageFallback() {
   return <LoadingSpinner message="正在载入系统视图..." />;
@@ -102,10 +105,37 @@ function DataErrorPanel({ errors }: { errors: Record<string, string> }) {
 
 const WATERMARK_SVG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' opacity='0.1' viewBox='0 0 400 300'%3E%3Ctext x='50%25' y='50%25' transform='rotate(-30 200 150)' font-family='system-ui, sans-serif' font-size='24' font-weight='bold' fill='%23888888' text-anchor='middle' dominant-baseline='middle'%3Edata.zmwsrank.top%3C/text%3E%3C/svg%3E`;
 
+function isEditableCopyTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false;
+  return Boolean(target.closest('input, textarea, select, [contenteditable="true"], [data-copy-clean="true"]'));
+}
+
+function pickCopyPollutionIndex(text: string) {
+  const candidates: number[] = [];
+  const boundaryPattern = /[。！？；;,.，、\n]/g;
+  let match: RegExpExecArray | null;
+  while ((match = boundaryPattern.exec(text)) !== null) {
+    const index = match.index + match[0].length;
+    if (index > 0 && index < text.length) candidates.push(index);
+  }
+
+  if (candidates.length > 0) {
+    return candidates[Math.floor(Math.random() * candidates.length)];
+  }
+  if (text.length <= 2) return text.length;
+  return 1 + Math.floor(Math.random() * (text.length - 1));
+}
+
+function polluteCopyText(text: string) {
+  if (!text.trim() || text.includes(COPY_POLLUTION_TEXT)) return text;
+  const index = pickCopyPollutionIndex(text);
+  const marker = text.includes('\n') ? `\n${COPY_POLLUTION_TEXT}\n` : ` ${COPY_POLLUTION_TEXT} `;
+  return `${text.slice(0, index)}${marker}${text.slice(index)}`;
+}
+
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
-  const visitorStats = useVisitorStats();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [showOps, setShowOps] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -129,6 +159,27 @@ function App() {
     return 256;
   });
   const [isDragging, setIsDragging] = useState(false);
+  const mainScrollRef = useRef<HTMLElement | null>(null);
+  const moduleViewContentRef = useRef<HTMLDivElement | null>(null);
+  const [moduleViewMinHeight, setModuleViewMinHeight] = useState(0);
+  const moduleViewMinHeightRef = useRef(0);
+
+  useEffect(() => {
+    moduleViewMinHeightRef.current = moduleViewMinHeight;
+  }, [moduleViewMinHeight]);
+
+  const preserveModuleViewHeightBeforeSelection = (event: React.PointerEvent<HTMLElement>) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    if (!target.closest('.mobile-scroll-item-xl, .mobile-scroll-item-lg, [data-preserve-scroll-on-select="true"]')) return;
+
+    const content = moduleViewContentRef.current;
+    if (!content) return;
+    const height = Math.ceil(content.getBoundingClientRect().height);
+    if (height > 0) {
+      setModuleViewMinHeight((current) => Math.max(current, height));
+    }
+  };
 
   const handleToggleSidebar = () => {
     setIsSidebarCollapsed((prev) => {
@@ -180,6 +231,50 @@ function App() {
   const isSearching = shouldLoadGameData && searchQuery.trim().length > 0 && !isBossSystem;
 
   useEffect(() => {
+    setModuleViewMinHeight(0);
+  }, [activeSystem, isSearching, location.pathname]);
+
+  useLayoutEffect(() => {
+    if (!moduleViewMinHeight) return;
+    const main = mainScrollRef.current;
+    const content = moduleViewContentRef.current;
+    if (!main || !content) return;
+
+    let frame = 0;
+    const releaseIfSafe = () => {
+      const minHeight = moduleViewMinHeightRef.current;
+      if (!minHeight) return;
+
+      const naturalHeight = Math.ceil(content.getBoundingClientRect().height);
+      if (naturalHeight >= minHeight - 1) {
+        setModuleViewMinHeight(0);
+        return;
+      }
+
+      const reservedHeight = minHeight - naturalHeight;
+      const naturalScrollHeight = Math.max(main.clientHeight, main.scrollHeight - reservedHeight);
+      const naturalMaxScrollTop = Math.max(0, naturalScrollHeight - main.clientHeight);
+      if (main.scrollTop <= naturalMaxScrollTop + 1) {
+        setModuleViewMinHeight(0);
+      }
+    };
+    const scheduleReleaseCheck = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(releaseIfSafe);
+    };
+
+    frame = requestAnimationFrame(releaseIfSafe);
+    main.addEventListener('scroll', scheduleReleaseCheck, { passive: true });
+    window.addEventListener('resize', scheduleReleaseCheck);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      main.removeEventListener('scroll', scheduleReleaseCheck);
+      window.removeEventListener('resize', scheduleReleaseCheck);
+    };
+  }, [moduleViewMinHeight, activeSystem, isSearching]);
+
+  useEffect(() => {
     const normalized = normalizeRoutePath(location.pathname, showOps);
     if (normalized !== location.pathname) {
       navigate(normalized, { replace: true });
@@ -223,6 +318,22 @@ function App() {
   const searchResults = useMemo(() => searchDataSources(dataSources, searchQuery), [dataSources, searchQuery]);
 
   const knownSystems: string[] = showOps ? [...KNOWN_SYSTEMS] : KNOWN_SYSTEMS.filter((item) => item !== OPS_SYSTEM);
+
+  useEffect(() => {
+    const handleCopy = (event: ClipboardEvent) => {
+      if (isEditableCopyTarget(event.target)) return;
+      const selectedText = window.getSelection()?.toString() ?? '';
+      if (selectedText.trim().length < 8) return;
+      const clipboardData = event.clipboardData;
+      if (!clipboardData) return;
+
+      clipboardData.setData('text/plain', polluteCopyText(selectedText));
+      event.preventDefault();
+    };
+
+    document.addEventListener('copy', handleCopy);
+    return () => document.removeEventListener('copy', handleCopy);
+  }, []);
 
   return (
     <div className={`min-h-screen bg-background flex ${isDragging ? 'no-transition' : ''}`}>
@@ -281,14 +392,17 @@ function App() {
           searchValue={searchQuery}
           searchDisabled={!hasGlobalSearch}
           onSearchChange={setSearchQuery}
-          visitorStats={visitorStats}
         />
 
         <div className="hidden lg:block">
           <NoticeBanner />
         </div>
 
-        <main className="flex-1 overflow-x-hidden p-4 lg:p-8 relative scroll-smooth min-h-0">
+        <main
+          ref={mainScrollRef}
+          onPointerDownCapture={preserveModuleViewHeightBeforeSelection}
+          className="app-main-scroll flex-1 overflow-x-hidden overflow-y-auto p-4 lg:p-8 relative scroll-smooth min-h-0"
+        >
           <div className="block lg:hidden mb-4 -mx-4 -mt-4">
             <NoticeBanner />
           </div>
@@ -302,50 +416,57 @@ function App() {
               </div>
             ) : null}
 
-            <section key={`${activeSystem}-${isSearching ? 'search' : 'view'}`} className="module-view">
-              {loading && requiredDataFiles.length > 0 && activeSystem !== 'call_god' && activeSystem !== 'role_wiki' && activeSystem !== 'ride' ? (
-                <LoadingSpinner message="正在载入游戏配置文件..." />
-              ) : Object.keys(dataErrors).length > 0 ? (
-                <DataErrorPanel errors={dataErrors} />
-              ) : isSearching ? (
-                <SearchResults
-                  currentLabel={currentMeta.title}
-                  query={searchQuery.trim()}
-                  results={searchResults}
-                />
-              ) : (
-                <>
-                  <Suspense fallback={<PageFallback />}>
-                    {activeSystem === 'role_wiki' && <RoleWiki dataSources={dataSources} />}
-                    {activeSystem === 'role_equip' && <RoleEquip dataSources={dataSources} />}
-                    {activeSystem === 'role_spiritual' && <RoleSpiritual dataSources={dataSources} />}
-                    {activeSystem === 'role_starstone' && <RoleStarStone dataSources={dataSources} />}
-                    {activeSystem === 'role_wing' && <RoleWing dataSources={dataSources} />}
-                    {activeSystem === 'role_cultivate' && <RoleCultivate dataSources={dataSources} loading={loading} />}
-                    {activeSystem === 'pet' && <RolePet dataSources={dataSources} />}
-                    {activeSystem === 'beast_stats' && <BeastStats detailSource={dataSources.beast_detail?.data as any} lineupSource={dataSources.beast_lineup_analysis?.data as any} playerSource={dataSources.beast_player_analysis?.data as any} loading={loading} />}
-                    {activeSystem === 'ride' && <RoleRide dataSources={dataSources} />}
-                    {activeSystem === 'role_fashion' && <RoleFashion dataSources={dataSources} />}
-                    {activeSystem === 'role_honor' && <RoleHonor dataSources={dataSources} />}
-                    {activeSystem === EXTREME_STATS_SYSTEM && <RoleExtremeStats dataSources={dataSources} />}
-                    {activeSystem === 'call_god' && <CallGodStats dataSources={dataSources} />}
-                    {activeSystem === 'rogue_item' && <RogueItems dataSources={dataSources} />}
-                    {activeSystem === 'boss' && <BossStats dataSources={dataSources} searchQuery={searchQuery} />}
-                    {activeSystem === 'resist' && <ResistStats dataSources={dataSources} />}
-                    {activeSystem === PLAYER_LOOKUP_SYSTEM && <PlayerLookup />}
-                    {activeSystem === COLD_KNOWLEDGE_SYSTEM && <ColdKnowledge dataSources={dataSources} />}
-                    {activeSystem === HELP_SYSTEM && <HelpCenter />}
-                    {activeSystem === OPS_SYSTEM && <OpsDashboard />}
-                  </Suspense>
+            <section
+              key={`${activeSystem}-${isSearching ? 'search' : 'view'}`}
+              className="module-view"
+              style={moduleViewMinHeight ? { minHeight: moduleViewMinHeight } : undefined}
+            >
+              <div ref={moduleViewContentRef}>
+                {loading && requiredDataFiles.length > 0 && activeSystem !== 'call_god' && activeSystem !== 'role_wiki' && activeSystem !== 'ride' ? (
+                  <LoadingSpinner message="正在载入游戏配置文件..." />
+                ) : Object.keys(dataErrors).length > 0 ? (
+                  <DataErrorPanel errors={dataErrors} />
+                ) : isSearching ? (
+                  <SearchResults
+                    currentLabel={currentMeta.title}
+                    query={searchQuery.trim()}
+                    results={searchResults}
+                  />
+                ) : (
+                  <>
+                    <Suspense fallback={<PageFallback />}>
+                      {activeSystem === 'role_wiki' && <RoleWiki dataSources={dataSources} />}
+                      {activeSystem === 'role_equip' && <RoleEquip dataSources={dataSources} />}
+                      {activeSystem === 'role_spiritual' && <RoleSpiritual dataSources={dataSources} />}
+                      {activeSystem === 'role_starstone' && <RoleStarStone dataSources={dataSources} />}
+                      {activeSystem === 'role_wing' && <RoleWing dataSources={dataSources} />}
+                      {activeSystem === 'role_cultivate' && <RoleCultivate dataSources={dataSources} loading={loading} />}
+                      {activeSystem === 'pet' && <RolePet dataSources={dataSources} />}
+                      {activeSystem === 'beast_stats' && <BeastStats detailSource={dataSources.beast_detail?.data as any} lineupSource={dataSources.beast_lineup_analysis?.data as any} playerSource={dataSources.beast_player_analysis?.data as any} loading={loading} />}
+                      {activeSystem === 'ride' && <RoleRide dataSources={dataSources} />}
+                      {activeSystem === 'role_fashion' && <RoleFashion dataSources={dataSources} />}
+                      {activeSystem === 'role_honor' && <RoleHonor dataSources={dataSources} />}
+                      {activeSystem === EXTREME_STATS_SYSTEM && <RoleExtremeStats dataSources={dataSources} />}
+                      {activeSystem === 'call_god' && <CallGodStats dataSources={dataSources} />}
+                      {activeSystem === 'rogue_item' && <RogueItems dataSources={dataSources} />}
+                      {activeSystem === STAGE_REWARDS_SYSTEM && <StageRewards dataSources={dataSources} />}
+                      {activeSystem === 'boss' && <BossStats dataSources={dataSources} searchQuery={searchQuery} />}
+                      {activeSystem === 'resist' && <ResistStats dataSources={dataSources} />}
+                      {activeSystem === PLAYER_LOOKUP_SYSTEM && <PlayerLookup />}
+                      {activeSystem === COLD_KNOWLEDGE_SYSTEM && <ColdKnowledge dataSources={dataSources} />}
+                      {activeSystem === HELP_SYSTEM && <HelpCenter />}
+                      {activeSystem === OPS_SYSTEM && <OpsDashboard />}
+                    </Suspense>
 
-                  {!knownSystems.includes(activeSystem) && (
-                    <div className="card text-center py-20 border border-dashed border-border bg-transparent">
-                      <h3 className="text-xl text-textSub font-medium">该模块前端视图组件研发中...</h3>
-                      <p className="text-textSub mt-2">可在左侧切回已完成模块查看实际效果。</p>
-                    </div>
-                  )}
-                </>
-              )}
+                    {!knownSystems.includes(activeSystem) && (
+                      <div className="card text-center py-20 border border-dashed border-border bg-transparent">
+                        <h3 className="text-xl text-textSub font-medium">该模块前端视图组件研发中...</h3>
+                        <p className="text-textSub mt-2">可在左侧切回已完成模块查看实际效果。</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </section>
           </div>
         </main>

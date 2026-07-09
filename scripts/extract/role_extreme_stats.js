@@ -12,7 +12,11 @@ const u = require('../lib/utils');
 const { CONFIG_PATH, loadAppSettings } = require('../../server/app-config');
 
 const RUNTIME_CONFIRMED_POWER_ATTRIBUTE_ID = 1;
-const GAME_RUNTIME_INDEX = process.env.GAME_ANALYSIS_INDEX || 'D:\\zmws\\GameAnalysis\\data\\index.js';
+const PROJECT_RUNTIME_INDEX = path.join(u.ROOT, 'data', 'runtime', 'main-index.js');
+const LEGACY_GAME_RUNTIME_INDEX = 'D:\\zmws\\GameAnalysis\\data\\index.js';
+const GAME_RUNTIME_INDEX = process.env.GAME_ANALYSIS_INDEX || (
+  fs.existsSync(PROJECT_RUNTIME_INDEX) ? PROJECT_RUNTIME_INDEX : LEGACY_GAME_RUNTIME_INDEX
+);
 const RUNTIME_EMBEDDED_TABLES = new Set(['breathing', 'breathingAcupoint']);
 const SYS_BREATHING_ID = 65;
 const RESIST_FIELD_BY_ID = {
@@ -310,21 +314,24 @@ function extractBracketLiteral(text, startIndex, label) {
   throw new Error(`${label} 数组字面量未闭合。`);
 }
 
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function loadRuntimeEmbeddedTable(tableName) {
   const text = loadRuntimeIndexText();
-  const moduleMarker = `${tableName}: [function(e, t)`;
-  const moduleStart = text.indexOf(moduleMarker);
-  if (moduleStart < 0) {
+  const moduleRe = new RegExp(`(?:^|[,{])\\s*${escapeRegExp(tableName)}\\s*:\\s*\\[function\\s*\\([^)]*\\)\\s*\\{`, 'g');
+  const moduleMatch = moduleRe.exec(text);
+  if (!moduleMatch) {
     throw new Error(`运行时 index.js 未找到内嵌表模块: ${tableName}`);
   }
-  const varStart = text.indexOf('var i = ', moduleStart);
-  if (varStart < 0) {
-    throw new Error(`运行时内嵌表 ${tableName} 未找到 var i = 表数据。`);
+  const varRe = /\bvar\s+([A-Za-z_$][\w$]*)\s*=\s*\[/g;
+  varRe.lastIndex = moduleMatch.index;
+  const varMatch = varRe.exec(text);
+  if (!varMatch) {
+    throw new Error(`运行时内嵌表 ${tableName} 未找到表数据数组变量。`);
   }
-  const arrayStart = text.indexOf('[', varStart);
-  if (arrayStart < 0) {
-    throw new Error(`运行时内嵌表 ${tableName} 未找到数组起点。`);
-  }
+  const arrayStart = varRe.lastIndex - 1;
   const literal = extractBracketLiteral(text, arrayStart, `runtime.${tableName}`);
   const matrix = vm.runInNewContext(literal, Object.create(null), { timeout: 5000 });
   if (!Array.isArray(matrix) || !Array.isArray(matrix[0])) {

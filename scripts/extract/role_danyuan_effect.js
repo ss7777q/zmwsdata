@@ -44,8 +44,9 @@ function createDanyuanEffectContext() {
   const monsterById = new Map(u.loadTable('monster').map((row) => [row.id, row]));
   const skillById = new Map(u.loadTable('skill').map((row) => [row.id, row]));
   const skillLevelById = new Map(u.loadTable('skillLevel').map((row) => [row.id, row]));
+  const valueFlagById = new Map(u.loadTable('valueFlag').map((row) => [row.id, row]));
   const bulletById = loadBulletById();
-  return { beskillById, buffById, buffSequenceById, monsterById, skillById, skillLevelById, bulletById };
+  return { beskillById, buffById, buffSequenceById, monsterById, skillById, skillLevelById, valueFlagById, bulletById };
 }
 
 function extractDanyuanEffect(raw) {

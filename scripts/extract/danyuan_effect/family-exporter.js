@@ -10,6 +10,36 @@ const {
   summarizeBeskill
 } = require('./mechanics');
 
+const DANYUAN_SKILL_COLOR_QUALITY = {
+  '蓝': 3,
+  '紫': 4,
+  '橙': 5,
+  '红': 6
+};
+
+function parseDanyuanSkillColor(row, ctx) {
+  const skillIds = Array.isArray(row.skillId) ? row.skillId : [];
+  for (const id of skillIds) {
+    const be = ctx.beskillById.get(id);
+    const match = String(be?.name || '').match(/[\-（(](绿|蓝|紫|橙|红)[）)]?$/);
+    if (match) return match[1];
+  }
+  return null;
+}
+
+function shouldSkipUnsupportedDanyuanQuality(row, quality, ctx, warnings) {
+  const color = parseDanyuanSkillColor(row, ctx);
+  if (!color) return false;
+  const expectedQuality = DANYUAN_SKILL_COLOR_QUALITY[color];
+  if (expectedQuality === quality) return false;
+
+  warnings.push({
+    code: 'DANYUAN_SKILL_COLOR_QUALITY_SKIPPED',
+    detail: `${normalizeDanyuanName(row.name)} Lv.${row.level} id=${row.id} 使用技能颜色${color}，当前丹元效果页只导出蓝/紫/橙/红四档，已跳过该行`
+  });
+  return true;
+}
+
 function ensureDanyuanFamily(families, row) {
   const familyId = Math.floor(row.displayType / 10);
   if (!familyId) {
@@ -99,6 +129,10 @@ function buildRawDanyuanFamilies(raw, ctx, warnings) {
       throw new Error(`未知丹元品质: id=${row.id}, type=${row.type}`);
     }
 
+    if (shouldSkipUnsupportedDanyuanQuality(row, quality, ctx, warnings)) {
+      continue;
+    }
+
     if (isDanyuanPlaceholderLevel(row)) {
       warnings.push({
         code: 'DANYUAN_PLACEHOLDER_LEVEL_SKIPPED',
@@ -133,6 +167,7 @@ function buildLevelValueColumns(levels) {
 }
 
 const REQUIRED_LEVEL_VALUE_COLUMNS_BY_FAMILY = {
+  26: ['韧性弱化 · 韧性下降', '闪避弱化 · 闪避下降'],
   31: ['狂暴 · 攻击提升', '防御降低 · 防御值']
 };
 

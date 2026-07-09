@@ -10,9 +10,10 @@ const HTTP_NOT_FOUND = 404;
 const EXPECTED_SUCCESS_STATUS = 0;
 
 const fixtureHtml = '<!doctype html><script src="src/settings.test.js"></script>';
-const settingsCode = 'window._CCSettings = { jsList: ["assets/script/config/newTable.123.js", "assets/script/lib/zlib.min.abc.js"] };';
+const settingsCode = 'window._CCSettings = { bundleVers: { main: "testmain" }, jsList: ["assets/script/config/newTable.123.js", "assets/script/lib/zlib.min.abc.js"] };';
 const tableCode = 'module.exports = [["id","name"],[1,"新版"]];';
 const libCode = 'window.zlibLoaded = true;';
+const runtimeMainCode = 'window.__require={breathingAcupoint:[function(e,t){"use strict";var i=[["id","breathingId","type","level","attribute","attributeValue"],[10101000,1,1,0,"hitVal",0],[10101001,1,1,1,"hitVal",6]];t.exports=i},{}],breathing:[function(e,t){"use strict";var i=[["id","name","breathingAcupointType","impacCuriosity","curiosityQuality","breakItemQuality","breakItem","unlock","bigPicture","picture","close"],[1,"抱守归一",[1],[],[],[[1,2],[0,0],[0,.2]],[],[],"bre_big_1","bre_1",0]];t.exports=i},{}]};';
 const staleTableCode = 'module.exports = [["id"],[999]];';
 const staleJsonCode = '[{"id":999}]\n';
 const staleNestedJsonCode = '[{"id":888}]\n';
@@ -28,11 +29,13 @@ function createClientFixture(clientRoot) {
   fs.mkdirSync(path.join(clientRoot, 'src'), { recursive: true });
   fs.mkdirSync(path.join(clientRoot, 'src', 'assets', 'script', 'config'), { recursive: true });
   fs.mkdirSync(path.join(clientRoot, 'src', 'assets', 'script', 'lib'), { recursive: true });
+  fs.mkdirSync(path.join(clientRoot, 'assets', 'main'), { recursive: true });
 
   fs.writeFileSync(path.join(clientRoot, 'index.html'), fixtureHtml, 'utf8');
   fs.writeFileSync(path.join(clientRoot, 'src', 'settings.test.js'), settingsCode, 'utf8');
   fs.writeFileSync(path.join(clientRoot, 'src', 'assets', 'script', 'config', 'newTable.123.js'), tableCode, 'utf8');
   fs.writeFileSync(path.join(clientRoot, 'src', 'assets', 'script', 'lib', 'zlib.min.abc.js'), libCode, 'utf8');
+  fs.writeFileSync(path.join(clientRoot, 'assets', 'main', 'index.testmain.js'), runtimeMainCode, 'utf8');
 }
 
 function createStaleDataApi(dataApiRoot) {
@@ -130,10 +133,33 @@ async function main() {
     assert.strictEqual(result.status, EXPECTED_SUCCESS_STATUS, `${result.stdout}\n${result.stderr}`);
 
     const dataApiEntries = fs.readdirSync(path.join(appRoot, 'dataApi')).sort();
-    assert.deepStrictEqual(dataApiEntries, ['newTable.123.js', 'newTable.123.json', 'zlib.min.abc.js']);
+    assert.deepStrictEqual(dataApiEntries, [
+      'breathing.runtime.json',
+      'breathingAcupoint.runtime.json',
+      'newTable.123.js',
+      'newTable.123.json',
+      'zlib.min.abc.js',
+    ]);
 
     const newJson = JSON.parse(fs.readFileSync(path.join(appRoot, 'dataApi', 'newTable.123.json'), 'utf8'));
     assert.deepStrictEqual(newJson, [{ id: 1, name: '新版' }]);
+
+    const breathingJson = JSON.parse(fs.readFileSync(path.join(appRoot, 'dataApi', 'breathing.runtime.json'), 'utf8'));
+    assert.deepStrictEqual(breathingJson, [{
+      id: 1,
+      name: '抱守归一',
+      breathingAcupointType: [1],
+      impacCuriosity: [],
+      curiosityQuality: [],
+      breakItemQuality: [[1, 2], [0, 0], [0, 0.2]],
+      breakItem: [],
+      unlock: [],
+      bigPicture: 'bre_big_1',
+      picture: 'bre_1',
+      close: 0,
+    }]);
+
+    assert.ok(fs.existsSync(path.join(appRoot, 'data', 'runtime', 'main-index.js')));
   } finally {
     if (serverProcess) serverProcess.kill();
     fs.rmSync(tempRoot, { recursive: true, force: true });

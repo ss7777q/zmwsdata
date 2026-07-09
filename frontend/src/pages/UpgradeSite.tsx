@@ -74,7 +74,7 @@ function UpgradeLayout({ children }: { children: React.ReactNode }) {
       </header>
 
       <div className="mx-auto grid max-w-[1600px] gap-8 px-6 py-8 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+        <aside className="min-w-0 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-5">
             <div className="text-xs font-bold uppercase tracking-[0.22em] text-sky-600">Upgrade Data</div>
             <h2 className="mt-2 text-2xl font-black">升级数据</h2>
@@ -86,30 +86,33 @@ function UpgradeLayout({ children }: { children: React.ReactNode }) {
           ) : error ? (
             <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-6 text-sm text-red-700">{error}</div>
           ) : (
-            <div className="space-y-2">
-              {categories.map((category) => {
-                const meta = CATEGORY_META[category.id as CategoryId];
-                const active = location.pathname.startsWith(`/upgrade/category/${category.id}`);
-                return (
-                  <Link
-                    key={category.id}
-                    to={`/upgrade/category/${category.id}`}
-                    className={`flex items-start gap-3 rounded-2xl border px-4 py-4 transition-all ${
-                      active
-                        ? 'border-sky-200 bg-sky-50 text-sky-900'
-                        : 'border-transparent bg-slate-50 text-slate-700 hover:border-slate-200 hover:bg-white'
-                    }`}
-                  >
-                    <div className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-bold text-sm ${active ? 'bg-sky-600 text-white shadow-sm shadow-sky-500/20' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
-                      {meta.label[0]}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="font-bold">{meta.label}</div>
-                      <div className="mt-1 text-xs leading-5 text-slate-500">{meta.description}</div>
-                    </div>
-                  </Link>
-                );
-              })}
+            <div className="mobile-scroll-container">
+              <div className="mobile-scroll-list-lg">
+                {categories.map((category) => {
+                  const meta = CATEGORY_META[category.id as CategoryId];
+                  const active = location.pathname.startsWith(`/upgrade/category/${category.id}`);
+                  return (
+                    <Link
+                      key={category.id}
+                      to={`/upgrade/category/${category.id}`}
+                      className={`mobile-scroll-item-lg flex items-start gap-3 rounded-2xl border px-4 py-4 transition-all ${
+                        active
+                          ? 'border-sky-200 bg-sky-50 text-sky-900'
+                          : 'border-transparent bg-slate-50 text-slate-700 hover:border-slate-200 hover:bg-white'
+                      }`}
+                    >
+                      <div className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-bold text-sm ${active ? 'bg-sky-600 text-white shadow-sm shadow-sky-500/20' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
+                        {meta.label[0]}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-bold">{meta.label}</div>
+                        <div className="mt-1 text-xs leading-5 text-slate-500">{meta.description}</div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+              <div className="mobile-scroll-mask-lg" />
             </div>
           )}
         </aside>

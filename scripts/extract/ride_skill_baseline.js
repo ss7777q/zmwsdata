@@ -13,7 +13,7 @@ const path = require("path");
 const u = require("../lib/utils");
 
 const OUTPUT_DIR = u.OUTPUT_DIR;
-const RIDE_WIKI_FILE_RE = /^ride_wiki_.*\.json$/;
+const RIDE_WIKI_FILE_RE = /^ride_wiki_(?!index\.json$).*\.json$/;
 const OUTPUT_NAME = "ride_skill_baseline";
 const RIDE_WIKI_INDEX_OUTPUT_NAME = "ride_wiki_index";
 

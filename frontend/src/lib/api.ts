@@ -132,21 +132,17 @@ export interface VisitorHistoryResponse {
   updatedAt: string;
 }
 
-export type ColdKnowledgeDifficulty = '入门' | '进阶';
-
 export interface ColdKnowledgeArticle {
   id: string;
   title: string;
   category: string;
-  difficulty: ColdKnowledgeDifficulty;
   readingMinutes: number;
   sourceFile?: string;
   summary: string;
   playerQuestion: string;
-  quickAnswer: string[];
-  misconceptions: string[];
+  playerQuestionMarkdown?: string;
   mechanism: string[];
-  playerTip: string;
+  mechanismMarkdown?: string;
   sourceExcerpt: string[];
 }
 

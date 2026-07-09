@@ -543,6 +543,7 @@ function buildSkillCard(displaySkillId, slot, ctx) {
           totalPer: l.totalPer,
           metricTotalPer: metricTotalPerFor(displaySkillId, l.segments, l.totalPer, l.level === 1 ? warnings : []),
           totalVal: l.totalVal,
+          growthBuffs: l.growthBuffs || [],
           releaseSeconds: rel.releaseSeconds,
           segCount: l.segments.reduce((a, s) => a + s.maxHit, 0),
         },

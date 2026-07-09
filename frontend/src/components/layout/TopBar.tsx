@@ -13,6 +13,29 @@ interface Props {
   visitorStats?: VisitorStatsResponse | null;
 }
 
+const THEME_STORAGE_KEY = 'theme';
+type ThemeMode = 'dark' | 'light';
+
+function readSavedTheme(): ThemeMode | null {
+  try {
+    const saved = window.localStorage.getItem(THEME_STORAGE_KEY);
+    return saved === 'dark' || saved === 'light' ? saved : null;
+  } catch {
+    return null;
+  }
+}
+
+function prefersDarkTheme() {
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+}
+
+function getInitialDarkMode() {
+  if (typeof window === 'undefined') return true;
+  const saved = readSavedTheme();
+  if (saved) return saved === 'dark';
+  return document.documentElement.classList.contains('dark') || prefersDarkTheme();
+}
+
 export default function TopBar({
   onMenuClick,
   currentLabel,
@@ -23,22 +46,13 @@ export default function TopBar({
   onSearchChange,
   visitorStats,
 }: Props) {
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return document.documentElement.classList.contains('dark') ||
-        (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    }
-    return true;
-  });
+  const [isDarkMode, setIsDarkMode] = useState(getInitialDarkMode);
 
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
+    document.documentElement.classList.toggle('dark', isDarkMode);
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, isDarkMode ? 'dark' : 'light');
+    } catch {}
   }, [isDarkMode]);
 
   const searchPlaceholder = useMemo(() => {

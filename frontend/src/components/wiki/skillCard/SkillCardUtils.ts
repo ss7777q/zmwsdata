@@ -54,14 +54,45 @@ export function inferGrowthBuffValueLabel(buff: BuffInfo) {
   if (/恢复.*生命|回血|回复.*生命/.test(text)) return /每秒/.test(text) ? '每秒回血' : '回血值';
   if (/减伤/.test(text)) return /降低|扣减/.test(text) ? '减伤降低' : '减伤值';
   if (/防御/.test(text)) return /降低|扣减/.test(text) ? '防御降低' : '防御值';
-  if (/守护/.test(text)) return /降低|扣减/.test(text) ? '守护降低' : '守护值';
-  if (/韧性/.test(text)) return /降低|扣减/.test(text) ? '韧性降低' : '韧性值';
-  if (/闪避/.test(text)) return /降低|下降|弱化/.test(text) ? '闪避降低' : '闪避值';
-  if (/命中/.test(text)) return /降低|下降|弱化/.test(text) ? '命中降低' : '命中值';
-  if (/暴击/.test(text)) return /降低|下降|弱化/.test(text) ? '暴击降低' : '暴击值';
+  if (/守护/.test(text)) return '守护值';
+  if (/韧性/.test(text)) return '韧性值';
+  if (/闪避/.test(text)) return '闪避值';
+  if (/命中/.test(text)) return '命中值';
+  if (/幸运/.test(text)) return '幸运值';
+  if (/暴击/.test(text)) return '暴击值';
   if (/攻击/.test(text)) return /降低|下降|弱化/.test(text) ? '攻击降低' : '攻击值';
   if (/伤害|灼烧|中毒|毒伤|真伤|固伤/.test(text)) return '伤害值';
   return cleanBuffName(buff.name);
+}
+
+function growthBuffStatText(group: Pick<GrowthBuffGroup, 'effectName' | 'valueLabel' | 'template' | 'sample'>) {
+  return [group.effectName, group.valueLabel, group.template, group.sample.displayText, group.sample.name]
+    .filter((part): part is string => Boolean(part))
+    .join(' ');
+}
+
+export function growthBuffMetricLabelCandidates(group: Pick<GrowthBuffGroup, 'effectName' | 'valueLabel' | 'template' | 'sample'>) {
+  const text = growthBuffStatText(group);
+  const baseName = group.effectName.replace(/(强化|弱化|等级\d+.*|状态)/g, '');
+  const candidates = [baseName + '率', group.valueLabel.replace(/值(?:\(.+\))?$/, '率'), group.effectName + '率'];
+  if (/闪避/.test(text)) candidates.push('闪避率');
+  if (/命中/.test(text)) candidates.push('命中率');
+  if (/幸运/.test(text)) candidates.push('幸运率', '暴击增伤率');
+  if (/守护/.test(text)) candidates.push('守护率', '暴击免伤率');
+  if (/暴击/.test(text)) candidates.push('暴击率');
+  if (/韧性/.test(text)) candidates.push('负暴击率');
+  return [...new Set(candidates.filter(Boolean))];
+}
+
+export function growthBuffMetricMeaningLabel(group: Pick<GrowthBuffGroup, 'effectName' | 'valueLabel' | 'template' | 'sample'>, metricLabel?: string | null) {
+  const text = growthBuffStatText(group);
+  if (/闪避/.test(text)) return '闪避率';
+  if (/命中/.test(text)) return '命中率';
+  if (/幸运/.test(text)) return '暴击增伤率';
+  if (/守护/.test(text)) return '暴击免伤率';
+  if (/暴击/.test(text)) return '暴击率';
+  if (/韧性/.test(text)) return '负暴击率';
+  return metricLabel || null;
 }
 
 export function fmtPercent(n: number | null | undefined) {
@@ -172,6 +203,7 @@ export interface GrowthBuffGroup {
 export interface GrowthBuffColumn {
   key: string;
   label: string;
+  metricLabel: string | null;
   subLabel: string | null;
   perLevel: Map<number, (string | React.ReactNode)[]>;
 }

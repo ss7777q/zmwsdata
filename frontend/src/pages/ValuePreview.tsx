@@ -264,31 +264,34 @@ export default function ValuePreview() {
         <PlaceholderPanel category={currentCategory} />
       ) : (
         <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
-          <aside className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+          <aside className="min-w-0 rounded-2xl border border-border bg-card p-4 shadow-sm">
             <div className="mb-3">
               <h2 className="text-lg font-semibold text-textMain">角色目录</h2>
               <p className="mt-1 text-sm text-textSub">选择角色后，右侧按参数驱动展示导出结构。</p>
             </div>
-            <div className="space-y-2">
-              {roleItems.map((item) => {
-                const active = item.roleKey === currentRoleKey;
-                return (
-                  <button
-                    key={item.roleKey}
-                    type="button"
-                    onClick={() => setActiveRoleKey(item.roleKey ?? null)}
-                    className={`w-full rounded-xl border px-4 py-3 text-left transition-all ${active
-                        ? 'border-primary bg-primary text-white shadow-md shadow-primary/15'
-                        : 'border-border bg-surface/60 text-textMain hover:border-primary/30 hover:bg-surface'
-                      }`}
-                  >
-                    <div className="font-semibold">{item.roleName || item.roleKey}</div>
-                    <div className={`mt-1 text-xs ${active ? 'text-white/80' : 'text-textSub'}`}>
-                      展示行 {String(item.excelDisplayRowsCount ?? 0)} | 未解决 {String(item.unresolvedCount ?? 0)}
-                    </div>
-                  </button>
-                );
-              })}
+            <div className="mobile-scroll-container">
+              <div className="mobile-scroll-list-xl">
+                {roleItems.map((item) => {
+                  const active = item.roleKey === currentRoleKey;
+                  return (
+                    <button
+                      key={item.roleKey}
+                      type="button"
+                      onClick={() => setActiveRoleKey(item.roleKey ?? null)}
+                      className={`mobile-scroll-item-xl rounded-xl border px-4 py-3 text-left transition-all ${active
+                          ? 'border-primary bg-primary text-white shadow-md shadow-primary/15'
+                          : 'border-border bg-surface/60 text-textMain hover:border-primary/30 hover:bg-surface'
+                        }`}
+                    >
+                      <div className="font-semibold">{item.roleName || item.roleKey}</div>
+                      <div className={`mt-1 text-xs ${active ? 'text-white/80' : 'text-textSub'}`}>
+                        展示行 {String(item.excelDisplayRowsCount ?? 0)} | 未解决 {String(item.unresolvedCount ?? 0)}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mobile-scroll-mask-xl" />
             </div>
           </aside>
 

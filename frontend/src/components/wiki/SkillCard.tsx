@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import type { SkillCardData, SkillLevel } from './skillCard/SkillCardTypes';
 import type { GrowthBuffColumn, GrowthBuffEffectInfo } from './skillCard/SkillCardUtils';
-import { buffDuration, buildGrowthBuffGroups, describeSegments, effectFormulaNote, fmt, fmtBuffVal, fmtPercent, fmtRatio, fmtX, growthBuffColumnLabel, growthBuffGroupKey, metricText } from './skillCard/SkillCardUtils';
+import { buffDuration, buildGrowthBuffGroups, describeSegments, effectFormulaNote, fmt, fmtBuffVal, fmtPercent, fmtRatio, fmtX, growthBuffColumnLabel, growthBuffGroupKey, growthBuffMetricLabelCandidates, growthBuffMetricMeaningLabel, metricText } from './skillCard/SkillCardUtils';
 import { BuffRow, ChainViz, PassiveLevelBlock, Stat, Td, Th } from './skillCard/SkillCardParts';
 export type { SkillBaselineData, SkillCardData } from './skillCard/SkillCardTypes';
 
@@ -53,11 +53,9 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
     const used = new Set<string>();
     const mapped = new Map<string, { key: string; label: string }>();
     for (const group of growthBuffGroups) {
-      const baseName = group.effectName.replace(/(强化|弱化|等级\d+.*|状态)/g, '');
-      const expectedLabel1 = baseName + '率';
-      const expectedLabel2 = group.valueLabel?.replace(/值$/, '率');
+      const labelCandidates = growthBuffMetricLabelCandidates(group);
       const associatedMetric = metricCols.find(
-        (m) => !used.has(m.key) && (m.label === expectedLabel1 || m.label === expectedLabel2 || m.label === group.effectName + '率')
+        (m) => !used.has(m.key) && labelCandidates.includes(m.label)
       );
       if (associatedMetric) {
         used.add(associatedMetric.key);
@@ -123,6 +121,7 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
 
       if (group.dynamicVal) {
         const label = growthBuffColumnLabel(group.effectName, group.valueLabel, card.name);
+        const metricLabel = associatedMetric ? growthBuffMetricMeaningLabel(group, associatedMetric.label) : null;
         const perLevel = new Map<number, (string | React.ReactNode)[]>();
         for (const lv of rows) {
           const texts = matchingBuffs(lv).map((buff) => fmtBuffVal(buff.value?.val, buff.displayText || group.sample.displayText));
@@ -136,6 +135,7 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
         cols.push({
           key: `${group.key}::val`,
           label,
+          metricLabel,
           subLabel: label === group.valueLabel ? null : group.valueLabel,
           perLevel,
         });
@@ -151,6 +151,7 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
         cols.push({
           key: `${group.key}::per`,
           label,
+          metricLabel: null,
           subLabel: label === '比例' ? null : '比例',
           perLevel,
         });
@@ -338,8 +339,16 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
                   {growthBuffCols.map((c) => (
                     <Th key={c.key}>
                       <div className="flex min-w-[7rem] flex-col items-center justify-center gap-0.5">
-                        <span>{c.label}</span>
-                        {c.subLabel && <span className="text-[10px] font-normal text-textSub/70">{c.subLabel}</span>}
+                        <span>
+                          {c.label}
+                          {!c.subLabel && c.metricLabel && <span className="text-emerald-500/90 dark:text-emerald-400/90">({c.metricLabel})</span>}
+                        </span>
+                        {c.subLabel && (
+                          <span className="text-[10px] font-normal text-textSub/70">
+                            {c.subLabel}
+                            {c.metricLabel && <span className="text-emerald-500/90 dark:text-emerald-400/90">({c.metricLabel})</span>}
+                          </span>
+                        )}
                       </div>
                     </Th>
                   ))}

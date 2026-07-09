@@ -89,6 +89,71 @@ function computeConversion(conv, bag, helpers, warnings, label) {
   return mid;
 }
 
+const AUTO_GROWTH_STAT_SPECS = [
+  { stat: "闪避", key: "dodgeRate", label: "闪避率", type: "dodge" },
+  { stat: "命中", key: "hitRate", label: "命中率", type: "hit" },
+  { stat: "幸运", key: "luckRate", label: "暴击增伤率", type: "resist" },
+  { stat: "守护", key: "guardianRate", label: "暴击免伤率", type: "resist" },
+  { stat: "暴击", key: "critRate", label: "暴击率", type: "resist" },
+  { stat: "韧性", key: "tenacityRate", label: "负暴击率", type: "resist" },
+];
+
+let cachedStandards = null;
+
+function standardValue(roleLevel, helpers) {
+  if (helpers?.standard) return helpers.standard(roleLevel);
+  if (roleLevel == null) return null;
+  if (!cachedStandards) cachedStandards = loadCommonStandards();
+  return cachedStandards.get(roleLevel) ?? null;
+}
+
+function statPattern(stat) {
+  return new RegExp(`${stat}(?:强化|弱化|降低|提升|增加|减少|值|率)|(?:降低|提升|增加|减少)[^，；。]*${stat}`);
+}
+
+function autoGrowthBuffStat(buff) {
+  const text = [buff?.name, buff?.displayText, buff?.bindLabel].filter(Boolean).join(" ");
+  return AUTO_GROWTH_STAT_SPECS.find((spec) => statPattern(spec.stat).test(text)) || null;
+}
+
+function growthBuffVal(buff) {
+  const value = buff?.value;
+  if (value && typeof value === "object" && typeof value.val === "number" && Number.isFinite(value.val) && value.val !== 0) return value.val;
+  return null;
+}
+
+function autoGrowthMetricValue(spec, rawValue, standard) {
+  const mid = rawValue / standard;
+  if ((spec.type === "dodge" || spec.type === "hit") && rawValue > 0) return mid / (1 + mid);
+  return mid;
+}
+
+function appendAutoGrowthBuffMetrics(out, bag, helpers) {
+  if (!Array.isArray(bag?.growthBuffs) || bag.growthBuffs.length === 0) return out;
+  const standard = standardValue(bag.roleLevel, helpers);
+  if (typeof standard !== "number" || standard <= 0) return out;
+
+  const existingKeys = new Set(out.map((metric) => metric.key));
+  const existingLabels = new Set(out.map((metric) => metric.label));
+  bag.growthBuffs.forEach((buff, index) => {
+    const spec = autoGrowthBuffStat(buff);
+    if (!spec) return;
+    if (existingKeys.has(spec.key) || existingLabels.has(spec.label)) return;
+    const rawValue = growthBuffVal(buff);
+    if (rawValue == null) return;
+    const value = autoGrowthMetricValue(spec, rawValue, standard);
+    out.push({
+      key: `${spec.key}_${index}`,
+      label: spec.label,
+      value,
+      display: formatMetric(value, { format: "pct", fixed: 1 }),
+    });
+    existingKeys.add(spec.key);
+    existingLabels.add(spec.label);
+  });
+  return out;
+}
+
 /**
  * 计算某 scope 下的全部指标。
  * @param defs    指标定义数组
@@ -130,7 +195,7 @@ function computeMetrics(defs, scope, bag, helpers, warnings) {
 
     out.push({ key: def.key, label: def.label || def.key, value, display: formatMetric(value, def) });
   }
-  return out;
+  return scope === "level" ? appendAutoGrowthBuffMetrics(out, bag, helpers) : out;
 }
 
 /**

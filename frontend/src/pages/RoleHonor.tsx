@@ -311,32 +311,38 @@ export default function RoleHonor({ dataSources }: Props) {
               />
             </label>
           </div>
-          <div className="max-h-[70vh] space-y-2 overflow-auto p-3 custom-scrollbar">
-            {filteredGroups.map((group) => {
-              const selected = activeGroup?.id === group.id;
-              return (
-                <button
-                  key={group.id}
-                  type="button"
-                  onClick={() => setSelectedId(group.id)}
-                  className={clsx('w-full rounded-lg border p-3 text-left transition-colors', selected ? 'border-primary/35 bg-primary/10' : 'border-transparent bg-slate-500/[0.025] hover:border-border hover:bg-slate-500/[0.05]')}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className={clsx('truncate text-sm font-bold', selected ? 'text-primary' : 'text-textMain')}>{group.name}</div>
-                      <div className="mt-1 truncate text-xs text-textSub">{group.showName || group.typeLabel || L.honor}</div>
+          <div className="mobile-scroll-container p-3 pt-0 xl:p-3">
+            <div className="mobile-scroll-list-xl max-h-[70vh]">
+              {filteredGroups.map((group) => {
+                const selected = activeGroup?.id === group.id;
+                return (
+                  <button
+                    key={group.id}
+                    type="button"
+                    onClick={() => setSelectedId(group.id)}
+                    className={clsx(
+                      'mobile-scroll-item-xl rounded-lg border p-3 text-left transition-colors',
+                      selected ? 'border-primary/35 bg-primary/10' : 'border-transparent bg-slate-500/[0.025] hover:border-border hover:bg-slate-500/[0.05]'
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className={clsx('truncate text-sm font-bold', selected ? 'text-primary' : 'text-textMain')}>{group.name}</div>
+                        <div className="mt-1 truncate text-xs text-textSub">{group.showName || group.typeLabel || L.honor}</div>
+                      </div>
+                      <Award className={clsx('mt-0.5 h-4 w-4 shrink-0', selected ? 'text-primary' : 'text-textSub/60')} />
                     </div>
-                    <Award className={clsx('mt-0.5 h-4 w-4 shrink-0', selected ? 'text-primary' : 'text-textSub/60')} />
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    <DetailBadge>{group.rankCount} {L.items}</DetailBadge>
-                    {group.levelLinked ? <DetailBadge>{L.byLevel}</DetailBadge> : null}
-                    {group.hasUpgradeCost ? <DetailBadge>{L.hasUpgrade}</DetailBadge> : null}
-                  </div>
-                </button>
-              );
-            })}
-            {filteredGroups.length === 0 ? <div className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-textSub">{L.noMatches}</div> : null}
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      <DetailBadge>{group.rankCount} {L.items}</DetailBadge>
+                      {group.levelLinked ? <DetailBadge>{L.byLevel}</DetailBadge> : null}
+                      {group.hasUpgradeCost ? <DetailBadge>{L.hasUpgrade}</DetailBadge> : null}
+                    </div>
+                  </button>
+                );
+              })}
+              {filteredGroups.length === 0 ? <div className="w-full rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-textSub">{L.noMatches}</div> : null}
+            </div>
+            <div className="mobile-scroll-mask-xl" />
           </div>
         </aside>
 

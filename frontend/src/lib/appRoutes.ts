@@ -4,6 +4,7 @@ export const EXTREME_STATS_SYSTEM = 'role_extreme_stats';
 export const PLAYER_LOOKUP_SYSTEM = 'player_lookup';
 export const HELP_SYSTEM = 'help';
 export const COLD_KNOWLEDGE_SYSTEM = 'cold_knowledge';
+export const STAGE_REWARDS_SYSTEM = 'stage_rewards';
 
 export const SYSTEM_PATHS: Record<string, string> = {
   role_wiki: '/role_wiki',
@@ -20,6 +21,7 @@ export const SYSTEM_PATHS: Record<string, string> = {
   ride: '/ride',
   call_god: '/call_god',
   rogue_item: '/rogue_item',
+  stage_rewards: '/stage_rewards',
   boss: '/boss',
   resist: '/resist',
   player_lookup: '/player_lookup',
@@ -43,6 +45,7 @@ export const DEFAULT_SYSTEM_PATHS: Record<string, string> = {
   ride: '/ride/star',
   call_god: '/call_god/stats',
   rogue_item: '/rogue_item/list',
+  stage_rewards: '/stage_rewards/list',
   boss: '/boss/mainline',
   resist: '/resist/standard',
   player_lookup: '/player_lookup/search',
@@ -93,6 +96,7 @@ const VALID_PATHS: Record<string, string[]> = {
   ride: ['/ride/star', '/ride/skill', '/ride/wiki', '/ride/make', '/ride/upgrade'],
   call_god: ['/call_god/stats', '/call_god/stones', '/call_god/boss', '/call_god/common_skills', '/call_god/talents'],
   rogue_item: ['/rogue_item/list'],
+  stage_rewards: ['/stage_rewards/list'],
   resist: ['/resist/standard'],
   player_lookup: ['/player_lookup/search'],
   cold_knowledge: ['/cold_knowledge/list'],
@@ -254,6 +258,7 @@ export function getRequiredDataFiles(system: string, pathname: string, rawSearch
     return [];
   }
   if (system === 'rogue_item') return ['rogue_item_analysis'];
+  if (system === STAGE_REWARDS_SYSTEM) return ['stage_reward_exp_soul'];
   if (system === 'boss') {
     if (normalized.endsWith('/all') || normalized.endsWith('/search')) return [BOSS_INDEX_FILE, ...ALL_BOSS_FILES];
     const routeKey = normalized.slice('/boss/'.length);

@@ -3,7 +3,7 @@ const path = require('path');
 
 const DEFAULT_ROOT = path.resolve(__dirname, '..', '..', '..');
 const DEFAULT_REPORT_ROOT = 'D:\\zmws\\GameAnalysis\\report';
-const frontMatterFields = ['id', 'title', 'category', 'difficulty', 'readingMinutes', 'summary'];
+const frontMatterFields = ['id', 'title', 'category', 'readingMinutes', 'summary'];
 
 function normalizeText(value) {
   return String(value).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
@@ -71,9 +71,6 @@ function parseFrontMatter(raw, filePath) {
   if (!Number.isInteger(readingMinutes) || readingMinutes <= 0) {
     throw new Error(`Invalid readingMinutes in ${filePath}: ${meta.readingMinutes}`);
   }
-  if (!['入门', '进阶'].includes(meta.difficulty)) {
-    throw new Error(`Invalid difficulty in ${filePath}: ${meta.difficulty}`);
-  }
 
   return {
     meta: { ...meta, readingMinutes },
@@ -111,10 +108,22 @@ function optionalSection(sections, title) {
 
 function parseList(section, sectionTitle, filePath) {
   if (!section) return [];
-  const items = section.split('\n')
+  const lines = section.split('\n')
     .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => line.replace(/^-\s+/, '').trim());
+    .filter(Boolean);
+
+  const listMarkerRegex = /^(?:[-*]\s+|\d+(?:\.\d+)?\.\s+)/;
+  const items = [];
+
+  for (const line of lines) {
+    if (listMarkerRegex.test(line)) {
+      items.push(line.replace(/^(?:[-*]\s+|\d+(?:\.\d+)?\.\s+)/, '').trim());
+    } else if (items.length > 0) {
+      items[items.length - 1] += '\n' + line;
+    } else {
+      items.push(line);
+    }
+  }
 
   if (items.length === 0 || items.some((item) => !item)) {
     throw new Error(`Invalid list section ${sectionTitle}: ${filePath}`);
@@ -125,15 +134,16 @@ function parseList(section, sectionTitle, filePath) {
 function parseArticle(filePath) {
   const { meta, body } = parseFrontMatter(readTextFile(filePath), filePath);
   const sections = parseSections(body);
+  const playerQuestionMarkdown = optionalSection(sections, '玩家提问');
+  const mechanismMarkdown = optionalSection(sections, '核心机制');
   const requiredSnippets = parseList(optionalSection(sections, '报告校验片段'), '报告校验片段', filePath);
 
   return {
     ...meta,
-    playerQuestion: optionalSection(sections, '玩家提问'),
-    quickAnswer: parseList(optionalSection(sections, '快捷回答'), '快捷回答', filePath),
-    misconceptions: parseList(optionalSection(sections, '常见误解'), '常见误解', filePath),
-    mechanism: parseList(optionalSection(sections, '核心机制'), '核心机制', filePath),
-    playerTip: optionalSection(sections, '实战建议'),
+    playerQuestion: playerQuestionMarkdown,
+    playerQuestionMarkdown,
+    mechanism: parseList(mechanismMarkdown, '核心机制', filePath),
+    mechanismMarkdown,
     requiredSnippets,
   };
 }

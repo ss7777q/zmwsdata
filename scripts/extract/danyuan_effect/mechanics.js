@@ -11,6 +11,8 @@ const {
   BULLET_BESKILL_KEYS
 } = require('./constants');
 
+const MOUSE_DEMON_DANYUAN_FAMILY_ID = 32;
+
 function roundNumber(value, digits = 3) {
   if (typeof value !== 'number' || Number.isNaN(value)) return null;
   const base = 10 ** digits;
@@ -52,9 +54,16 @@ function cooldownText(be) {
   if (typeof be.initCd === 'number' && be.initCd > 0) parts.push(`初始${framesText(be.initCd)}`);
   if (typeof be.cd === 'number' && be.cd > 0) parts.push(`冷却${framesText(be.cd)}`);
   if (typeof be.chargedNumber === 'number' && be.chargedNumber > 0) {
-    const charged = typeof be.chargedCd === 'number' && be.chargedCd > 0
-      ? `最多${be.chargedNumber}次，每${framesText(be.chargedCd)}补满到上限`
-      : `最多${be.chargedNumber}次`;
+    const hasChargeCd = typeof be.chargedCd === 'number' && be.chargedCd > 0;
+    const hasDifferentInitCd = hasChargeCd
+      && typeof be.chargedInitCd === 'number'
+      && be.chargedInitCd > 0
+      && be.chargedInitCd !== be.chargedCd;
+    const charged = hasChargeCd
+      ? hasDifferentInitCd
+        ? `开局有${be.chargedNumber}次，先等${framesText(be.chargedInitCd)}，之后每${framesText(be.chargedCd)}把机会补回${be.chargedNumber}次`
+        : `开局有${be.chargedNumber}次，每${framesText(be.chargedCd)}把机会补回${be.chargedNumber}次`
+      : `开局有${be.chargedNumber}次`;
     parts.push(charged);
   }
   return parts.join('，') || null;
@@ -119,7 +128,11 @@ function uniqueNumbers(values) {
 function buffEffectText(buff) {
   if (!buff) return null;
   const parts = [];
-  if (buff.text) parts.push(buff.text);
+  if (buff.type === 116 && /攻击或释放技能取消隐身状态/.test(String(buff.text || ''))) {
+    parts.push('普攻和主动释放技能基本都会取消隐身；少数自动/持续型技能不走普通释放破隐链路');
+  } else if (buff.text) {
+    parts.push(buff.text);
+  }
   const val = valueText(buff.value);
   if (val) parts.push(val);
   const duration = framesText(buff.time);
@@ -155,7 +168,8 @@ function buffMetricName(buff) {
   if (/防御/.test(text)) return '防御值';
   if (/攻击/.test(text)) return '攻击值';
   if (/命中/.test(text)) return '命中值';
-  if (/韧性/.test(text)) return '韧性值';
+  if (/韧性/.test(text)) return /下降|弱化/.test(text) ? '韧性下降' : '韧性值';
+  if (/闪避/.test(text)) return /下降|弱化/.test(text) ? '闪避下降' : '闪避值';
   if (/生命上限|生命最大/.test(text)) return '生命上限';
   if (/穿透/.test(text)) return '穿透值';
   if (/移速|移动速度/.test(text)) return '移速';
@@ -197,7 +211,7 @@ function formatStatParts(per, val, maxRate, options = {}) {
 
 function shouldDisplayAbsoluteBuffValue(buff) {
   const text = `${buff?.name || ''}${buff?.text || ''}`;
-  return /损失.*生命|流失.*生命|扣除.*生命|减少.*生命|灼烧|降低|减少/.test(text);
+  return /损失.*生命|流失.*生命|扣除.*生命|减少.*生命|灼烧|降低|减少|下降|弱化/.test(text);
 }
 
 function formatBuffValue(value, buff = null) {
@@ -219,6 +233,13 @@ function formatBuffValue(value, buff = null) {
       return signedValueText(Math.abs(value.param[0]));
     }
     const parts = [];
+    if (Array.isArray(value.sourceProps)) {
+      for (const prop of value.sourceProps) {
+        if (!Array.isArray(prop)) continue;
+        const stat = formatStatParts(prop[1], prop[2], null, options);
+        if (stat) parts.push(stat);
+      }
+    }
     const atk = formatStatParts(value.atkPer, value.atkVal, null, options);
     if (atk) parts.push(atk);
     if (typeof value.toHpRate === 'number' && value.toHpRate !== 0) parts.push(`生命影响比例 ${value.toHpRate}`);
@@ -386,6 +407,26 @@ function addBuffEffectValues(out, seen, buff, ctx, depth = 0) {
   const valueReferencedBuffIds = collectReferencedBuffIdsFromValue(resolvedBuff.value, ctx);
   const referencedBuffIds = new Set(valueReferencedBuffIds);
   collectBuffAttachIds(resolvedBuff).forEach((id) => referencedBuffIds.add(id));
+  if (
+    resolvedBuff.type === 238
+    && resolvedBuff.value
+    && typeof resolvedBuff.value === 'object'
+    && !Array.isArray(resolvedBuff.value)
+  ) {
+    if (typeof resolvedBuff.value.val === 'number') {
+      addEffectValue(out, seen, `${name} · 单次异常值`, signedValueText(resolvedBuff.value.val), 'buff', resolvedBuff);
+    }
+    const valueFlag = typeof resolvedBuff.value.valueFlagId === 'number'
+      ? ctx.valueFlagById?.get(resolvedBuff.value.valueFlagId)
+      : null;
+    if (valueFlag && typeof resolvedBuff.value.lv === 'number') {
+      const valueFlagCtx = { ...ctx, danyuanLevel: resolvedBuff.value.lv };
+      for (const buffId of uniqueNumbers(asArray(valueFlag.effectValue).flat(Infinity))) {
+        const valueFlagBuff = ctx.buffById.get(buffId);
+        if (valueFlagBuff) addBuffEffectValues(out, seen, summarizeBuff(valueFlagBuff), valueFlagCtx, depth + 1);
+      }
+    }
+  }
   if (resolvedBuff.type === 253 && resolvedBuff.value && typeof resolvedBuff.value === 'object') {
     const { needPiles, addHp, cd } = resolvedBuff.value;
     if (typeof needPiles === 'number') addEffectValue(out, seen, `${name} · 蜕皮触发层数`, `${needPiles}层`, 'buff', resolvedBuff);
@@ -405,6 +446,16 @@ function addBuffEffectValues(out, seen, buff, ctx, depth = 0) {
   ) {
     value = `${percentText(resolvedBuff.value[0])} + 0`;
   }
+  if (
+    ctx?.familyId === MOUSE_DEMON_DANYUAN_FAMILY_ID
+    && name === '护盾'
+    && Array.isArray(resolvedBuff.value)
+  ) {
+    if (typeof resolvedBuff.value[1] === 'number') value = signedValueText(resolvedBuff.value[1]);
+    if (typeof resolvedBuff.value[3] === 'number' && resolvedBuff.value[3] !== 0) {
+      addEffectValue(out, seen, `${name} · 最大生命系数`, `${percentText(resolvedBuff.value[3])}最大生命`, 'buff', resolvedBuff);
+    }
+  }
   if (value && valueReferencedBuffIds.size === 0) addEffectValue(out, seen, valueLabel, value, 'buff', resolvedBuff);
   if (typeof resolvedBuff.timeSeconds === 'number') addEffectValue(out, seen, `${name} · 持续时间`, `${resolvedBuff.timeSeconds}秒`, 'buff', resolvedBuff);
   if (typeof resolvedBuff.intervalSeconds === 'number' && resolvedBuff.intervalSeconds > 0) addEffectValue(out, seen, `${name} · 间隔`, `${resolvedBuff.intervalSeconds}秒`, 'buff', resolvedBuff);
@@ -421,8 +472,8 @@ function addCooldownEffectValues(out, seen, raw) {
   if (!raw || typeof raw !== 'object') return;
   if (typeof raw.initCd === 'number' && raw.initCd > 0) addEffectValue(out, seen, '初始冷却', framesText(raw.initCd), 'mechanic', raw);
   if (typeof raw.cd === 'number' && raw.cd > 0) addEffectValue(out, seen, '冷却', framesText(raw.cd), 'mechanic', raw);
-  if (typeof raw.chargedNumber === 'number' && raw.chargedNumber > 0) addEffectValue(out, seen, '充能上限', `${raw.chargedNumber}次`, 'mechanic', raw);
-  if (typeof raw.chargedCd === 'number' && raw.chargedCd > 0) addEffectValue(out, seen, '充能恢复', framesText(raw.chargedCd), 'mechanic', raw);
+  if (typeof raw.chargedNumber === 'number' && raw.chargedNumber > 0) addEffectValue(out, seen, '最多可存机会', `${raw.chargedNumber}次`, 'mechanic', raw);
+  if (typeof raw.chargedCd === 'number' && raw.chargedCd > 0) addEffectValue(out, seen, '机会恢复', framesText(raw.chargedCd), 'mechanic', raw);
 }
 
 function rectSizeText(rect) {
@@ -563,6 +614,9 @@ function addStructuredMechanicEffectValues(out, seen, effect) {
     case '咬住吸取':
       if (typeof raw.subMpVal === 'number') addEffectValue(out, seen, '每次吸魔', signedValueText(raw.subMpVal), 'mechanic', raw);
       if (typeof raw.subHpRate === 'number') addEffectValue(out, seen, '生命补给倍率', signedValueText(raw.subHpRate), 'mechanic', raw);
+      break;
+    case '分身迷惑':
+      if (typeof raw.time === 'number') addEffectValue(out, seen, '分身存在时间', `${raw.time}秒`, 'mechanic', raw);
       break;
     case '火球蓄能':
       if (typeof raw.maxVal === 'number') addEffectValue(out, seen, '火球膨胀上限', signedValueText(raw.maxVal), 'mechanic', raw);
@@ -861,6 +915,8 @@ function directBuffIdsForLabel(be) {
     case 'lsnPropAddMaxProp':
     case 'whiteFaceDanYuan':
       return uniqueNumbers(asArray(attr?.buffIds).flat(Infinity));
+    case 'imitateEntity':
+      return uniqueNumbers(asArray(attr?.selfBuffs).flat(Infinity));
     case 'buff2':
       return uniqueNumbers([
         ...asArray(attr?.addBuffs),
@@ -1042,6 +1098,12 @@ function describeDanyuanBeskill(be, ctx, warnings, depth = 0) {
     case 'whiteFaceDanYuan': {
       const attr = be.attribute || {};
       add('友方死亡累计', `友方死亡积累狂暴值，上限 ${attr.maxVal ?? '?'}，单位上限 ${attr.unitMaxVal ?? '?'}，倍率 ${attr.rate ?? '?'}`, attr);
+      effects.push(...describeBuffList(directBuffIdsForLabel(be), ctx, warnings, `beskill ${be.id}`));
+      break;
+    }
+    case 'imitateEntity': {
+      const attr = be.attribute || {};
+      add('分身迷惑', `保护分满时生成分身，本体获得自保效果${typeof attr.time === 'number' ? `，分身存在${attr.time}秒` : ''}`, attr);
       effects.push(...describeBuffList(directBuffIdsForLabel(be), ctx, warnings, `beskill ${be.id}`));
       break;
     }
