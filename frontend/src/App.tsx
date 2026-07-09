@@ -5,6 +5,7 @@ import TopBar from './components/layout/TopBar';
 import SearchResults from './components/ui/SearchResults';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import { useDataFiles } from './hooks/useGameData';
+import { useVisitorStats } from './hooks/useVisitorStats';
 import { searchDataSources } from './lib/search';
 import { apiUrl } from './lib/api';
 import {
@@ -227,6 +228,7 @@ function App() {
     [activeSystem, location.pathname, searchQuery]
   );
   const { dataSources, loading, errors: dataErrors } = useDataFiles(requiredDataFiles, shouldLoadGameData && requiredDataFiles.length > 0);
+  const visitorStats = useVisitorStats();
   const isBossSystem = activeSystem === 'boss';
   const isSearching = shouldLoadGameData && searchQuery.trim().length > 0 && !isBossSystem;
 
@@ -392,6 +394,7 @@ function App() {
           searchValue={searchQuery}
           searchDisabled={!hasGlobalSearch}
           onSearchChange={setSearchQuery}
+          visitorStats={visitorStats}
         />
 
         <div className="hidden lg:block">
