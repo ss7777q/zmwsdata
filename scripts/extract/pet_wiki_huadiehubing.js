@@ -1,5 +1,5 @@
 /**
- * 宠物技能 Wiki - 神霄花仙/玄蝶仙子/千年冰狐提取脚本
+ * 宠物技能 Wiki - 神霄花仙/玄蝶仙子/千年冰狐/圣冰天狐提取脚本
  *
  * 宠物入口从 pet.skillActive/skillPassive/skillSp 和 pet.monsterId 取展示技能；
  * 普攻从宠物 monster.atkIds 取。伤害、释放时间、buff 成长继续走 skill ->
@@ -16,7 +16,7 @@ const FORCE = process.argv.includes("--force");
 
 const BATTLE_FRAMES_PER_SECOND = 30;
 const GUIDE_PATH = "D:/zmws/保存网页资源/4399_Threads_Download/【结弦】花花蝴蝶冰冰~数值百科_64189062/content.md";
-const PET_IDS = [190000073, 190000103, 190000033];
+const PET_IDS = [190000073, 190000103, 190000033, 190000034];
 
 const PET_SKILL = {
   FLOWER_ATTACK: 20408020001,
@@ -42,6 +42,19 @@ const PET_SKILL = {
   FOX_SKILL_3_END: 20404010303,
   FOX_SP: 20404010401,
   FOX_PASSIVE: 20404010501,
+  SACRED_FOX_ATTACK: 20420040001,
+  SACRED_FOX_SKILL_1: 20420040101,
+  SACRED_FOX_SKILL_2: 20420040201,
+  SACRED_FOX_SKILL_3: 20420040301,
+  SACRED_FOX_SKILL_3_HIT: 20420040302,
+  SACRED_FOX_SKILL_3_END: 20420040303,
+  SACRED_FOX_SKILL_4: 20420040401,
+  SACRED_FOX_SKILL_4_FROZEN: 20420040402,
+  SACRED_FOX_SKILL_4_TIMEOUT: 20420040403,
+  SACRED_FOX_SP: 20420040501,
+  SACRED_FOX_PASSIVE_FROST: 20420040601,
+  SACRED_FOX_PASSIVE_FLY: 20420040701,
+  SACRED_FOX_SUMMON_ATTACK: 20420060001,
 };
 
 const PET_BUFF = {
@@ -61,6 +74,8 @@ const PET_BUFF = {
   BUTTERFLY_BAD_LUCK: 180000201,
   FOX_FREEZE: 35000301,
   FOX_FREEZE_STRONG: 35001001,
+  SACRED_FOX_FLY_DAMAGE_UP: 14019001,
+  SACRED_FOX_SUMMON_SHIELD: 13010001,
 };
 
 const PET_BESKILL = {
@@ -69,12 +84,23 @@ const PET_BESKILL = {
   BUTTERFLY_BAD_LUCK: 7038801,
   FOX_REPLACE_FREEZE: 7011601,
   FOX_FREEZE_DAMAGE: 7011602,
+  SACRED_FOX_REPLACE_FREEZE: 7083101,
+  SACRED_FOX_FREEZE_DAMAGE: 7083102,
+  SACRED_FOX_FLY: 7083103,
+  SACRED_FOX_SUMMON_FLY: 7083104,
+  SACRED_FOX_ROCK_CHARGE: 7083105,
+  SACRED_FOX_ROCK_SCALE_DAMAGE: 7083106,
+  SACRED_FOX_ROCK_FROZEN_RELEASE: 7083107,
+  SACRED_FOX_ROCK_TIMEOUT_RELEASE: 7083108,
+  SACRED_FOX_ROCK_BREAK: 7083109,
 };
 
 const SPECIAL_CONCRETE_SKILLS = new Map([
   [PET_SKILL.FLOWER_PASSIVE, [PET_SKILL.FLOWER_PASSIVE, PET_SKILL.FLOWER_PASSIVE_VSKILL]],
   [PET_SKILL.BUTTERFLY_PASSIVE_BAD_LUCK, [PET_SKILL.BUTTERFLY_PASSIVE_BAD_LUCK, PET_SKILL.BUTTERFLY_PASSIVE_BAD_LUCK_VSKILL]],
   [PET_SKILL.FOX_SKILL_3, [PET_SKILL.FOX_SKILL_3, PET_SKILL.FOX_SKILL_3_HIT]],
+  [PET_SKILL.SACRED_FOX_SKILL_3, [PET_SKILL.SACRED_FOX_SKILL_3, PET_SKILL.SACRED_FOX_SKILL_3_HIT]],
+  [PET_SKILL.SACRED_FOX_SKILL_4, [PET_SKILL.SACRED_FOX_SKILL_4, PET_SKILL.SACRED_FOX_SKILL_4_FROZEN, PET_SKILL.SACRED_FOX_SKILL_4_TIMEOUT]],
 ]);
 
 const DAMAGE_SKILL_IDS = new Map([
@@ -83,9 +109,11 @@ const DAMAGE_SKILL_IDS = new Map([
   [PET_SKILL.BUTTERFLY_SP, []],
   [PET_SKILL.FOX_SKILL_2, []],
   [PET_SKILL.FOX_SKILL_3, [PET_SKILL.FOX_SKILL_3_HIT]],
+  [PET_SKILL.SACRED_FOX_SKILL_2, []],
+  [PET_SKILL.SACRED_FOX_SKILL_3, [PET_SKILL.SACRED_FOX_SKILL_3_HIT]],
 ]);
 
-const GUIDE_DAMAGE_PATCHES = new Map([
+const DAMAGE_PATCHES = new Map([
   [PET_SKILL.BUTTERFLY_SKILL_3, {
     sourceSkillId: PET_SKILL.BUTTERFLY_SKILL_3,
     hits: 12,
@@ -103,6 +131,24 @@ const GUIDE_DAMAGE_PATCHES = new Map([
     hits: 9,
     kind: "guideMultiHit",
     source: "guide:huadiehubingWiki:极冰九刺9连击",
+  }],
+  [PET_SKILL.SACRED_FOX_SKILL_3, {
+    sourceSkillId: PET_SKILL.SACRED_FOX_SKILL_3_HIT,
+    hits: 15,
+    kind: "entityLinkedMultiHit",
+    source: "entityCtg:2042004-monster_cfg_shenghuabinghu skill3_2 五组、每组三发，共15段",
+  }],
+  [PET_SKILL.SACRED_FOX_SKILL_4, {
+    sourceSkillId: PET_SKILL.SACRED_FOX_SKILL_4,
+    hits: 1,
+    kind: "chargedProjectile",
+    source: "entityCtg:vskill4_1/vskill4_2 -> bullet:104124；此处记录未计充能与破冰的基础伤害",
+  }],
+  [PET_SKILL.SACRED_FOX_SP, {
+    sourceSkillId: PET_SKILL.SACRED_FOX_SP,
+    hits: 9,
+    kind: "entityLinkedMultiHit",
+    source: "entityCtg:2042004-monster_cfg_shenghuabinghu skill5_1 八枚冰刺加一枚巨型冰刺，共9段",
   }],
 ]);
 
@@ -126,6 +172,10 @@ const GUIDE_RELEASE_FRAMES = new Map([
   [PET_SKILL.FOX_SKILL_2, guideRelease(1.867, "guide:huadiehubingWiki:冰心狐狸释放用时1.867s")],
   [PET_SKILL.FOX_SKILL_3, guideRelease(4.567, "guide:huadiehubingWiki:冰雪风暴释放用时4.567s")],
   [PET_SKILL.FOX_SP, guideRelease(3.033, "guide:huadiehubingWiki:极冰九刺释放用时3.033s")],
+  [PET_SKILL.SACRED_FOX_SKILL_3, {
+    frames: 136,
+    source: "entityCtg.time chain:skill3_1(27)+skill3_2循环(84)+skill3_3(25)",
+  }],
 ]);
 
 const GUIDE_CD_SECONDS = new Map([
@@ -148,6 +198,7 @@ const EFFECT_ONLY_SKILLS = new Set([
   PET_SKILL.FLOWER_SP,
   PET_SKILL.BUTTERFLY_SP,
   PET_SKILL.FOX_SKILL_2,
+  PET_SKILL.SACRED_FOX_SKILL_2,
 ]);
 
 const SKIP_ZERO_BUFFS = new Set([
@@ -173,6 +224,9 @@ const BIND_SOURCE_LABEL = {
 
 const DEFAULT_METRICS = [
   { key: "atkConv", label: "攻转", scope: "level", expr: "totalPer / releaseSeconds", when: "totalPer * releaseSeconds", fixed: 3 },
+  { key: "fullChargeVal", label: "满充固伤", scope: "level", skill: PET_SKILL.SACRED_FOX_SKILL_4, expr: "totalVal * 1.75", when: "totalVal", fixed: 3 },
+  { key: "fullChargeBreakVal", label: "满充破冰固伤", scope: "level", skill: PET_SKILL.SACRED_FOX_SKILL_4, expr: "totalVal * 2.45", when: "totalVal", fixed: 3 },
+  { key: "fullChargeFrozenBreakVal", label: "满充冰冻破冰固伤", scope: "level", skill: PET_SKILL.SACRED_FOX_SKILL_4, expr: "totalVal * 3.0625", when: "totalVal", fixed: 3 },
 ];
 
 function idx(arr) {
@@ -183,6 +237,11 @@ function idx(arr) {
 
 function round(n) {
   return Math.round(n * 1000) / 1000;
+}
+
+function formatNumber(n, digits = 4) {
+  if (typeof n !== "number" || !Number.isFinite(n)) return "?";
+  return String(Number(n.toFixed(digits)));
 }
 
 function asArray(value) {
@@ -292,7 +351,7 @@ function resolvePetReleaseTime(displaySkillId, cfg, skill, warnings) {
 
 function detectDisplayMaxLevel(displaySkillId, concreteIds, slotKind, ctx) {
   if (slotKind === "passive" || slotKind === "attack") return 1;
-  const patch = GUIDE_DAMAGE_PATCHES.get(displaySkillId);
+  const patch = DAMAGE_PATCHES.get(displaySkillId);
   const sourceIds = patch ? [patch.sourceSkillId] : damageSkillIdsFor(displaySkillId, concreteIds);
   const ids = sourceIds.length ? sourceIds : [displaySkillId];
   let maxLevel = 0;
@@ -440,6 +499,179 @@ function collectFoxPassive(displaySkillId, fixedBuffs, ctx, warnings) {
   pushFixedBuff(fixedBuffs, displaySkillId, PET_BUFF.FOX_FREEZE_STRONG, ctx.buffById.get(PET_BUFF.FOX_FREEZE_STRONG), "passiveEffect", ctx, warnings, null);
 }
 
+function collectSacredFoxFrostPassive(displaySkillId, fixedBuffs, ctx, warnings) {
+  const replace = ctx.beskillById.get(PET_BESKILL.SACRED_FOX_REPLACE_FREEZE);
+  const damage = ctx.beskillById.get(PET_BESKILL.SACRED_FOX_FREEZE_DAMAGE);
+  if (!replace) warnings.push({ code: eng.WARN.MISSING_BESKILL, detail: `beskill ${PET_BESKILL.SACRED_FOX_REPLACE_FREEZE} 缺失` });
+  if (!damage) warnings.push({ code: eng.WARN.MISSING_BESKILL, detail: `beskill ${PET_BESKILL.SACRED_FOX_FREEZE_DAMAGE} 缺失` });
+  pushPassiveBeskill(fixedBuffs, PET_BESKILL.SACRED_FOX_REPLACE_FREEZE, "霜冻强化", "普通冰冻替换为强化冰冻，控制时间从3秒延长至5秒。");
+  pushPassiveBeskill(fixedBuffs, PET_BESKILL.SACRED_FOX_FREEZE_DAMAGE, "冰冻目标增伤", "对冰冻目标造成的伤害提升25%。");
+  pushFixedBuff(fixedBuffs, displaySkillId, PET_BUFF.FOX_FREEZE, ctx.buffById.get(PET_BUFF.FOX_FREEZE), "passiveEffect", ctx, warnings, null);
+  pushFixedBuff(fixedBuffs, displaySkillId, PET_BUFF.FOX_FREEZE_STRONG, ctx.buffById.get(PET_BUFF.FOX_FREEZE_STRONG), "passiveEffect", ctx, warnings, null);
+}
+
+function collectSacredFoxFlyPassive(displaySkillId, fixedBuffs, ctx, warnings) {
+  const fly = ctx.beskillById.get(PET_BESKILL.SACRED_FOX_FLY);
+  const summonFly = ctx.beskillById.get(PET_BESKILL.SACRED_FOX_SUMMON_FLY);
+  if (!fly) warnings.push({ code: eng.WARN.MISSING_BESKILL, detail: `beskill ${PET_BESKILL.SACRED_FOX_FLY} 缺失` });
+  if (!summonFly) warnings.push({ code: eng.WARN.MISSING_BESKILL, detail: `beskill ${PET_BESKILL.SACRED_FOX_SUMMON_FLY} 缺失` });
+  pushPassiveBeskill(
+    fixedBuffs,
+    PET_BESKILL.SACRED_FOX_FLY,
+    "踏雪凌虚",
+    "仅PVE可开关；开启后圣冰天狐与冰狐战士切换为飞行姿态。",
+  );
+  pushFixedBuff(fixedBuffs, displaySkillId, PET_BUFF.SACRED_FOX_FLY_DAMAGE_UP, ctx.buffById.get(PET_BUFF.SACRED_FOX_FLY_DAMAGE_UP), "passiveEffect", ctx, warnings, null);
+}
+
+function collectSacredFoxSummonEffects(displaySkillId, pet, ctx, warnings) {
+  const out = [];
+  const skill = ctx.skillById.get(displaySkillId);
+  const cfg = skill ? resolvePetCfgFile(skill, pet, ctx, warnings) : null;
+  const summon = cfg?.actionCfg?.com?.find((com) => com.type === 13);
+  const monsterId = asArray(summon?.mIds)[0];
+  const monster = ctx.monsterById.get(monsterId);
+  const attackSkillId = asArray(monster?.atkIds)[0];
+  const attackSkill = ctx.skillById.get(attackSkillId);
+  const attackRow = attackSkill ? ctx.skillLevelById.get(eng.skillLevelRowId(attackSkill, 1)) : null;
+  const attackCfg = monster ? eng.loadEntityCfg(monster.cfgFile) : null;
+  const attackActionCfg = attackSkill?.entityAction ? attackCfg?.[attackSkill.entityAction] : null;
+  const attackDamage = attackSkill && attackRow
+    ? eng.computeDamageSegments(attackSkill, attackRow, attackActionCfg, warnings)
+    : null;
+  const attackHitCount = attackDamage?.segments?.reduce((sum, segment) => sum + (segment.maxHit || 1), 0) ?? null;
+  const attackTotalPer = typeof attackRow?.damageAddPer === "number" && typeof attackHitCount === "number"
+    ? attackRow.damageAddPer * attackHitCount
+    : attackDamage?.totalPer;
+  const attackRelease = attackSkill
+    ? eng.resolveReleaseTime(attackCfg, attackSkill.entityAction, Boolean(attackActionCfg), warnings)
+    : null;
+  const shieldSkillId = asArray(monster?.initVskill)[0];
+  const shieldSkill = ctx.skillById.get(shieldSkillId);
+  const shieldActionCfg = shieldSkill?.entityAction ? attackCfg?.[shieldSkill.entityAction] : null;
+  const shieldBuffId = asArray(shieldActionCfg?.com?.find((com) => com.type === 1)?.buff)[0];
+  const shieldBuff = ctx.buffById.get(shieldBuffId);
+  const shieldPer = Array.isArray(shieldBuff?.value) && typeof shieldBuff.value[3] === "number"
+    ? shieldBuff.value[3]
+    : null;
+  const attachedBuffId = asArray(shieldBuff?.attachBuff)[0];
+  const attachedBuff = ctx.buffById.get(attachedBuffId);
+  const summonParams = ctx.constByKey.get("bingbingCallMonsterParams");
+  if (!summon) warnings.push({ code: eng.WARN.MISSING_ACTION_CFG, detail: `skill ${displaySkillId} 未解析到召唤动作` });
+  if (!monster) warnings.push({ code: eng.WARN.MISSING_ENTITY_CFG, detail: `skill ${displaySkillId} 未解析到召唤物` });
+  if (!attackSkill || !attackRow) warnings.push({ code: eng.WARN.MISSING_SKILL, detail: `召唤物 ${monsterId ?? "?"} 未解析到普攻` });
+  if (!shieldSkill) warnings.push({ code: eng.WARN.MISSING_SKILL, detail: `召唤物 ${monsterId ?? "?"} 未解析到登场护盾技能` });
+  if (shieldSkill && !shieldActionCfg) warnings.push({ code: eng.WARN.MISSING_ACTION_CFG, detail: `召唤物护盾技能 ${shieldSkillId} 未解析到动作配置` });
+  if (shieldActionCfg && !shieldBuff) warnings.push({ code: eng.WARN.MISSING_BUFF, detail: `召唤物护盾技能 ${shieldSkillId} 未解析到护盾效果` });
+  if (!summonParams) warnings.push({ code: eng.WARN.MISSING_ENTITY_CFG, detail: "未解析到冰狐战士专属召唤属性公式" });
+
+  const durationText = summon?.time === -1
+    ? "无持续时间限制"
+    : (typeof summon?.time === "number" ? `持续${formatNumber(summon.time / BATTLE_FRAMES_PER_SECOND, 3)}秒` : "持续时间未解析");
+  out.push({
+    baseBuffId: displaySkillId,
+    name: "冰狐战士召唤",
+    text: null,
+    time: summon?.time ?? null,
+    bindSource: "mechanismEffect",
+    bindLabel: BIND_SOURCE_LABEL.mechanismEffect,
+    value: null,
+    displayText: `召唤冰狐战士，最多同时存在${summon?.maxCount ?? "?"}只，${durationText}。`,
+  });
+  if (summonParams) {
+    const pct = (value) => formatNumber(typeof value === "number" ? value * 100 : null, 2);
+    out.push({
+      baseBuffId: displaySkillId,
+      name: "冰狐战士属性继承",
+      text: null,
+      time: -1,
+      bindSource: "mechanismEffect",
+      bindLabel: BIND_SOURCE_LABEL.mechanismEffect,
+      value: summonParams,
+      displayText: `生命取圣冰天狐最大生命的${pct(summonParams.hpInfluenceRatio)}%与召唤生命基准的${pct(summonParams.hpStandardRatio)}%之和；攻击取圣冰天狐攻击的${pct(summonParams.atkInfluenceRatio)}%与召唤攻击基准的${pct(summonParams.atkStandardRatio)}%之和；回血取圣冰天狐回血的${pct(summonParams.healHpInfluenceRatio)}%与召唤回血基准的${pct(summonParams.healHpStandardRatio)}%之和；破防取圣冰天狐破防的${pct(summonParams.breakInfluenceRatio)}%与召唤破防基准的${pct(summonParams.breakStandardRatio)}%之和；守护取圣冰天狐守护的${pct(summonParams.protectInfluenceRatio)}%与召唤守护基准的${pct(summonParams.protectStandardRatio)}%之和。召唤基准按冰心化灵技能等级的5倍读取。`,
+    });
+  }
+  out.push({
+    baseBuffId: attackSkillId || PET_SKILL.SACRED_FOX_SUMMON_ATTACK,
+    name: "冰狐战士普攻",
+    text: null,
+    time: -1,
+    bindSource: "mechanismEffect",
+    bindLabel: BIND_SOURCE_LABEL.mechanismEffect,
+    value: null,
+    displayText: `爪击共${attackHitCount ?? "?"}段，每段系数${formatNumber(attackRow?.damageAddPer)}，总系数${formatNumber(attackTotalPer)}，释放用时${formatNumber(attackRelease?.releaseSeconds, 3)}秒。`,
+  });
+  if (shieldBuff) {
+    const shieldPercent = typeof shieldPer === "number" ? formatNumber(shieldPer * 100, 1) : "?";
+    const totalDurabilityPercent = typeof shieldPer === "number" ? formatNumber((1 + shieldPer) * 100, 1) : "?";
+    const armorText = attachedBuff?.name === "霸体" ? "护盾存在期间处于霸体状态，护盾耗尽后霸体一并移除" : "护盾附带效果未解析";
+    out.push({
+      baseBuffId: shieldBuffId || PET_BUFF.SACRED_FOX_SUMMON_SHIELD,
+      name: "冰狐战士寒冰盾",
+      text: shieldBuff.text || null,
+      time: shieldBuff.time ?? null,
+      bindSource: "mechanismEffect",
+      bindLabel: BIND_SOURCE_LABEL.mechanismEffect,
+      value: { maxHpPer: shieldPer },
+      displayText: `冰狐战士登场时获得相当于自身最大生命${shieldPercent}%的寒冰盾，连同本体生命，未计防御时总承伤池相当于自身最大生命${totalDurabilityPercent}%；护盾无持续时间限制，只在登场时获得且不会自行恢复；${armorText}。`,
+    });
+  }
+  return out;
+}
+
+function collectSacredFoxRockMechanics(ctx, warnings) {
+  const charge = ctx.beskillById.get(PET_BESKILL.SACRED_FOX_ROCK_CHARGE);
+  const scaleDamage = ctx.beskillById.get(PET_BESKILL.SACRED_FOX_ROCK_SCALE_DAMAGE);
+  const frozenRelease = ctx.beskillById.get(PET_BESKILL.SACRED_FOX_ROCK_FROZEN_RELEASE);
+  const timeoutRelease = ctx.beskillById.get(PET_BESKILL.SACRED_FOX_ROCK_TIMEOUT_RELEASE);
+  const rockBreak = ctx.beskillById.get(PET_BESKILL.SACRED_FOX_ROCK_BREAK);
+  const frozenDamage = ctx.beskillById.get(PET_BESKILL.SACRED_FOX_FREEZE_DAMAGE);
+  for (const [id, row] of [
+    [PET_BESKILL.SACRED_FOX_ROCK_CHARGE, charge],
+    [PET_BESKILL.SACRED_FOX_ROCK_SCALE_DAMAGE, scaleDamage],
+    [PET_BESKILL.SACRED_FOX_ROCK_FROZEN_RELEASE, frozenRelease],
+    [PET_BESKILL.SACRED_FOX_ROCK_TIMEOUT_RELEASE, timeoutRelease],
+    [PET_BESKILL.SACRED_FOX_ROCK_BREAK, rockBreak],
+  ]) {
+    if (!row) warnings.push({ code: eng.WARN.MISSING_BESKILL, detail: `beskill ${id} 缺失` });
+  }
+
+  const addScale = charge?.attribute?.addScale || {};
+  const skillCaps = charge?.attribute?.skillIdMaxScale || {};
+  const maxScale = charge?.attribute?.maxScale;
+  const minScale = scaleDamage?.attribute?.minScale;
+  const frozenScale = frozenRelease?.scopeParam?.judgeMeCondition?.find((item) => item.name === "bulletScaleMore")?.param?.scale;
+  const timeout = timeoutRelease?.scopeParam?.judgeMeCondition?.find((item) => item.name === "bulletTimeMore")?.param?.time;
+  const breakPer = rockBreak?.attribute?.per;
+  const frozenPer = frozenDamage?.attribute?.value?.[0];
+  const rockSkill = ctx.skillById.get(PET_SKILL.SACRED_FOX_SKILL_4);
+  const rockRow = rockSkill ? ctx.skillLevelById.get(eng.skillLevelRowId(rockSkill, 1)) : null;
+  const damageFactor = typeof maxScale === "number" && typeof minScale === "number" ? maxScale / minScale : null;
+  const maxPer = typeof rockRow?.damageAddPer === "number" && damageFactor != null ? rockRow.damageAddPer * damageFactor : null;
+  const maxBreakPer = maxPer != null && typeof breakPer === "number" ? maxPer * (1 + breakPer) : null;
+  const maxFrozenBreakPer = maxBreakPer != null && typeof frozenPer === "number" ? maxBreakPer * (1 + frozenPer) : null;
+
+  const chargeText = [
+    [PET_SKILL.SACRED_FOX_ATTACK, "冰晶球"],
+    [PET_SKILL.SACRED_FOX_SKILL_1, "冰雪玉盘"],
+    [PET_SKILL.SACRED_FOX_SKILL_3, "冰雪风暴"],
+    [PET_SKILL.SACRED_FOX_SP, "极冰九刺"],
+  ].map(([skillId, name]) => `${name}每段增加${formatNumber(addScale[skillId])}尺寸，单次最多增加${formatNumber(skillCaps[skillId])}`).join("；");
+
+  return [
+    { label: "充能规则", value: `${chargeText}。巨岩尺寸上限为${formatNumber(maxScale)}。` },
+    { label: "投出条件", value: `巨岩存在${formatNumber(timeout)}秒后自动投向最近敌人；尺寸达到${formatNumber(frozenScale)}且附近存在冰冻敌人时，会提前投向该目标。` },
+    { label: "满充伤害", value: `尺寸低于${formatNumber(minScale)}时不增加伤害；达到该尺寸后按“尺寸÷${formatNumber(minScale)}”结算。满尺寸${formatNumber(maxScale)}时主伤害为基础的${formatNumber(damageFactor)}倍，总系数${formatNumber(maxPer)}。` },
+    { label: "破冰", value: `命中冰冻目标时，霜冻强化先将主伤害提高${formatNumber(typeof frozenPer === "number" ? frozenPer * 100 : null, 1)}%，再额外造成最终主伤害${formatNumber(typeof breakPer === "number" ? breakPer * 100 : null, 1)}%的破冰伤害并移除冰冻。满尺寸未计霜冻强化时合计总系数${formatNumber(maxBreakPer)}，计入霜冻强化后实际总系数${formatNumber(maxFrozenBreakPer, 5)}。` },
+    { label: "固伤修正", value: `按基础固伤100%口径，满充主伤害修正比为${formatNumber(damageFactor != null ? damageFactor * 100 : null, 2)}%，满充破冰未计霜冻强化时为${formatNumber(damageFactor != null && typeof breakPer === "number" ? damageFactor * (1 + breakPer) * 100 : null, 2)}%，计入霜冻强化后为${formatNumber(damageFactor != null && typeof breakPer === "number" && typeof frozenPer === "number" ? damageFactor * (1 + breakPer) * (1 + frozenPer) * 100 : null, 2)}%。` },
+  ];
+}
+
+function collectSkillMechanics(displaySkillId, ctx, warnings) {
+  if (displaySkillId === PET_SKILL.SACRED_FOX_SKILL_4) return collectSacredFoxRockMechanics(ctx, warnings);
+  return [];
+}
+
 function collectGuideEffects(displaySkillId, pet, ctx, warnings) {
   const out = [];
   if (displaySkillId === PET_SKILL.FOX_SKILL_2) {
@@ -469,6 +701,9 @@ function collectGuideEffects(displaySkillId, pet, ctx, warnings) {
       displayText: "释放期间保持无敌状态；后摇不包含在无敌内",
     });
   }
+  if (displaySkillId === PET_SKILL.SACRED_FOX_SKILL_2) {
+    out.push(...collectSacredFoxSummonEffects(displaySkillId, pet, ctx, warnings));
+  }
   return out;
 }
 
@@ -491,6 +726,8 @@ function collectBuffs(displaySkillId, concreteIds, pet, slotKind, ctx, warnings)
   if (slotKind === "passive" && displaySkillId === PET_SKILL.BUTTERFLY_PASSIVE_FLY) collectButterflyFlyPassive(displaySkillId, fixedBuffs, ctx, warnings);
   if (slotKind === "passive" && displaySkillId === PET_SKILL.BUTTERFLY_PASSIVE_BAD_LUCK) collectButterflyBadLuckPassive(displaySkillId, pet, fixedBuffs, ctx, warnings);
   if (slotKind === "passive" && displaySkillId === PET_SKILL.FOX_PASSIVE) collectFoxPassive(displaySkillId, fixedBuffs, ctx, warnings);
+  if (slotKind === "passive" && displaySkillId === PET_SKILL.SACRED_FOX_PASSIVE_FROST) collectSacredFoxFrostPassive(displaySkillId, fixedBuffs, ctx, warnings);
+  if (slotKind === "passive" && displaySkillId === PET_SKILL.SACRED_FOX_PASSIVE_FLY) collectSacredFoxFlyPassive(displaySkillId, fixedBuffs, ctx, warnings);
 
   fixedBuffs.push(...collectGuideEffects(displaySkillId, pet, ctx, warnings));
   return { fixedBuffs, growthBuffRefs };
@@ -527,8 +764,8 @@ function makePassiveLevel() {
   };
 }
 
-function computeGuidePatchedLevel(displaySkillId, level, ctx, warnings) {
-  const def = GUIDE_DAMAGE_PATCHES.get(displaySkillId);
+function computePatchedLevel(displaySkillId, level, ctx, warnings) {
+  const def = DAMAGE_PATCHES.get(displaySkillId);
   const skill = ctx.skillById.get(def.sourceSkillId);
   const row = skill ? ctx.skillLevelById.get(eng.skillLevelRowId(skill, level)) : null;
   if (!skill) warnings.push({ code: eng.WARN.MISSING_SKILL, detail: `skill ${def.sourceSkillId} 不在 skill 表` });
@@ -552,7 +789,7 @@ function computeGuidePatchedLevel(displaySkillId, level, ctx, warnings) {
 
 function computePetLevel(displaySkillId, concreteIds, level, pet, slotKind, ctx, warnings) {
   if (slotKind === "passive") return makePassiveLevel();
-  if (GUIDE_DAMAGE_PATCHES.has(displaySkillId)) return computeGuidePatchedLevel(displaySkillId, level, ctx, warnings);
+  if (DAMAGE_PATCHES.has(displaySkillId)) return computePatchedLevel(displaySkillId, level, ctx, warnings);
   if (EFFECT_ONLY_SKILLS.has(displaySkillId)) return makeEffectOnlyLevel(displaySkillId, level, ctx, warnings);
 
   let mergedSegments = [];
@@ -620,6 +857,7 @@ function buildSkillCard(displaySkillId, pet, slotLabel, slotKind, ctx) {
     ? { releaseFrames: null, releaseSeconds: null, releaseTimeSource: "effectOnly" }
     : resolvePetReleaseTime(displaySkillId, cfg, skill, warnings);
   const { fixedBuffs, growthBuffRefs } = collectBuffs(displaySkillId, concreteIds, pet, slotKind, ctx, warnings);
+  const skillMechanics = collectSkillMechanics(displaySkillId, ctx, warnings);
 
   const levels = [];
   for (let lv = 1; lv <= maxLevel; lv++) {
@@ -670,6 +908,7 @@ function buildSkillCard(displaySkillId, pet, slotLabel, slotKind, ctx) {
       cfgResolveSource: cfg.cfgResolveSource,
       referenceLevel: reference?.level ?? null,
       fixedBuffs,
+      mechanics: skillMechanics,
       metrics: metrics.computeMetrics(
         ctx.metricDefs, "header",
         { skillId: displaySkillId, totalPer: reference ? reference.totalPer : null, releaseSeconds: rel.releaseSeconds, segCount },
@@ -744,7 +983,7 @@ function buildSlots(pet, ctx) {
 }
 
 function extract() {
-  console.log("\n🌸 宠物技能 Wiki → 神霄花仙/玄蝶仙子/千年冰狐");
+  console.log("\n🌸 宠物技能 Wiki → 神霄花仙/玄蝶仙子/千年冰狐/圣冰天狐");
 
   const ctx = {
     petById: idx(u.loadTable("pet")),
@@ -753,6 +992,7 @@ function extract() {
     monsterById: idx(u.loadTable("monster")),
     buffById: idx(u.loadTable("buff")),
     beskillById: idx(u.loadTable("beskill")),
+    constByKey: new Map(u.loadTable("consts").map((row) => [row.key, row.value])),
     overrides: ov.loadOverrides(PET_OVERRIDE),
     emitTemplate: EMIT_TEMPLATE,
   };
@@ -797,18 +1037,18 @@ function extract() {
   const payload = {
     petGroup: {
       key: "huadiehubing",
-      name: "神霄花仙/玄蝶仙子/千年冰狐",
+      name: "神霄花仙/玄蝶仙子/千年冰狐/圣冰天狐",
       guidePath: GUIDE_PATH,
       petIds: PET_IDS,
-      note: "宠物技能 Wiki 使用满级作为卡片表头参考值，逐级成长见下方成长数值表；花仙治疗、玄蝶恶咒、冰狐冰雪风暴/极冰九刺按攻略与实际命中阶段重组。",
+      note: "宠物技能 Wiki 使用满级作为卡片表头参考值，逐级成长见下方成长数值表；花仙治疗、玄蝶恶咒、冰狐与圣冰天狐的多段技能按攻略或实际动作链重组，圣冰天狐额外展示召唤物寒冰盾、巨岩充能、破冰与飞行机制。",
     },
     variants,
   };
 
   u.saveOutput("pet_wiki_huadiehubing", payload, {
     system: "pet_wiki",
-    sourceFiles: ["pet.*.json", "skill.*.json", "skillLevel.*.json", "monster.*.json", "beskill.*.json", "buff.*.json", "bullets.json", "entityCtg/*.json", GUIDE_PATH],
-    note: "神霄花仙/玄蝶仙子/千年冰狐宠物技能 Wiki，包括普攻、主动技能、无双、被动、治疗、召唤和减益效果。",
+    sourceFiles: ["pet.*.json", "skill.*.json", "skillLevel.*.json", "monster.*.json", "beskill.*.json", "buff.*.json", "consts.*.json", "exp.*.json", "bullets.json", "entityCtg/*.json", GUIDE_PATH],
+    note: "神霄花仙/玄蝶仙子/千年冰狐/圣冰天狐宠物技能 Wiki，包括普攻、主动技能、无双、被动、治疗、召唤、护盾、充能、破冰和减益效果。",
   });
 
   for (const v of variants) {

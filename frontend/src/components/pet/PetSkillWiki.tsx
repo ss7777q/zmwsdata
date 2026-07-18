@@ -37,7 +37,7 @@ interface PetSkillBaselinePayload {
   skills?: PetSkillBaselineEntry[];
 }
 
-type PetGroupType = '神兽' | '灵兽' | '仙兽';
+type PetGroupType = '神兽' | '灵兽' | '仙兽' | '圣兽';
 
 interface PetMenuEntry {
   type: PetGroupType;
@@ -65,12 +65,13 @@ interface PetWikiIndexPayload {
   groups?: PetWikiIndexGroup[];
 }
 
-const TYPE_ORDER: PetGroupType[] = ['神兽', '灵兽', '仙兽'];
+const TYPE_ORDER: PetGroupType[] = ['神兽', '灵兽', '仙兽', '圣兽'];
 
 const TYPE_BADGE_CLASS: Record<PetGroupType, string> = {
   神兽: 'border-orange-500/30 bg-orange-500/10 text-orange-500',
   灵兽: 'border-blue-500/30 bg-blue-500/10 text-blue-400',
   仙兽: 'border-purple-500/30 bg-purple-500/10 text-purple-400',
+  圣兽: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400',
 };
 
 function dedupeSort(arr: number[]) {
@@ -114,7 +115,7 @@ export default function PetSkillWiki({ dataSources }: Props) {
     return map;
   }, [dataSources]);
   const petEntriesByType = useMemo<Record<PetGroupType, PetMenuEntry[]>>(() => {
-    const buckets: Record<PetGroupType, PetMenuEntry[]> = { 神兽: [], 灵兽: [], 仙兽: [] };
+    const buckets: Record<PetGroupType, PetMenuEntry[]> = { 神兽: [], 灵兽: [], 仙兽: [], 圣兽: [] };
     for (const group of indexGroups) {
       for (const entry of group.entries || []) {
         const type = entry.type ?? group.type;

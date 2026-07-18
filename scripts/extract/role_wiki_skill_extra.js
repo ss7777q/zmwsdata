@@ -9,7 +9,15 @@ const u = require("../lib/utils");
 const eng = require("./lib/skill-engine");
 
 const OUTPUT_KEY = "role_wiki_skill_extra";
-const SLOT_LABEL = "绝技无双";
+const MODULE_LABEL = "绝技无双";
+
+// skillExtra 的先天进阶沿用原绝技名，但当前入口表仍保留了未更新的占位名。
+const PRESENTATION_BY_SKILL_ID = new Map([
+  [21801010101, { slotLabel: "传说绝技", order: 10 }],
+  [21804010101, { name: "至尊幻装·剑神无我", slotLabel: "先天绝技", order: 11 }],
+  [21802010101, { slotLabel: "传说绝技", order: 20 }],
+  [21803010101, { slotLabel: "传说绝技", order: 30 }],
+]);
 
 function idx(arr) {
   const m = new Map();
@@ -185,11 +193,22 @@ function extract() {
     monsterById: idx(u.loadTable("monster")),
   };
 
-  const slots = [...groupsByKey.values()].map((group) => {
-    const card = buildSkillExtraCard(group, ctx);
+  const groups = [...groupsByKey.values()]
+    .map((group, sourceOrder) => ({
+      ...group,
+      sourceOrder,
+      presentation: PRESENTATION_BY_SKILL_ID.get(group.skillId) || {},
+    }))
+    .sort((a, b) => (a.presentation.order ?? 1000 + a.sourceOrder) - (b.presentation.order ?? 1000 + b.sourceOrder));
+
+  const slots = groups.map((group) => {
+    const card = buildSkillExtraCard({
+      ...group,
+      name: group.presentation.name || group.name,
+    }, ctx);
     return {
       slot: `skillExtra-${group.skillId}`,
-      slotLabel: SLOT_LABEL,
+      slotLabel: group.presentation.slotLabel || MODULE_LABEL,
       isTrans: false,
       base: card,
       awakens: [],
@@ -201,7 +220,7 @@ function extract() {
     kind: "skillExtra",
     role: {
       id: 0,
-      name: SLOT_LABEL,
+      name: MODULE_LABEL,
       text: "特殊无双技能独立展示，不按角色名归类。",
     },
     slots,
@@ -218,7 +237,7 @@ function extract() {
       "bullets.json",
       "entityCtg/*.json",
     ],
-    note: "绝技无双独立模块；入口来自 skillExtra，数值来自 skillExtraLevel.skillId 对应的 skill/skillLevel 战斗链路。",
+    note: "绝技无双独立模块；入口来自 skillExtra，数值来自 skillExtraLevel.skillId 对应的 skill/skillLevel 战斗链路；先天绝技按进阶关系沿用对应传说绝技的展示名。",
   });
 
   for (const slot of slots) {
