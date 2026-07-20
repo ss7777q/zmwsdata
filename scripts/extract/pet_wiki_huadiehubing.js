@@ -103,11 +103,11 @@ const PET_BESKILL = {
 };
 
 const SACRED_FOX_SUMMON_METRICS = [
-  { key: "summonHp", label: "战士生命", influenceKey: "hpInfluenceRatio", standardKey: "hpStandardRatio", expKey: "hpSummonedStanderd" },
-  { key: "summonAtk", label: "战士攻击", influenceKey: "atkInfluenceRatio", standardKey: "atkStandardRatio", expKey: "atkSummonedStanderd" },
-  { key: "summonHealHp", label: "战士回血", influenceKey: "healHpInfluenceRatio", standardKey: "healHpStandardRatio", expKey: "healHpSummonedStanderd" },
-  { key: "summonBreak", label: "战士穿透", influenceKey: "breakInfluenceRatio", standardKey: "breakStandardRatio", expKey: "breakSummonedStanderd" },
-  { key: "summonProtect", label: "战士减伤", influenceKey: "protectInfluenceRatio", standardKey: "protectStandardRatio", expKey: "protectSummonedStanderd" },
+  { key: "summonHp", label: "召唤生命固定值", influenceKey: "hpInfluenceRatio", standardKey: "hpStandardRatio", expKey: "hpSummonedStanderd" },
+  { key: "summonAtk", label: "召唤攻击固定值", influenceKey: "atkInfluenceRatio", standardKey: "atkStandardRatio", expKey: "atkSummonedStanderd" },
+  { key: "summonHealHp", label: "召唤回血固定值", influenceKey: "healHpInfluenceRatio", standardKey: "healHpStandardRatio", expKey: "healHpSummonedStanderd" },
+  { key: "summonBreak", label: "召唤穿透固定值", influenceKey: "breakInfluenceRatio", standardKey: "breakStandardRatio", expKey: "breakSummonedStanderd" },
+  { key: "summonProtect", label: "召唤减伤固定值", influenceKey: "protectInfluenceRatio", standardKey: "protectStandardRatio", expKey: "protectSummonedStanderd" },
 ];
 
 const SPECIAL_CONCRETE_SKILLS = new Map([
@@ -627,7 +627,7 @@ function collectSacredFoxSummonMechanics(ctx, warnings) {
   return [
     {
       label: "属性继承",
-      value: "生命、攻击、回血、穿透和减伤均取圣冰天狐对应属性的一部分，再加上冰心化灵技能等级5倍所对应的召唤基准贡献，最终结果向上取整；各级完整公式见成长数值。",
+      value: "生命、攻击、回血、穿透和减伤分别取圣冰天狐对应属性的33.33%，再加上成长数值中的召唤固定值，最终整体向上取整。召唤固定值按冰心化灵技能等级的5倍读取基准：生命、回血取基准的66.67%，攻击、穿透、减伤取基准的100%；表中固定值已换算并四舍五入保留整数，实际结算仍使用未取整值。",
     },
     {
       label: "寒冰盾与霸体",
@@ -660,12 +660,12 @@ function collectSacredFoxSummonLevelMetrics(displaySkillId, level, ctx, warnings
     if (![influenceRatio, standardRatio, standardValue].every((value) => typeof value === "number" && Number.isFinite(value))) {
       return { key: def.key, label: def.label, value: null, display: null };
     }
-    const standardContribution = standardValue * standardRatio;
+    const fixedValue = Math.round(standardValue * standardRatio);
     return {
       key: def.key,
       label: def.label,
-      value: standardContribution,
-      display: `⌈${formatNumber(influenceRatio * 100, 2)}%本体+${formatNumber(standardContribution, 4)}⌉`,
+      value: fixedValue,
+      display: formatNumber(fixedValue, 0),
     };
   });
 }
