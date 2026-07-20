@@ -1,4 +1,5 @@
 import CostBadge from '../ui/CostBadge';
+import { buildUpgradeSteps, withCumulativeUpgradeCosts } from '../../lib/upgrade-cost';
 
 interface Props {
     dataSources: Record<string, any>;
@@ -7,6 +8,25 @@ interface Props {
 export default function PetSkill({ dataSources }: Props) {
     const skillData = (dataSources['pet_skill'] as any)?.data || { levels: [] };
     const potentialData = (dataSources['pet_potential'] as any)?.data || { sharedCostByLevel: [], maxLevelBonus: null };
+    const skillLevels = Array.isArray(skillData.levels) ? skillData.levels : [];
+    const skillMaxLevel = Math.max(1, ...skillLevels.map((level: any) => Number(level.level) || 0));
+    const skillSteps = withCumulativeUpgradeCosts(buildUpgradeSteps({
+        rows: skillLevels,
+        getStoredLevel: (level: any) => level.level,
+        getCosts: (level: any) => level.upgradeCost,
+        // 普通宠技的 skillLevel.soulCost 属于目标等级；Lv.1 是学习成本，
+        // Lv.2 才是玩家实际执行的 Lv.1 → Lv.2 升级消耗。
+        storedLevelOffset: -1,
+        maxLevel: skillMaxLevel,
+    }));
+    const potentialLevels = Array.isArray(potentialData.sharedCostByLevel) ? potentialData.sharedCostByLevel : [];
+    const potentialMaxLevel = Math.max(1, ...potentialLevels.map((level: any) => Number(level.level) || 0));
+    const potentialSteps = withCumulativeUpgradeCosts(buildUpgradeSteps({
+        rows: potentialLevels,
+        getStoredLevel: (level: any) => level.level,
+        getCosts: (level: any) => level.upgradeCost,
+        maxLevel: potentialMaxLevel,
+    }));
 
     return (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full fade-in zoom-in-95 duration-500">
@@ -20,53 +40,35 @@ export default function PetSkill({ dataSources }: Props) {
                     <table className="w-full text-left text-sm whitespace-nowrap">
                         <thead className="sticky top-0 bg-surface z-10 shadow-sm border-b border-border">
                             <tr className="bg-textMain/5 text-textSub text-xs uppercase tracking-wider">
-                                <th className="px-4 py-3 font-medium">技能等级</th>
-                                <th className="px-4 py-3 font-medium">角色要求</th>
+                                <th className="px-4 py-3 font-medium">升级阶段</th>
+                                <th className="px-4 py-3 font-medium">本次升级要求</th>
                                 <th className="px-4 py-3 font-medium">单级升级消耗</th>
-                                <th className="px-4 py-3 font-medium text-cta">到本级总计消耗</th>
+                                <th className="px-4 py-3 font-medium text-cta">升至目标等级总计</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border/50">
-                            {(() => {
-                                const cumulativeCosts = new Map<string, { itemId: number; name: string; count: number }>();
-
-                                return skillData.levels.map((lvl: any) => {
-                                    const upgradeCosts = Array.isArray(lvl.upgradeCost) ? lvl.upgradeCost : [];
-
-                                    for (const cost of upgradeCosts) {
-                                        const key = `${cost.itemId}-${cost.name}`;
-                                        const existing = cumulativeCosts.get(key);
-                                        cumulativeCosts.set(key, {
-                                            itemId: cost.itemId,
-                                            name: cost.name,
-                                            count: (existing?.count || 0) + Number(cost.count || 0),
-                                        });
-                                    }
-
-                                    return (
-                                        <tr key={lvl.level} className="hover:bg-textMain/5 transition-colors">
-                                            <td className="px-4 py-3 font-mono text-textMain">Lv.{lvl.level}</td>
+                            {skillSteps.map((step) => (
+                                        <tr key={`${step.fromLevel}-${step.toLevel}`} className="hover:bg-textMain/5 transition-colors">
+                                            <td className="px-4 py-3 font-mono text-textMain">Lv.{step.fromLevel} → Lv.{step.toLevel}</td>
                                             <td className="px-4 py-3 font-mono text-textSub">
-                                                {lvl.roleLevel > 0 ? `Lv.${lvl.roleLevel}` : '-'}
+                                                {step.source.roleLevel > 0 ? `角色 Lv.${step.source.roleLevel}` : '-'}
                                             </td>
                                             <td className="px-4 py-3">
                                                 <div className="flex flex-wrap gap-2">
-                                                    {upgradeCosts.length > 0 ? upgradeCosts.map((c: any, i: number) => (
+                                                    {step.costs.map((c, i) => (
                                                         <CostBadge key={i} itemId={c.itemId} name={c.name} count={c.count} />
-                                                    )) : '-'}
+                                                    ))}
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3">
                                                 <div className="flex flex-wrap gap-2">
-                                                    {cumulativeCosts.size > 0 ? Array.from(cumulativeCosts.values()).map((c) => (
+                                                    {step.cumulativeCosts.map((c) => (
                                                         <CostBadge key={`${c.itemId}-${c.name}`} itemId={c.itemId} name={c.name} count={c.count} />
-                                                    )) : '-'}
+                                                    ))}
                                                 </div>
                                             </td>
                                         </tr>
-                                    );
-                                });
-                            })()}
+                            ))}
                         </tbody>
                     </table>
                 </div>
@@ -82,32 +84,27 @@ export default function PetSkill({ dataSources }: Props) {
                     <table className="w-full text-left text-sm whitespace-nowrap">
                         <thead className="sticky top-0 bg-surface z-10 shadow-sm border-b border-border">
                             <tr className="bg-textMain/5 text-textSub text-xs uppercase tracking-wider">
-                                <th className="px-4 py-3 font-medium">潜能等级</th>
+                                <th className="px-4 py-3 font-medium">升级阶段</th>
                                 <th className="px-4 py-3 font-medium">单项单级开支</th>
-                                <th className="px-4 py-3 font-medium text-cta">到本级总计消耗</th>
+                                <th className="px-4 py-3 font-medium text-cta">升至目标等级总计</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border/50">
-                            {(() => {
-                                let cumulativeCost = 0;
-                                return potentialData.sharedCostByLevel.map((lvl: any) => {
-                                    const costNode = lvl.upgradeCost?.[0];
-                                    if (costNode) {
-                                        cumulativeCost += costNode.count;
-                                    }
+                            {potentialSteps.map((step) => {
+                                    const costNode = step.costs[0];
+                                    const cumulativeCost = step.cumulativeCosts[0];
                                     return (
-                                        <tr key={lvl.level} className="hover:bg-textMain/5 transition-colors">
-                                            <td className="px-4 py-3 font-mono text-textMain">Lv.{lvl.level} → Lv.{lvl.level + 1}</td>
+                                        <tr key={`${step.fromLevel}-${step.toLevel}`} className="hover:bg-textMain/5 transition-colors">
+                                            <td className="px-4 py-3 font-mono text-textMain">Lv.{step.fromLevel} → Lv.{step.toLevel}</td>
                                             <td className="px-4 py-3">
                                                 {costNode ? <CostBadge itemId={costNode.itemId} name={costNode.name} count={costNode.count} /> : '-'}
                                             </td>
                                             <td className="px-4 py-3">
-                                                {costNode ? <CostBadge itemId={costNode.itemId} name={costNode.name} count={cumulativeCost} /> : '-'}
+                                                {cumulativeCost ? <CostBadge itemId={cumulativeCost.itemId} name={cumulativeCost.name} count={cumulativeCost.count} /> : '-'}
                                             </td>
                                         </tr>
                                     );
-                                });
-                            })()}
+                            })}
                         </tbody>
                     </table>
                 </div>

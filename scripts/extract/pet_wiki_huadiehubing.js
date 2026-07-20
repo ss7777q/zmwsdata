@@ -18,6 +18,13 @@ const BATTLE_FRAMES_PER_SECOND = 30;
 const GUIDE_PATH = "D:/zmws/保存网页资源/4399_Threads_Download/【结弦】花花蝴蝶冰冰~数值百科_64189062/content.md";
 const PET_IDS = [190000073, 190000103, 190000033, 190000034];
 
+const SACRED_FOX_ROCK_AI = {
+  noRockBehaviorId: 428001,
+  expectedBlockingBulletIds: [104119, 104120],
+  heldBulletId: 104120,
+  baseSolidDamageX: 15,
+};
+
 const PET_SKILL = {
   FLOWER_ATTACK: 20408020001,
   FLOWER_SKILL_1: 20408020101,
@@ -94,6 +101,14 @@ const PET_BESKILL = {
   SACRED_FOX_ROCK_TIMEOUT_RELEASE: 7083108,
   SACRED_FOX_ROCK_BREAK: 7083109,
 };
+
+const SACRED_FOX_SUMMON_METRICS = [
+  { key: "summonHp", label: "战士生命", influenceKey: "hpInfluenceRatio", standardKey: "hpStandardRatio", expKey: "hpSummonedStanderd" },
+  { key: "summonAtk", label: "战士攻击", influenceKey: "atkInfluenceRatio", standardKey: "atkStandardRatio", expKey: "atkSummonedStanderd" },
+  { key: "summonHealHp", label: "战士回血", influenceKey: "healHpInfluenceRatio", standardKey: "healHpStandardRatio", expKey: "healHpSummonedStanderd" },
+  { key: "summonBreak", label: "战士穿透", influenceKey: "breakInfluenceRatio", standardKey: "breakStandardRatio", expKey: "breakSummonedStanderd" },
+  { key: "summonProtect", label: "战士减伤", influenceKey: "protectInfluenceRatio", standardKey: "protectStandardRatio", expKey: "protectSummonedStanderd" },
+];
 
 const SPECIAL_CONCRETE_SKILLS = new Map([
   [PET_SKILL.FLOWER_PASSIVE, [PET_SKILL.FLOWER_PASSIVE, PET_SKILL.FLOWER_PASSIVE_VSKILL]],
@@ -224,9 +239,9 @@ const BIND_SOURCE_LABEL = {
 
 const DEFAULT_METRICS = [
   { key: "atkConv", label: "攻转", scope: "level", expr: "totalPer / releaseSeconds", when: "totalPer * releaseSeconds", fixed: 3 },
-  { key: "fullChargeVal", label: "满充固伤", scope: "level", skill: PET_SKILL.SACRED_FOX_SKILL_4, expr: "totalVal * 1.75", when: "totalVal", fixed: 3 },
-  { key: "fullChargeBreakVal", label: "满充破冰固伤", scope: "level", skill: PET_SKILL.SACRED_FOX_SKILL_4, expr: "totalVal * 2.45", when: "totalVal", fixed: 3 },
-  { key: "fullChargeFrozenBreakVal", label: "满充冰冻破冰固伤", scope: "level", skill: PET_SKILL.SACRED_FOX_SKILL_4, expr: "totalVal * 3.0625", when: "totalVal", fixed: 3 },
+  { key: "fullChargeVal", label: "尺寸7单次主固伤", scope: "level", skill: PET_SKILL.SACRED_FOX_SKILL_4, expr: "totalVal * 1.75", when: "totalVal", fixed: 3 },
+  { key: "fullChargeBreakVal", label: "尺寸7单次破冰固伤", scope: "level", skill: PET_SKILL.SACRED_FOX_SKILL_4, expr: "totalVal * 2.45", when: "totalVal", fixed: 3 },
+  { key: "fullChargeFrozenBreakVal", label: "尺寸7单次冰冻破冰固伤", scope: "level", skill: PET_SKILL.SACRED_FOX_SKILL_4, expr: "totalVal * 3.0625", when: "totalVal", fixed: 3 },
 ];
 
 function idx(arr) {
@@ -554,16 +569,12 @@ function collectSacredFoxSummonEffects(displaySkillId, pet, ctx, warnings) {
   const shieldPer = Array.isArray(shieldBuff?.value) && typeof shieldBuff.value[3] === "number"
     ? shieldBuff.value[3]
     : null;
-  const attachedBuffId = asArray(shieldBuff?.attachBuff)[0];
-  const attachedBuff = ctx.buffById.get(attachedBuffId);
-  const summonParams = ctx.constByKey.get("bingbingCallMonsterParams");
   if (!summon) warnings.push({ code: eng.WARN.MISSING_ACTION_CFG, detail: `skill ${displaySkillId} 未解析到召唤动作` });
   if (!monster) warnings.push({ code: eng.WARN.MISSING_ENTITY_CFG, detail: `skill ${displaySkillId} 未解析到召唤物` });
   if (!attackSkill || !attackRow) warnings.push({ code: eng.WARN.MISSING_SKILL, detail: `召唤物 ${monsterId ?? "?"} 未解析到普攻` });
   if (!shieldSkill) warnings.push({ code: eng.WARN.MISSING_SKILL, detail: `召唤物 ${monsterId ?? "?"} 未解析到登场护盾技能` });
   if (shieldSkill && !shieldActionCfg) warnings.push({ code: eng.WARN.MISSING_ACTION_CFG, detail: `召唤物护盾技能 ${shieldSkillId} 未解析到动作配置` });
   if (shieldActionCfg && !shieldBuff) warnings.push({ code: eng.WARN.MISSING_BUFF, detail: `召唤物护盾技能 ${shieldSkillId} 未解析到护盾效果` });
-  if (!summonParams) warnings.push({ code: eng.WARN.MISSING_ENTITY_CFG, detail: "未解析到冰狐战士专属召唤属性公式" });
 
   const durationText = summon?.time === -1
     ? "无持续时间限制"
@@ -578,19 +589,6 @@ function collectSacredFoxSummonEffects(displaySkillId, pet, ctx, warnings) {
     value: null,
     displayText: `召唤冰狐战士，最多同时存在${summon?.maxCount ?? "?"}只，${durationText}。`,
   });
-  if (summonParams) {
-    const pct = (value) => formatNumber(typeof value === "number" ? value * 100 : null, 2);
-    out.push({
-      baseBuffId: displaySkillId,
-      name: "冰狐战士属性继承",
-      text: null,
-      time: -1,
-      bindSource: "mechanismEffect",
-      bindLabel: BIND_SOURCE_LABEL.mechanismEffect,
-      value: summonParams,
-      displayText: `生命取圣冰天狐最大生命的${pct(summonParams.hpInfluenceRatio)}%与召唤生命基准的${pct(summonParams.hpStandardRatio)}%之和；攻击取圣冰天狐攻击的${pct(summonParams.atkInfluenceRatio)}%与召唤攻击基准的${pct(summonParams.atkStandardRatio)}%之和；回血取圣冰天狐回血的${pct(summonParams.healHpInfluenceRatio)}%与召唤回血基准的${pct(summonParams.healHpStandardRatio)}%之和；破防取圣冰天狐破防的${pct(summonParams.breakInfluenceRatio)}%与召唤破防基准的${pct(summonParams.breakStandardRatio)}%之和；守护取圣冰天狐守护的${pct(summonParams.protectInfluenceRatio)}%与召唤守护基准的${pct(summonParams.protectStandardRatio)}%之和。召唤基准按冰心化灵技能等级的5倍读取。`,
-    });
-  }
   out.push({
     baseBuffId: attackSkillId || PET_SKILL.SACRED_FOX_SUMMON_ATTACK,
     name: "冰狐战士普攻",
@@ -604,7 +602,6 @@ function collectSacredFoxSummonEffects(displaySkillId, pet, ctx, warnings) {
   if (shieldBuff) {
     const shieldPercent = typeof shieldPer === "number" ? formatNumber(shieldPer * 100, 1) : "?";
     const totalDurabilityPercent = typeof shieldPer === "number" ? formatNumber((1 + shieldPer) * 100, 1) : "?";
-    const armorText = attachedBuff?.name === "霸体" ? "护盾存在期间处于霸体状态，护盾耗尽后霸体一并移除" : "护盾附带效果未解析";
     out.push({
       baseBuffId: shieldBuffId || PET_BUFF.SACRED_FOX_SUMMON_SHIELD,
       name: "冰狐战士寒冰盾",
@@ -613,10 +610,64 @@ function collectSacredFoxSummonEffects(displaySkillId, pet, ctx, warnings) {
       bindSource: "mechanismEffect",
       bindLabel: BIND_SOURCE_LABEL.mechanismEffect,
       value: { maxHpPer: shieldPer },
-      displayText: `冰狐战士登场时获得相当于自身最大生命${shieldPercent}%的寒冰盾，连同本体生命，未计防御时总承伤池相当于自身最大生命${totalDurabilityPercent}%；护盾无持续时间限制，只在登场时获得且不会自行恢复；${armorText}。`,
+      displayText: `冰狐战士登场时获得相当于自身最大生命${shieldPercent}%的寒冰盾，连同本体生命，未计防御时总承伤池相当于自身最大生命${totalDurabilityPercent}%；护盾无持续时间限制，只在登场时获得且不会自行恢复；寒冰盾不提供霸体。`,
     });
   }
   return out;
+}
+
+function collectSacredFoxSummonMechanics(ctx, warnings) {
+  const summonParams = ctx.constByKey.get("bingbingCallMonsterParams");
+  const shieldBuff = ctx.buffById.get(PET_BUFF.SACRED_FOX_SUMMON_SHIELD);
+  const armorBuffId = asArray(shieldBuff?.attachBuff)[0];
+  const armorBuff = ctx.buffById.get(armorBuffId);
+  if (!summonParams) warnings.push({ code: eng.WARN.MISSING_ENTITY_CFG, detail: "未解析到冰狐战士专属召唤属性公式" });
+  if (shieldBuff?.attachBuff && !armorBuff) warnings.push({ code: eng.WARN.MISSING_BUFF, detail: `寒冰盾附加效果 ${armorBuffId ?? "?"} 缺失` });
+
+  return [
+    {
+      label: "属性继承",
+      value: "生命、攻击、回血、穿透和减伤均取圣冰天狐对应属性的一部分，再加上冰心化灵技能等级5倍所对应的召唤基准贡献，最终结果向上取整；各级完整公式见成长数值。",
+    },
+    {
+      label: "寒冰盾与霸体",
+      value: armorBuff?.type === 23 && armorBuff?.qualified === 1
+        ? "数据层虽然让寒冰盾附加霸体 Buff，但该 Buff 被标记为技能限定，会在召唤物的登场护盾技能结束时清除；寒冰盾不会续挂或重新赋予霸体。因此护盾存在期间不具备霸体，冰狐战士仍会受到攻击硬直。"
+        : "寒冰盾不提供霸体，实战中冰狐战士仍会受到攻击硬直。",
+    },
+  ];
+}
+
+function collectSacredFoxSummonLevelMetrics(displaySkillId, level, ctx, warnings) {
+  if (displaySkillId !== PET_SKILL.SACRED_FOX_SKILL_2) return [];
+  const summonParams = ctx.constByKey.get("bingbingCallMonsterParams");
+  const standardLevel = level * 5;
+  const standard = ctx.expByLevel.get(standardLevel);
+  if (!summonParams || !standard) {
+    const detail = !summonParams
+      ? "未解析到冰狐战士专属召唤属性公式"
+      : `exp ${standardLevel} 未解析到召唤属性基准`;
+    if (!warnings.some((warning) => warning.code === "SACRED_FOX_SUMMON_STANDARD_MISSING" && warning.detail === detail)) {
+      warnings.push({ code: "SACRED_FOX_SUMMON_STANDARD_MISSING", detail });
+    }
+    return [];
+  }
+
+  return SACRED_FOX_SUMMON_METRICS.map((def) => {
+    const influenceRatio = summonParams[def.influenceKey];
+    const standardRatio = summonParams[def.standardKey];
+    const standardValue = standard[def.expKey];
+    if (![influenceRatio, standardRatio, standardValue].every((value) => typeof value === "number" && Number.isFinite(value))) {
+      return { key: def.key, label: def.label, value: null, display: null };
+    }
+    const standardContribution = standardValue * standardRatio;
+    return {
+      key: def.key,
+      label: def.label,
+      value: standardContribution,
+      display: `⌈${formatNumber(influenceRatio * 100, 2)}%本体+${formatNumber(standardContribution, 4)}⌉`,
+    };
+  });
 }
 
 function collectSacredFoxRockMechanics(ctx, warnings) {
@@ -646,10 +697,72 @@ function collectSacredFoxRockMechanics(ctx, warnings) {
   const frozenPer = frozenDamage?.attribute?.value?.[0];
   const rockSkill = ctx.skillById.get(PET_SKILL.SACRED_FOX_SKILL_4);
   const rockRow = rockSkill ? ctx.skillLevelById.get(eng.skillLevelRowId(rockSkill, 1)) : null;
+  const skillCd = rockSkill?.cd;
+  const noRockBehavior = ctx.behaviorById.get(SACRED_FOX_ROCK_AI.noRockBehaviorId);
+  const blockingBulletIds = asArray(noRockBehavior?.value?.bIds);
+  const hasHoldingLock = noRockBehavior?.name === "IsNoHaveBullet"
+    && SACRED_FOX_ROCK_AI.expectedBlockingBulletIds.every((id) => blockingBulletIds.includes(id));
+  const heldBullet = eng.getBullet(SACRED_FOX_ROCK_AI.heldBulletId, warnings);
+  const heldBulletLastsToTimeout = typeof heldBullet?.maxTime === "number"
+    && typeof timeout === "number"
+    && heldBullet.maxTime >= timeout;
+  if (!hasHoldingLock) {
+    warnings.push({
+      code: "SACRED_FOX_ROCK_AI_LOCK_MISMATCH",
+      detail: `behavior ${SACRED_FOX_ROCK_AI.noRockBehaviorId} 未匹配生成态/持有态巨岩限制`,
+    });
+  }
+  if (!heldBulletLastsToTimeout) {
+    warnings.push({
+      code: "SACRED_FOX_ROCK_LIFETIME_MISMATCH",
+      detail: `bullet ${SACRED_FOX_ROCK_AI.heldBulletId} 持续时间不足以覆盖 ${timeout ?? "?"} 秒超时条件`,
+    });
+  }
   const damageFactor = typeof maxScale === "number" && typeof minScale === "number" ? maxScale / minScale : null;
-  const maxPer = typeof rockRow?.damageAddPer === "number" && damageFactor != null ? rockRow.damageAddPer * damageFactor : null;
-  const maxBreakPer = maxPer != null && typeof breakPer === "number" ? maxPer * (1 + breakPer) : null;
-  const maxFrozenBreakPer = maxBreakPer != null && typeof frozenPer === "number" ? maxBreakPer * (1 + frozenPer) : null;
+  const basePer = typeof rockRow?.damageAddPer === "number" ? rockRow.damageAddPer : null;
+  const breakTotalPer = basePer != null && typeof breakPer === "number" ? basePer * (1 + breakPer) : null;
+  const frozenBreakTotalPer = breakTotalPer != null && typeof frozenPer === "number" ? breakTotalPer * (1 + frozenPer) : null;
+  const maxBonusFactor = damageFactor != null ? damageFactor - 1 : null;
+  const unreachableFullBonusScale = typeof minScale === "number" ? minScale * 2 : null;
+  const timeoutCycle = typeof skillCd === "number" && typeof timeout === "number"
+    ? Math.max(skillCd, timeout)
+    : null;
+  const scaleMultiplier = (scale) => (typeof minScale === "number" ? Math.max(1, scale / minScale) : null);
+  const correctionFor = (scale, cycle) => {
+    const multiplier = scaleMultiplier(scale);
+    if (multiplier == null || typeof cycle !== "number" || cycle <= 0) return null;
+    return SACRED_FOX_ROCK_AI.baseSolidDamageX * multiplier / cycle * 100;
+  };
+  const scaleFactors = typeof maxScale === "number"
+    ? Array.from({ length: Math.max(0, Math.floor(maxScale)) }, (_, index) => {
+      const scale = index + 1;
+      return `${formatNumber(scale)}尺寸=${formatNumber((scaleMultiplier(scale) ?? 0) * 100, 2)}%固伤`;
+    }).join("、")
+    : "";
+  const staticCorrectionFactors = typeof maxScale === "number" && typeof skillCd === "number"
+    ? Array.from({ length: Math.max(0, Math.floor(maxScale)) }, (_, index) => {
+      const scale = index + 1;
+      return `${formatNumber(scale)}尺寸=${formatNumber(correctionFor(scale, skillCd), 2)}%`;
+    }).join("、")
+    : "";
+  const timeoutCorrectionFactors = typeof maxScale === "number" && timeoutCycle != null
+    ? Array.from({ length: Math.max(0, Math.floor(maxScale)) }, (_, index) => {
+      const scale = index + 1;
+      return `${formatNumber(scale)}尺寸=${formatNumber(correctionFor(scale, timeoutCycle), 2)}%`;
+    }).join("、")
+    : "";
+  const fullCorrectionCycleLimits = typeof maxScale === "number"
+    ? Array.from({ length: Math.max(0, Math.floor(maxScale)) }, (_, index) => {
+      const scale = index + 1;
+      return `${formatNumber(scale)}尺寸=${formatNumber(SACRED_FOX_ROCK_AI.baseSolidDamageX * (scaleMultiplier(scale) ?? 0), 2)}秒`;
+    }).join("、")
+    : "";
+  const frozenStaticCorrection = typeof frozenScale === "number" && typeof skillCd === "number"
+    ? correctionFor(frozenScale, skillCd)
+    : null;
+  const maxStaticCorrection = typeof maxScale === "number" && typeof skillCd === "number"
+    ? correctionFor(maxScale, skillCd)
+    : null;
 
   const chargeText = [
     [PET_SKILL.SACRED_FOX_ATTACK, "冰晶球"],
@@ -659,15 +772,20 @@ function collectSacredFoxRockMechanics(ctx, warnings) {
   ].map(([skillId, name]) => `${name}每段增加${formatNumber(addScale[skillId])}尺寸，单次最多增加${formatNumber(skillCaps[skillId])}`).join("；");
 
   return [
-    { label: "充能规则", value: `${chargeText}。巨岩尺寸上限为${formatNumber(maxScale)}。` },
-    { label: "投出条件", value: `巨岩存在${formatNumber(timeout)}秒后自动投向最近敌人；尺寸达到${formatNumber(frozenScale)}且附近存在冰冻敌人时，会提前投向该目标。` },
-    { label: "满充伤害", value: `尺寸低于${formatNumber(minScale)}时不增加伤害；达到该尺寸后按“尺寸÷${formatNumber(minScale)}”结算。满尺寸${formatNumber(maxScale)}时主伤害为基础的${formatNumber(damageFactor)}倍，总系数${formatNumber(maxPer)}。` },
-    { label: "破冰", value: `命中冰冻目标时，霜冻强化先将主伤害提高${formatNumber(typeof frozenPer === "number" ? frozenPer * 100 : null, 1)}%，再额外造成最终主伤害${formatNumber(typeof breakPer === "number" ? breakPer * 100 : null, 1)}%的破冰伤害并移除冰冻。满尺寸未计霜冻强化时合计总系数${formatNumber(maxBreakPer)}，计入霜冻强化后实际总系数${formatNumber(maxFrozenBreakPer, 5)}。` },
-    { label: "固伤修正", value: `按基础固伤100%口径，满充主伤害修正比为${formatNumber(damageFactor != null ? damageFactor * 100 : null, 2)}%，满充破冰未计霜冻强化时为${formatNumber(damageFactor != null && typeof breakPer === "number" ? damageFactor * (1 + breakPer) * 100 : null, 2)}%，计入霜冻强化后为${formatNumber(damageFactor != null && typeof breakPer === "number" && typeof frozenPer === "number" ? damageFactor * (1 + breakPer) * (1 + frozenPer) * 100 : null, 2)}%。` },
+    { label: "充能规则", value: `巨岩初始尺寸为1。${chargeText}。巨岩尺寸上限为${formatNumber(maxScale)}。` },
+    { label: "投出条件", value: `巨岩存在${formatNumber(timeout)}秒后按当时尺寸投向最近敌人；尺寸达到${formatNumber(frozenScale)}且附近存在冰冻敌人时，会立即提前投向该目标，不会继续等待尺寸上限。` },
+    { label: "再释放限制", value: `技能表冷却为${formatNumber(skillCd)}秒，但场上还有正在生成或持有的巨岩时，本技能不会再次生成巨岩。持有态巨岩会一直存在到提前投出或${formatNumber(timeout)}秒超时投出，因此实际生成间隔至少取${formatNumber(skillCd)}秒冷却和本轮巨岩持有时间中的较长者；没有冰冻目标触发提前投出时，间隔约为${formatNumber(timeoutCycle)}秒，而不是${formatNumber(skillCd)}秒。` },
+    { label: "尺寸倍率", value: `充能只放大技能等级固伤，基础${formatNumber(basePer)}倍攻击系数始终不变。尺寸低于${formatNumber(minScale)}时仍按基础固伤100%结算；达到后按“尺寸÷${formatNumber(minScale)}”结算，${scaleFactors}。` },
+    { label: "破冰", value: `命中冰冻目标时，霜冻强化先将主伤害提高${formatNumber(typeof frozenPer === "number" ? frozenPer * 100 : null, 1)}%，再额外造成最终主伤害${formatNumber(typeof breakPer === "number" ? breakPer * 100 : null, 1)}%的破冰伤害并移除冰冻。攻击系数未计霜冻强化时为${formatNumber(breakTotalPer)}，计入后为${formatNumber(frozenBreakTotalPer)}；充能仍只改变固伤部分。` },
+    { label: "15秒静态修正", value: `按技能表的${formatNumber(SACRED_FOX_ROCK_AI.baseSolidDamageX)}X基础固伤和${formatNumber(skillCd)}秒冷却计算，主固伤修正为${staticCorrectionFactors}。这只是配置静态值，只有巨岩最晚在${formatNumber(skillCd)}秒时投出、下一轮确实由冷却限制时才能兑现；并非无条件实战值。计入破冰、冰冻增伤加破冰后，尺寸${formatNumber(frozenScale)}分别为${formatNumber(frozenStaticCorrection, 2)}%、${formatNumber(frozenStaticCorrection != null && typeof breakPer === "number" ? frozenStaticCorrection * (1 + breakPer) : null, 2)}%、${formatNumber(frozenStaticCorrection != null && typeof breakPer === "number" && typeof frozenPer === "number" ? frozenStaticCorrection * (1 + breakPer) * (1 + frozenPer) : null, 2)}%；尺寸${formatNumber(maxScale)}分别为${formatNumber(maxStaticCorrection, 2)}%、${formatNumber(maxStaticCorrection != null && typeof breakPer === "number" ? maxStaticCorrection * (1 + breakPer) : null, 2)}%、${formatNumber(maxStaticCorrection != null && typeof breakPer === "number" && typeof frozenPer === "number" ? maxStaticCorrection * (1 + breakPer) * (1 + frozenPer) : null, 2)}%。尺寸${formatNumber(maxScale)}只比尺寸1至${formatNumber(frozenScale)}高${formatNumber(maxBonusFactor != null ? maxBonusFactor * 100 : null, 2)}个百分点；若把“满充”理解为额外增加100个百分点、总修正200%，则需要尺寸${formatNumber(unreachableFullBonusScale)}，超过配置上限。` },
+    { label: "30秒超时修正", value: `没有冰冻目标触发提前投出时，巨岩持有到${formatNumber(timeout)}秒才投出，主固伤按约${formatNumber(timeoutCycle)}秒一轮计算：${timeoutCorrectionFactors}。所以尺寸${formatNumber(maxScale)}即使充满，主固伤实战修正也只有${formatNumber(correctionFor(maxScale, timeoutCycle), 2)}%，达不到100%。换算成达到100%主固伤实战修正的最晚投出时间，${fullCorrectionCycleLimits}；超过对应时间就低于100%。` },
+    { label: "战斗统计", value: `伤害报告中的20420040402是冰冻条件提前投出；破冰额外伤害沿用同一技能编号，因此成功破冰时一次投掷通常记为2次。20420040403是${formatNumber(timeout)}秒超时投出，未触发破冰时一次投掷通常记为1次。报告里的“次”不能直接当作释放次数，前者通常要除以2后再与后者相加。` },
+    { label: "实战口径", value: `任意持有时间下，实际主固伤修正等于15秒静态修正乘以“${formatNumber(skillCd)}÷实际生成间隔”；实际生成间隔不会短于${formatNumber(skillCd)}秒。固伤修正只比较技能等级固伤与周期，不代表整段最终伤害，也不等于战斗统计占比；比较实测时还需把多段技能的命中次数换算为完整释放次数，并计入攻击系数、实际投出次数、目标防御和增减伤。` },
   ];
 }
 
 function collectSkillMechanics(displaySkillId, ctx, warnings) {
+  if (displaySkillId === PET_SKILL.SACRED_FOX_SKILL_2) return collectSacredFoxSummonMechanics(ctx, warnings);
   if (displaySkillId === PET_SKILL.SACRED_FOX_SKILL_4) return collectSacredFoxRockMechanics(ctx, warnings);
   return [];
 }
@@ -918,21 +1036,25 @@ function buildSkillCard(displaySkillId, pet, slotLabel, slotKind, ctx) {
     maxLevel,
     slotLabel,
     slotKind,
-    levels: levels.map((l) => ({
-      level: l.level,
-      roleLevel: l.roleLevel,
-      consumeMp: l.consumeMp,
-      soulCost: l.soulCost,
-      segmentVals: l.segments.map((s) => ({ val: s.val, maxHit: s.maxHit })),
-      totalPer: l.totalPer,
-      totalVal: l.totalVal,
-      growthBuffs: l.growthBuffs || [],
-      metrics: metrics.computeMetrics(
+    levels: levels.map((l) => {
+      const levelMetrics = metrics.computeMetrics(
         ctx.metricDefs, "level",
         { skillId: displaySkillId, level: l.level, roleLevel: l.roleLevel, consumeMp: l.consumeMp, totalPer: l.totalPer, totalVal: l.totalVal, growthBuffs: l.growthBuffs || [], releaseSeconds: rel.releaseSeconds, segCount: l.segments.reduce((sum, s) => sum + (s.maxHit || 1), 0) },
         ctx.helpers, l.level === 1 ? warnings : [],
-      ),
-    })),
+      );
+      levelMetrics.push(...collectSacredFoxSummonLevelMetrics(displaySkillId, l.level, ctx, warnings));
+      return {
+        level: l.level,
+        roleLevel: l.roleLevel,
+        consumeMp: l.consumeMp,
+        soulCost: l.soulCost,
+        segmentVals: l.segments.map((s) => ({ val: s.val, maxHit: s.maxHit })),
+        totalPer: l.totalPer,
+        totalVal: l.totalVal,
+        growthBuffs: l.growthBuffs || [],
+        metrics: levelMetrics,
+      };
+    }),
     warnings,
   };
 
@@ -992,6 +1114,8 @@ function extract() {
     monsterById: idx(u.loadTable("monster")),
     buffById: idx(u.loadTable("buff")),
     beskillById: idx(u.loadTable("beskill")),
+    behaviorById: idx(u.loadTable("behavior")),
+    expByLevel: idx(u.loadTable("exp")),
     constByKey: new Map(u.loadTable("consts").map((row) => [row.key, row.value])),
     overrides: ov.loadOverrides(PET_OVERRIDE),
     emitTemplate: EMIT_TEMPLATE,
@@ -1047,7 +1171,7 @@ function extract() {
 
   u.saveOutput("pet_wiki_huadiehubing", payload, {
     system: "pet_wiki",
-    sourceFiles: ["pet.*.json", "skill.*.json", "skillLevel.*.json", "monster.*.json", "beskill.*.json", "buff.*.json", "consts.*.json", "exp.*.json", "bullets.json", "entityCtg/*.json", GUIDE_PATH],
+    sourceFiles: ["pet.*.json", "skill.*.json", "skillLevel.*.json", "monster.*.json", "beskill.*.json", "behavior.*.json", "buff.*.json", "consts.*.json", "exp.*.json", "bullets.json", "entityCtg/*.json", "data/runtime/main-index.js", "aiCfg:2042004", GUIDE_PATH],
     note: "神霄花仙/玄蝶仙子/千年冰狐/圣冰天狐宠物技能 Wiki，包括普攻、主动技能、无双、被动、治疗、召唤、护盾、充能、破冰和减益效果。",
   });
 

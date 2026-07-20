@@ -9,6 +9,7 @@ import {
     Legend,
     ResponsiveContainer
 } from 'recharts';
+import { buildUpgradeSteps, withCumulativeUpgradeCosts } from '../lib/upgrade-cost';
 
 interface Props {
     dataSources: Record<string, any>;
@@ -18,14 +19,21 @@ export default function CultivateHeart({ dataSources }: Props) {
     const rawData = (dataSources['role_heart'] as any)?.data || [];
 
     const tableData = useMemo(() => {
-        let accumulated = 0;
-        return rawData.map((node: any) => {
-            const perHole = node.soulCost?.[0]?.count ?? 0;
+        const maxLevel = Math.max(0, ...rawData.map((node: any) => Number(node.level) || 0));
+        const steps = withCumulativeUpgradeCosts(buildUpgradeSteps({
+            rows: rawData,
+            getStoredLevel: (node: any) => node.level,
+            getCosts: (node: any) => node.soulCost,
+            maxLevel,
+        }));
+        return steps.map((step) => {
+            const perHole = step.costs[0]?.count ?? 0;
             const perLevel = perHole * 6; // 六大属性
-            accumulated += perLevel;
+            const accumulated = (step.cumulativeCosts[0]?.count ?? 0) * 6;
             return {
-                level: node.level,
-                roleLevelRequired: node.roleLevelRequired,
+                fromLevel: step.fromLevel,
+                toLevel: step.toLevel,
+                roleLevelRequired: step.source.roleLevelRequired,
                 perHole,
                 perLevel,
                 accumulated,
@@ -34,7 +42,7 @@ export default function CultivateHeart({ dataSources }: Props) {
     }, [rawData]);
 
     const chartData = useMemo(() => tableData.map((r: any) => ({
-        name: `${r.level}级`,
+        name: `${r.fromLevel}→${r.toLevel}级`,
         soulCost: r.perLevel,
         accumulatedSoul: r.accumulated,
     })), [tableData]);
@@ -72,7 +80,7 @@ export default function CultivateHeart({ dataSources }: Props) {
                                 formatter={(value: any, name: any) => [Number(value).toLocaleString(), name]}
                             />
                             <Legend wrapperStyle={{ paddingTop: '12px', fontSize: 11 }} />
-                            <Line yAxisId="left" type="monotone" dataKey="soulCost" name="本级升满消耗" stroke="var(--primary)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+                            <Line yAxisId="left" type="monotone" dataKey="soulCost" name="本次升级消耗" stroke="var(--primary)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
                             <Line yAxisId="right" type="monotone" dataKey="accumulatedSoul" name="累计灵魂" stroke="var(--cta)" strokeWidth={2.5} dot={false} />
                         </LineChart>
                     </ResponsiveContainer>
@@ -82,7 +90,7 @@ export default function CultivateHeart({ dataSources }: Props) {
             {/* Note */}
             <div className="text-[11px] text-textSub bg-slate-500/[0.02] dark:bg-white/[0.01] border border-border/40 rounded-lg px-4 py-2 flex items-center gap-2">
                 <span className="text-primary font-mono font-bold">提示</span>
-                <span><span className="font-semibold text-textMain">单次消耗</span> = 本级消耗 ÷ 6（修心共六项属性，每项升级消耗相同）。窄屏下该列自动隐藏。</span>
+                <span><span className="font-semibold text-textMain">单次消耗</span> = 本次升级消耗 ÷ 6（修心共六项属性，每项升级消耗相同）。窄屏下该列自动隐藏。</span>
             </div>
 
             {/* Table */}
@@ -91,23 +99,23 @@ export default function CultivateHeart({ dataSources }: Props) {
                     <table className="w-full text-xs text-left">
                         <thead className="sticky top-0 z-10 bg-slate-500/[0.04] dark:bg-white/[0.02] border-b border-border/40 text-[10px] uppercase tracking-wider text-textSub shadow-sm">
                             <tr>
-                                <th className="px-4 py-3 font-semibold whitespace-nowrap">修心等级</th>
-                                <th className="px-4 py-3 font-semibold whitespace-nowrap">解锁角色等级</th>
+                                <th className="px-4 py-3 font-semibold whitespace-nowrap">升级阶段</th>
+                                <th className="px-4 py-3 font-semibold whitespace-nowrap">本次升级要求</th>
                                 <th className="hidden sm:table-cell px-4 py-3 font-semibold whitespace-nowrap">单次消耗</th>
-                                <th className="px-4 py-3 font-semibold whitespace-nowrap">本级消耗</th>
-                                <th className="px-4 py-3 font-semibold whitespace-nowrap text-cta">累计消耗</th>
+                                <th className="px-4 py-3 font-semibold whitespace-nowrap">本次升级消耗</th>
+                                <th className="px-4 py-3 font-semibold whitespace-nowrap text-cta">升至目标等级累计</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border/20 font-mono">
                             {tableData.map((row: any) => {
-                                const isMilestone = row.level > 0 && row.level % 10 === 0;
+                                const isMilestone = row.toLevel > 0 && row.toLevel % 10 === 0;
                                 return (
                                     <tr
-                                        key={row.level}
+                                        key={`${row.fromLevel}-${row.toLevel}`}
                                         className={`hover:bg-purple-500/[0.02] transition-colors ${isMilestone ? 'bg-purple-500/[0.04]' : ''}`}
                                     >
                                         <td className={`px-4 py-2.5 font-bold ${isMilestone ? 'text-purple-600 dark:text-purple-400' : 'text-textMain'}`}>
-                                            {row.level}
+                                            Lv.{row.fromLevel} → Lv.{row.toLevel}
                                         </td>
                                         <td className="px-4 py-2.5 text-textSub">
                                             {row.roleLevelRequired > 0 ? `Lv.${row.roleLevelRequired}` : '—'}

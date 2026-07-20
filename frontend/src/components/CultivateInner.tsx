@@ -182,11 +182,18 @@ export default function CultivateInner({ dataSources }: Props) {
                             const styling = QualityColors[qualityData.quality] || 'text-textMain border-border bg-textMain/5';
                             const titleName = QualityNames[qualityData.quality] || `品质 ${qualityData.quality} 丹元`;
 
-                            // 预计算累计经验
+                            const rawLevels = Array.isArray(qualityData.levels) ? qualityData.levels : [];
+                            const maxLevel = Math.max(1, ...rawLevels.map((level: any) => Number(level.level) || 0));
                             let rollingExp = 0;
-                            const levels = (qualityData.levels || []).map((lvl: any) => {
-                                rollingExp += (lvl.levelUpNeed || 0);
-                                return { ...lvl, accumulatedExp: rollingExp };
+                            const levels = rawLevels.map((level: any) => {
+                                const canUpgrade = level.level < maxLevel && level.levelUpNeed > 0;
+                                if (canUpgrade) rollingExp += level.levelUpNeed;
+                                return {
+                                    ...level,
+                                    fromLevel: level.level,
+                                    toLevel: canUpgrade ? level.level + 1 : null,
+                                    accumulatedExp: rollingExp,
+                                };
                             });
 
                             return (
@@ -195,32 +202,32 @@ export default function CultivateInner({ dataSources }: Props) {
                                         <h4 className="text-sm font-bold tracking-wider uppercase">
                                             {titleName} 升级曲线
                                         </h4>
-                                        <span className="text-[10px] font-bold opacity-75 font-mono">MAX Lv.{levels.length}</span>
+                                        <span className="text-[10px] font-bold opacity-75 font-mono">MAX Lv.{maxLevel}</span>
                                     </div>
                                     <div className="p-0 overflow-x-auto flex-1">
                                         <table className="w-full text-center text-xs whitespace-nowrap">
                                             <thead>
                                                 <tr className="bg-slate-500/[0.04] dark:bg-white/[0.02] text-textSub text-[10px] uppercase tracking-wider border-b border-border/40">
-                                                    <th className="px-4 py-3 font-semibold">Lv.</th>
-                                                    <th className="px-4 py-3 font-semibold text-cta">升级所需</th>
-                                                    <th className="px-4 py-3 font-semibold text-orange-400">累计所需</th>
-                                                    <th className="px-4 py-3 font-semibold text-green-500">吞噬提供</th>
+                                                    <th className="px-4 py-3 font-semibold">升级阶段</th>
+                                                    <th className="px-4 py-3 font-semibold text-cta">本次升级所需</th>
+                                                    <th className="px-4 py-3 font-semibold text-orange-400">升至目标等级累计</th>
+                                                    <th className="px-4 py-3 font-semibold text-green-500">当前丹元吞噬提供</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-border/20 font-mono">
-                                                {levels.map((lvl: any) => (
-                                                    <tr key={lvl.level} className="hover:bg-purple-500/[0.02] transition-colors duration-150">
+                                                {levels.map((level: any) => (
+                                                    <tr key={level.fromLevel} className="hover:bg-purple-500/[0.02] transition-colors duration-150">
                                                         <td className="px-4 py-2.5 text-textMain font-bold">
-                                                            {lvl.level}
+                                                            {level.toLevel ? `Lv.${level.fromLevel} → Lv.${level.toLevel}` : `Lv.${level.fromLevel}（满级）`}
                                                         </td>
                                                         <td className="px-4 py-2.5 text-textMain">
-                                                            {lvl.levelUpNeed > 0 ? Number(lvl.levelUpNeed).toLocaleString() : '-'}
+                                                            {level.toLevel ? Number(level.levelUpNeed).toLocaleString() : '-'}
                                                         </td>
                                                         <td className="px-4 py-2.5 text-orange-400">
-                                                            {lvl.accumulatedExp > 0 ? Number(lvl.accumulatedExp).toLocaleString() : '-'}
+                                                            {level.accumulatedExp > 0 ? Number(level.accumulatedExp).toLocaleString() : '-'}
                                                         </td>
                                                         <td className="px-4 py-2.5 text-textSub">
-                                                            {lvl.provideExp > 0 ? Number(lvl.provideExp).toLocaleString() : '-'}
+                                                            {level.provideExp > 0 ? Number(level.provideExp).toLocaleString() : '-'}
                                                         </td>
                                                     </tr>
                                                 ))}

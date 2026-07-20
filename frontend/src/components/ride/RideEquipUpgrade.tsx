@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { levelCountInRange } from '../../lib/upgrade-cost';
 
 interface Props {
     dataSources: Record<string, any>;
@@ -12,7 +13,7 @@ export default function RideEquipUpgrade({ dataSources }: Props) {
         if (!upgradeData) return [];
         let accExp = 0;
         return upgradeData.map((stage: any) => {
-            accExp += stage.exp || 0;
+            accExp += (stage.exp || 0) * levelCountInRange(stage.levelStart, stage.levelEnd);
             return {
                 ...stage,
                 accExp

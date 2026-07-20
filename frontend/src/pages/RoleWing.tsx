@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 import CostBadge from '../components/ui/CostBadge';
 import { ChevronRight } from 'lucide-react';
+import { buildUpgradeSteps, sumUpgradeStepCosts } from '../lib/upgrade-cost';
 
 const QUALITY_NAMES: Record<number, string> = {
     2: '优秀',
@@ -35,23 +36,23 @@ export default function RoleWing({ dataSources }: RoleWingProps) {
 
     // =========== 翅膀 Tab 逻辑 ===========
     const wings = useMemo(() => {
-        return wingData.map((w: any) => ({
-            ...w,
-            maxLevel: w.levels?.[w.levels.length - 1]?.wingLevel || 0,
-            maxQuality: w.levels?.[w.levels.length - 1]?.quality || 1,
-            // 汇总满级总消耗 (过滤掉 null)
-            totalCost: w.levels?.reduce((acc: any[], lv: any) => {
-                if (lv.consume) {
-                    const exist = acc.find(c => c.itemId === lv.consume.itemId);
-                    if (exist) {
-                        exist.count += lv.consume.count;
-                    } else {
-                        acc.push({ ...lv.consume });
-                    }
-                }
-                return acc;
-            }, []) || []
-        }));
+        return wingData.map((w: any) => {
+            const levels = Array.isArray(w.levels) ? w.levels : [];
+            const maxLevel = Math.max(1, ...levels.map((level: any) => Number(level.wingLevel) || 0));
+            const upgradeSteps = buildUpgradeSteps({
+                rows: levels,
+                getStoredLevel: (level: any) => level.wingLevel,
+                getCosts: (level: any) => level.consume ? [level.consume] : [],
+                maxLevel,
+            });
+            return {
+                ...w,
+                maxLevel,
+                maxQuality: levels[levels.length - 1]?.quality || 1,
+                upgradeSteps,
+                totalCost: sumUpgradeStepCosts(upgradeSteps),
+            };
+        });
     }, [wingData]);
 
     const effectByButeId = useMemo(() => {
@@ -175,7 +176,7 @@ export default function RoleWing({ dataSources }: RoleWingProps) {
                             </div>
 
                             <div className="bg-slate-500/[0.01] dark:bg-white/[0.01] p-3.5 rounded-xl border border-border/40 border-l-2 border-l-purple-500/50">
-                                <span className="text-[10px] text-textSub mb-2 block font-bold uppercase tracking-wider">1 ~ 满级总代价</span>
+                                <span className="text-[10px] text-textSub mb-2 block font-bold uppercase tracking-wider">Lv.1 ~ Lv.{wing.maxLevel} 升级总代价</span>
                                 <div className="flex flex-wrap gap-1.5">
                                     {wing.totalCost.map((c: any, i: number) => (
                                         <CostBadge key={i} itemId={c.itemId} name={c.name} count={c.count} />
@@ -194,19 +195,19 @@ export default function RoleWing({ dataSources }: RoleWingProps) {
                                 "grid gap-2 overflow-hidden transition-all duration-300",
                                 expandedWingIds[wing.buteId] ? "max-h-[800px] overflow-y-auto custom-scrollbar mt-1 opacity-100" : "max-h-0 opacity-0"
                             )}>
-                                {wing.levels?.map((lv: any, i: number) => (
-                                    <div key={i} className="flex justify-between items-center p-2 rounded-lg bg-slate-500/[0.04] dark:bg-black/20 border border-border/10">
+                                {wing.upgradeSteps.map((step: any) => (
+                                    <div key={`${step.fromLevel}-${step.toLevel}`} className="flex justify-between items-center p-2 rounded-lg bg-slate-500/[0.04] dark:bg-black/20 border border-border/10">
                                         <div className="flex items-center gap-3">
-                                            <span className="w-12 text-xs font-mono text-textSub">Lv.{lv.wingLevel}</span>
-                                            {lv.consume ? (
-                                                <CostBadge itemId={lv.consume.itemId} name={lv.consume.name} count={lv.consume.count} />
-                                            ) : (
-                                                <span className="text-xs text-textSub italic">已满级</span>
-                                            )}
+                                            <span className="w-28 text-xs font-mono text-textSub">Lv.{step.fromLevel} → Lv.{step.toLevel}</span>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {step.costs.map((cost: any) => (
+                                                    <CostBadge key={cost.itemId} itemId={cost.itemId} name={cost.name} count={cost.count} />
+                                                ))}
+                                            </div>
                                         </div>
-                                        {lv.consume && lv.nextLevelRoleLevelRequired && (
+                                        {step.source.nextLevelRoleLevelRequired && (
                                             <div className="text-[10px] text-orange-400 font-mono text-right">
-                                                升下级需角色 {lv.nextLevelRoleLevelRequired} 级
+                                                升下级需角色 {step.source.nextLevelRoleLevelRequired} 级
                                             </div>
                                         )}
                                     </div>

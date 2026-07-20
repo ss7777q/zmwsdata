@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import CostBadge from '../components/ui/CostBadge';
 import { ChevronDown, ChevronUp, ChevronRight } from 'lucide-react';
 import { clsx } from 'clsx';
+import { buildUpgradeSteps } from '../lib/upgrade-cost';
 
 interface MagicWeaponEffectTable {
     title: string;
@@ -150,19 +151,21 @@ export default function RoleMagic({ dataSources, activeTab, onTabChange }: Props
             const soulDetails: any[] = [];
 
             if (soulItem && soulItem.levels) {
-                soulItem.levels.forEach((lvl: any, index: number) => {
-                    const currentLevelCosts: any[] = [];
-                    lvl.upCost?.forEach((c: any) => {
-                        if (c.itemId === 1) return; // 不展示点券
+                const soulMaxLevel = Math.max(1, ...soulItem.levels.map((lvl: any) => Number(lvl.level) || 0));
+                const soulSteps = buildUpgradeSteps({
+                    rows: soulItem.levels,
+                    getStoredLevel: (lvl: any) => lvl.level,
+                    getCosts: (lvl: any) => lvl.upCost,
+                    maxLevel: soulMaxLevel,
+                });
+
+                soulSteps.forEach((step) => {
+                    step.costs.forEach((c) => {
                         const exist = soulCostMap.get(c.itemId) || { name: c.name, count: 0 };
                         exist.count += c.count;
                         soulCostMap.set(c.itemId, exist);
-                        currentLevelCosts.push(c);
                     });
-
-                    if (currentLevelCosts.length > 0) {
-                        soulDetails.push({ level: index + 1, costs: currentLevelCosts });
-                    }
+                    soulDetails.push({ fromLevel: step.fromLevel, toLevel: step.toLevel, costs: step.costs });
                 });
             }
 
@@ -292,7 +295,7 @@ export default function RoleMagic({ dataSources, activeTab, onTabChange }: Props
                                         <div className="bg-slate-500/[0.01] dark:bg-white/[0.01] p-3.5 rounded-xl border border-border/40 space-y-3 border-l-2 border-l-indigo-500/50">
                                             <div className="flex justify-between items-center cursor-pointer select-none" onClick={() => toggleSoulExpand(card.id)}>
                                                 <div className="text-[11px] font-bold text-textMain/80 uppercase tracking-wider">
-                                                    器魂拉满总计
+                                                    器魂拉满总计 (Lv.1 ➜ Lv.10)
                                                 </div>
                                                 <button className="text-textSub hover:text-indigo-500 transition-colors p-0.5 rounded-md hover:bg-slate-200/50 dark:hover:bg-white/5">
                                                     {expandedSoulCards[card.id] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -313,7 +316,7 @@ export default function RoleMagic({ dataSources, activeTab, onTabChange }: Props
                                                 {card.soulDetails.map((detail: any, i: number) => (
                                                     <div key={i} className="flex flex-col gap-1.5 bg-slate-500/[0.04] dark:bg-black/20 rounded-lg p-2.5 border border-border/10">
                                                         <span className="text-[10px] text-textSub font-mono tracking-wider">
-                                                            器魂 Lv.{detail.level - 1} ➜ Lv.{detail.level} 消耗:
+                                                            器魂 Lv.{detail.fromLevel} ➜ Lv.{detail.toLevel} 消耗:
                                                         </span>
                                                         <div className="flex flex-wrap items-center gap-1.5">
                                                             {detail.costs.map((c: any, j: number) => (
