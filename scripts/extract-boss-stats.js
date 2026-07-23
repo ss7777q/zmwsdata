@@ -1507,7 +1507,7 @@ function writeBossOutput(groupedData, outPath, options = {}) {
   for (const group of groupedData) {
     utils.saveOutput(group.fileName, group, {
       system: 'BOSS 属性',
-      source: 'stage.*.json + monster.*.json + monsterAttribute.*.json + skill.*.json + beskิลl.*.json + consts.*.json + leagueBossCopy.*.json + leagueBossReally.*.json + buildProtectKunLunWave.*.json + resources/map/*.json + battle-config/entityCtg/*.json',
+      source: 'stage.*.json + monster.*.json + monsterAttribute.*.json + skill.*.json + beskill.*.json + consts.*.json + leagueBossCopy.*.json + leagueBossReally.*.json + buildProtectKunLunWave.*.json + resources/map/*.json + battle-config/entityCtg/*.json',
       grouping: '拆分为单个 stage.type 文件，便于维护与增量更新',
       stageType: group.type,
       stageTypeLabel: group.label,

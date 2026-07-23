@@ -36,12 +36,17 @@ const nightmareRain = stageWithBoss(nightmareGroup, 221791, 'Nightmare_22-');
 assert(nightmareRain, '找不到噩梦雨巫');
 assert.strictEqual(nightmareRain.bossData.find((boss) => Number(boss.id) === 221791).phases, undefined, '噩梦雨巫不应有二阶段');
 
-const mainline = extractBossStats({ types: [1], syncMaps: false, mapDir });
-const mainlineRain = mainline
+const mainlineAndElite = extractBossStats({ types: [1, 37], syncMaps: false, mapDir });
+const mainlineRain = mainlineAndElite
   .flatMap((group) => group.stages)
   .find((stage) => String(stage.mapName || '').includes('No_22-5') && stage.bossData.some((boss) => Number(boss.id) === 221701));
 assert(mainlineRain, '找不到主线雨巫');
 assert.strictEqual(mainlineRain.bossData.find((boss) => Number(boss.id) === 221701).phases?.length, 2, '主线雨巫应有二阶段');
+
+const eliteGroup = mainlineAndElite.find((group) => Number(group.type) === 37);
+assert(eliteGroup, '缺少精英副本分组');
+const eliteRain = stageWithBoss(eliteGroup, 5525501, 'Three-No_22-');
+assert.strictEqual(eliteRain?.bossData.find((boss) => Number(boss.id) === 5525501).phases?.[1].beskillIds?.[0], 1004806, '精英雨巫应读取复活狂暴配置');
 
 const gold = stageWithBoss(nightmareGroup, 161791, 'Nightmare_16-');
 assert(gold.bossData.some((boss) => Number(boss.id) === 161792 && boss.phases?.length === 2), '金巫左龙头应有独立二阶段');

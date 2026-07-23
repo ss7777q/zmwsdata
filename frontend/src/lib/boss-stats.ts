@@ -46,6 +46,9 @@ export interface BossEntry {
   error?: string;
   calcFormula?: BossFormula;
   phases?: BossPhase[];
+  displayPhase?: number;
+  displayPhaseName?: string;
+  baseBossName?: string;
 }
 
 export interface StageReport {
@@ -295,6 +298,7 @@ export function recalculateBossProps(boss: FlattenedBoss, level: number, templat
   const phaseTwo = boss.phases?.find((phase) => phase.phase === 2);
   const phaseOne = boss.phases?.find((phase) => phase.phase === 1);
   let phases = boss.phases;
+  let displayCalculatedProps = calculatedProps;
   if (phaseTwo && phaseOne) {
     phases = boss.phases?.map((phase) => {
       if (phase.phase === 1) return { ...phase, calculatedProps: { ...calculatedProps } };
@@ -303,12 +307,15 @@ export function recalculateBossProps(boss: FlattenedBoss, level: number, templat
       }
       return phase;
     });
+    if (boss.displayPhase === 2) {
+      displayCalculatedProps = applyPhaseBeskills(calculatedProps, phaseTwo.beskills);
+    }
   }
 
   return {
     ...boss,
     level,
-    calculatedProps,
+    calculatedProps: displayCalculatedProps,
     phases,
   };
 }
@@ -370,7 +377,7 @@ export function flattenBossGroups(groups: BossTypeGroup[]) {
   for (const group of groups) {
     for (const stage of group.stages) {
       for (const boss of stage.bossData) {
-        flatList.push({
+        const flattenedBoss: FlattenedBoss = {
           ...boss,
           stageId: stage.stageId,
           stageName: stage.stageName || `关卡 ${stage.stageId}`,
@@ -378,7 +385,24 @@ export function flattenBossGroups(groups: BossTypeGroup[]) {
           mapName: stage.mapName,
           type: group.type,
           typeLabel: group.label,
-        });
+        };
+        const phases = boss.phases?.filter((phase) => phase.calculatedProps) || [];
+        if (phases.length < 2) {
+          flatList.push(flattenedBoss);
+          continue;
+        }
+        for (const phase of phases) {
+          const phaseLabel = phase.phase === 1 ? '一阶段' : '二阶段·狂暴';
+          flatList.push({
+            ...flattenedBoss,
+            name: `${boss.name || '未知 BOSS'}（${phaseLabel}）`,
+            baseBossName: boss.name || '未知 BOSS',
+            displayPhase: phase.phase,
+            displayPhaseName: phaseLabel,
+            calculatedProps: phase.calculatedProps,
+            calculatedPropsDouble: phase.calculatedPropsDouble,
+          });
+        }
       }
     }
   }

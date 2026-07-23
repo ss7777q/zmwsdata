@@ -60,13 +60,6 @@ export default function BossStatsTable({
     scrollRef.current.scrollLeft = scrollLeft - walk;
   };
 
-  const getPhaseRows = (boss: FlattenedBoss) => {
-    if (boss.phases && boss.phases.length > 1) {
-      return boss.phases.filter((phase) => phase.calculatedProps);
-    }
-    return [{ phase: 1, name: '一阶段', calculatedProps: boss.calculatedProps }];
-  };
-
   return (
     <div className="rounded-2xl border border-border bg-surface overflow-hidden shadow-sm">
       <div
@@ -118,16 +111,13 @@ export default function BossStatsTable({
           <tbody className="divide-y divide-border/50 text-textMain">
             {bosses.map((boss, index) => (
               <tr
-                key={`${boss.stageId}-${boss.id}-${index}`}
+                key={`${boss.stageId}-${boss.id}-${boss.displayPhase || 0}-${index}`}
                 className="hover:bg-white/5 transition-colors group"
               >
                 <td className="sticky left-0 bg-surface/95 backdrop-blur-md z-10 w-[1%] whitespace-nowrap md:w-auto md:whitespace-normal px-4 py-2 border-r border-border group-hover:bg-active/80 shadow-[4px_0_12px_rgba(0,0,0,0.1)] transition-colors align-top">
                   <div className="font-medium text-primary md:whitespace-normal md:break-words md:leading-5">
                     {boss.name || '未知 BOSS'}
                   </div>
-                  {boss.phases && boss.phases.length > 1 ? (
-                    <div className="mt-1 text-[10px] text-amber-300">含二阶段复活·狂暴</div>
-                  ) : null}
                   {boss.remark ? (
                     <div className="mt-1 hidden md:block text-[10px] text-textSub whitespace-normal break-words leading-4">
                       {boss.remark}
@@ -163,16 +153,7 @@ export default function BossStatsTable({
                   <>
                     {METRIC_KEYS.map((key) => (
                       <td key={key} className={clsx('px-4 py-2 border-r border-border/50 font-mono font-semibold text-right align-top', METRIC_COLORS[key])}>
-                        <div className="space-y-1">
-                          {getPhaseRows(boss).map((phase) => (
-                            <div key={`${phase.phase}-${key}`} className="flex items-center justify-end gap-2">
-                              {key === METRIC_KEYS[0] && boss.phases && boss.phases.length > 1 ? (
-                                <span className="text-[10px] font-sans font-normal text-textSub">{phase.name || `${phase.phase} 阶段`}</span>
-                              ) : null}
-                              <span>{formatNumber(phase.calculatedProps?.[key])}</span>
-                            </div>
-                          ))}
-                        </div>
+                        {formatNumber(boss.calculatedProps?.[key])}
                       </td>
                     ))}
 

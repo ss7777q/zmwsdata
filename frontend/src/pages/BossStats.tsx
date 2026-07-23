@@ -87,17 +87,23 @@ export default function BossStats({ dataSources, searchQuery = '' }: Props) {
   const typeTabs = useMemo(() => {
     const indexTypes = Array.isArray(bossIndex?.types) ? bossIndex.types : [];
     const totalStageCount = bossIndex?.summary?.stageCount ?? sortedGroups.reduce((sum, group) => sum + group.stageCount, 0);
-    const totalBossCount = bossIndex?.summary?.bossCount ?? allBosses.length;
+    const totalBossCount = allBosses.length;
+    const displayedBossCounts = new Map<string, number>();
+    for (const boss of allBosses) {
+      const group = groups.find((item) => String(item.type) === String(boss.type));
+      const key = group?.slug || getTypeKey(boss.type);
+      displayedBossCounts.set(key, (displayedBossCounts.get(key) || 0) + 1);
+    }
     const tabs = indexTypes.length > 0
       ? indexTypes.map((group) => ({
         key: group.routeKey,
         label: group.label,
-        description: `${group.stageCount} 关卡 / ${group.bossCount} BOSS`,
+        description: `${group.stageCount} 关卡 / ${displayedBossCounts.get(group.routeKey) ?? group.bossCount} BOSS`,
       }))
       : sortedGroups.map((group) => ({
         key: group.slug || getTypeKey(group.type),
         label: group.type == null ? (group.label || '未知类型') : `${group.label || `Type ${group.type}`}`,
-        description: `${group.stageCount} 关卡 / ${group.bossCount} BOSS`,
+        description: `${group.stageCount} 关卡 / ${displayedBossCounts.get(group.slug || getTypeKey(group.type)) ?? group.bossCount} BOSS`,
       }));
 
     tabs.push({
