@@ -60,6 +60,13 @@ export default function BossStatsTable({
     scrollRef.current.scrollLeft = scrollLeft - walk;
   };
 
+  const getPhaseRows = (boss: FlattenedBoss) => {
+    if (boss.phases && boss.phases.length > 1) {
+      return boss.phases.filter((phase) => phase.calculatedProps);
+    }
+    return [{ phase: 1, name: '一阶段', calculatedProps: boss.calculatedProps }];
+  };
+
   return (
     <div className="rounded-2xl border border-border bg-surface overflow-hidden shadow-sm">
       <div
@@ -118,6 +125,9 @@ export default function BossStatsTable({
                   <div className="font-medium text-primary md:whitespace-normal md:break-words md:leading-5">
                     {boss.name || '未知 BOSS'}
                   </div>
+                  {boss.phases && boss.phases.length > 1 ? (
+                    <div className="mt-1 text-[10px] text-amber-300">含二阶段复活·狂暴</div>
+                  ) : null}
                   {boss.remark ? (
                     <div className="mt-1 hidden md:block text-[10px] text-textSub whitespace-normal break-words leading-4">
                       {boss.remark}
@@ -153,7 +163,16 @@ export default function BossStatsTable({
                   <>
                     {METRIC_KEYS.map((key) => (
                       <td key={key} className={clsx('px-4 py-2 border-r border-border/50 font-mono font-semibold text-right align-top', METRIC_COLORS[key])}>
-                        {formatNumber(boss.calculatedProps?.[key])}
+                        <div className="space-y-1">
+                          {getPhaseRows(boss).map((phase) => (
+                            <div key={`${phase.phase}-${key}`} className="flex items-center justify-end gap-2">
+                              {key === METRIC_KEYS[0] && boss.phases && boss.phases.length > 1 ? (
+                                <span className="text-[10px] font-sans font-normal text-textSub">{phase.name || `${phase.phase} 阶段`}</span>
+                              ) : null}
+                              <span>{formatNumber(phase.calculatedProps?.[key])}</span>
+                            </div>
+                          ))}
+                        </div>
                       </td>
                     ))}
 

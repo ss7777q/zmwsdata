@@ -11,6 +11,23 @@ export type BossFormula = {
   hpRate?: number;
 };
 
+export interface BossPhase {
+  phase: number;
+  name?: string;
+  calculatedProps?: BossProps;
+  calculatedPropsDouble?: BossProps;
+  hpCount?: number | string | null;
+  reburnDelayFram?: number | null;
+  dieSkill?: number | null;
+  reburnSkill?: number | null;
+  reburnVskill?: number | null;
+  switchAI?: number[] | null;
+  actions?: string[];
+  beskillIds?: number[];
+  beskills?: Array<{ id: number; name?: string; label?: string; attribute?: unknown; text?: string | null }>;
+  source?: string;
+}
+
 export interface BossEntry {
   id: number | string;
   bossId?: number | string;
@@ -28,6 +45,7 @@ export interface BossEntry {
   sourceField?: string;
   error?: string;
   calcFormula?: BossFormula;
+  phases?: BossPhase[];
 }
 
 export interface StageReport {
@@ -274,11 +292,43 @@ export function recalculateBossProps(boss: FlattenedBoss, level: number, templat
     calculatedProps.hp = Math.ceil(Number(calculatedProps.hp) * Number(boss.calcFormula?.hpRate));
   }
 
+  const phaseTwo = boss.phases?.find((phase) => phase.phase === 2);
+  const phaseOne = boss.phases?.find((phase) => phase.phase === 1);
+  let phases = boss.phases;
+  if (phaseTwo && phaseOne) {
+    phases = boss.phases?.map((phase) => {
+      if (phase.phase === 1) return { ...phase, calculatedProps: { ...calculatedProps } };
+      if (phase.phase === 2) {
+        return { ...phase, calculatedProps: applyPhaseBeskills(calculatedProps, phase.beskills) };
+      }
+      return phase;
+    });
+  }
+
   return {
     ...boss,
     level,
     calculatedProps,
+    phases,
   };
+}
+
+function applyPhaseBeskills(props: BossProps, beskills: BossPhase['beskills']) {
+  const next = { ...props };
+  let multiplier = 0;
+  let addition = 0;
+  for (const beskill of beskills || []) {
+    if (beskill?.label !== 'allProp') continue;
+    const values = Array.isArray(beskill.attribute) ? beskill.attribute : [0, 0];
+    multiplier += Number(values[0] || 0);
+    addition += Number(values[1] || 0);
+  }
+  for (const key of METRIC_KEYS) {
+    if (next[key] != null) next[key] = Math.ceil(Number(next[key]) * (1 + multiplier) + addition);
+  }
+  if (next.hp != null) next.maxHp = next.hp;
+  if (next.mp != null) next.maxMp = next.mp;
+  return next;
 }
 
 function isBossTypeGroup(value: unknown): value is BossTypeGroup {

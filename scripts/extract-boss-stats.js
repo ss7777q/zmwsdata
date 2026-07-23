@@ -12,6 +12,7 @@ const DEFAULT_BASE_URL = 'https://client-zmxyol.3304399.net/client/';
 const DEFAULT_MAP_CACHE_ROOT = path.join(ROOT, 'file', 'map-cache');
 const DEFAULT_MAP_CACHE_DIR = path.join(DEFAULT_MAP_CACHE_ROOT, 'resources', 'map');
 const DEFAULT_MANIFEST_PATH = path.join(ROOT, 'file', 'runtime', 'cocos-map-manifest.json');
+const BATTLE_ENTITY_DIR = path.join(ROOT, 'file', 'battle-config', 'entityCtg');
 const BOSS_OUTPUT_PREFIX = 'boss_type';
 const BOSS_INDEX_OUTPUT_NAME = 'boss_index';
 
@@ -25,6 +26,8 @@ const DEFAULT_CONFIG = {
   stageFile: utils.findTableFile('stage'),
   monsterFile: utils.findTableFile('monster'),
   attrFile: utils.findTableFile('monsterAttribute'),
+  skillFile: utils.findTableFile('skill'),
+  beskillFile: utils.findTableFile('beskill'),
   constsFile: utils.findTableFile('consts'),
   leagueBossCopyFile: utils.findTableFile('leagueBossCopy'),
   leagueBossReallyFile: utils.findTableFile('leagueBossReally'),
@@ -134,6 +137,8 @@ class CommandParser {
       stageFile: DEFAULT_CONFIG.stageFile,
       monsterFile: DEFAULT_CONFIG.monsterFile,
       attrFile: DEFAULT_CONFIG.attrFile,
+      skillFile: DEFAULT_CONFIG.skillFile,
+      beskillFile: DEFAULT_CONFIG.beskillFile,
       constsFile: DEFAULT_CONFIG.constsFile,
       leagueBossCopyFile: DEFAULT_CONFIG.leagueBossCopyFile,
       leagueBossReallyFile: DEFAULT_CONFIG.leagueBossReallyFile,
@@ -166,6 +171,10 @@ class CommandParser {
         args.monsterFile = process.argv[++index];
       } else if (arg === '--attr-file') {
         args.attrFile = process.argv[++index];
+      } else if (arg === '--skill-file') {
+        args.skillFile = process.argv[++index];
+      } else if (arg === '--beskill-file') {
+        args.beskillFile = process.argv[++index];
       } else if (arg === '--consts-file') {
         args.constsFile = process.argv[++index];
       } else if (arg === '--league-boss-copy-file') {
@@ -335,6 +344,12 @@ class DataLoader {
     console.log(`正在加载 monsterAttribute 配置: ${this.config.attrFile}`);
     const attrs = this.readJson(this.config.attrFile) || [];
 
+    console.log(`正在加载 skill 配置: ${this.config.skillFile}`);
+    const skills = this.readJson(this.config.skillFile) || [];
+
+    console.log(`正在加载 beskill 配置: ${this.config.beskillFile}`);
+    const beskills = this.readJson(this.config.beskillFile) || [];
+
     console.log(`正在加载 consts 配置: ${this.config.constsFile}`);
     const consts = this.readJson(this.config.constsFile) || [];
 
@@ -366,6 +381,8 @@ class DataLoader {
       stages,
       monsters,
       attrs,
+      skills,
+      beskills,
       consts,
       leagueBossCopies,
       leagueBossReallies,
@@ -507,6 +524,7 @@ class MapParser {
       const sourceField = randomIds.length > 0 ? 'RandomIds' : 'mIds';
       const monsterIds = randomIds.length > 0 ? randomIds : normalizeIds(creatorCfg.mIds);
       for (const monsterId of monsterIds) {
+        const rebirth = this.findRebirthConfig(mapPayload, screenKey);
         results.push({
           id: monsterId,
           creatorKey,
@@ -514,11 +532,43 @@ class MapParser {
           screen: pointToScreen.get(screenKey) ?? null,
           source: 'map',
           sourceField,
+          rebirth,
         });
       }
     }
 
     return results;
+  }
+
+  findRebirthConfig(mapPayload, pointId) {
+    const mapFunctions = Array.isArray(mapPayload?.mapFunctions) ? mapPayload.mapFunctions : [];
+    for (const mapFunction of mapFunctions) {
+      if (toNumber(mapFunction?.type) !== 15) {
+        continue;
+      }
+      const points = Array.isArray(mapFunction.points) ? mapFunction.points : [];
+      const index = points.findIndex((value) => String(value) === String(pointId));
+      if (index < 0) {
+        continue;
+      }
+      return {
+        type: 15,
+        name: mapFunction.name || null,
+        pointId: String(pointId),
+        index,
+        useHpCount: mapFunction.useHpCount ?? null,
+        reburnDelayFram: mapFunction.reburnDelayFram ?? null,
+        dieSkills: Array.isArray(mapFunction.dieSkills) ? mapFunction.dieSkills : [],
+        reburnSkills: Array.isArray(mapFunction.reburnSkills) ? mapFunction.reburnSkills : [],
+        reburnVskills: Array.isArray(mapFunction.reburnVskills) ? mapFunction.reburnVskills : [],
+        switchAIs: Array.isArray(mapFunction.switchAIs) ? mapFunction.switchAIs : [],
+        dieSkill: mapFunction.dieSkills?.[index] ?? null,
+        reburnSkill: mapFunction.reburnSkills?.[index] ?? null,
+        reburnVskill: mapFunction.reburnVskills?.[index] ?? null,
+        switchAI: mapFunction.switchAIs?.[index] ?? null,
+      };
+    }
+    return null;
   }
 
   getBossEntriesByMapName(mapName) {
@@ -559,14 +609,87 @@ class MapParser {
       for (const entry of entries) {
         const dedupeKey = [entry.id, entry.creatorKey ?? '', entry.screen ?? '', entry.source].join('|');
         if (seen.has(dedupeKey)) {
+          const existing = merged.find((item) => item.dedupeKey === dedupeKey);
+          if (existing && !existing.rebirth && entry.rebirth) {
+            existing.rebirth = entry.rebirth;
+            existing.mapName = mapName;
+          }
           continue;
         }
         seen.add(dedupeKey);
-        merged.push(entry);
+        merged.push({ ...entry, mapName, dedupeKey });
       }
     }
 
-    return merged;
+    return merged.map(({ dedupeKey, ...entry }) => entry);
+  }
+}
+
+class BattleRebirthResolver {
+  constructor(monsters, skills, beskills, entityDir = BATTLE_ENTITY_DIR) {
+    this.monsters = new Map(monsters.filter(Boolean).map((item) => [item.id, item]));
+    this.skills = new Map(skills.filter(Boolean).map((item) => [item.id, item]));
+    this.beskills = new Map(beskills.filter(Boolean).map((item) => [item.id, item]));
+    this.entityDir = entityDir;
+    this.cache = new Map();
+  }
+
+  loadEntityCfg(cfgFile) {
+    if (!cfgFile) return null;
+    if (this.cache.has(cfgFile)) return this.cache.get(cfgFile);
+    const filePath = path.join(this.entityDir, `${cfgFile}.json`);
+    const cfg = fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, 'utf8')) : null;
+    this.cache.set(cfgFile, cfg);
+    return cfg;
+  }
+
+  collectBeskillIds(actionCfg) {
+    const ids = new Set();
+    const visit = (node) => {
+      if (!node || typeof node !== 'object') return;
+      if (Array.isArray(node)) {
+        node.forEach(visit);
+        return;
+      }
+      const candidates = [
+        node.beSkillId,
+        node.id,
+      ];
+      for (const candidate of candidates) {
+        const id = toNumber(candidate);
+        const row = id == null ? null : this.beskills.get(id);
+        if (row && row.label === 'allProp' && row.name === '狂暴') ids.add(id);
+      }
+      Object.values(node).forEach(visit);
+    };
+    visit(actionCfg);
+    return [...ids];
+  }
+
+  resolve(monsterId, rebirth) {
+    if (!rebirth) return null;
+    const monster = this.monsters.get(monsterId);
+    const skillIds = [rebirth.reburnSkill, rebirth.reburnVskill].filter((id) => id != null);
+    const actions = [];
+    const beskillIds = new Set();
+    for (const skillId of skillIds) {
+      const skill = this.skills.get(skillId);
+      const cfg = this.loadEntityCfg(monster?.cfgFile);
+      const action = skill?.entityAction || null;
+      const actionCfg = cfg && action ? cfg[action] : null;
+      if (action) actions.push(action);
+      for (const id of this.collectBeskillIds(actionCfg)) beskillIds.add(id);
+    }
+    const beskills = [...beskillIds]
+      .map((id) => this.beskills.get(id))
+      .filter(Boolean)
+      .map((row) => ({ id: row.id, name: row.name, label: row.label, attribute: row.attribute, text: row.text }));
+    return {
+      ...rebirth,
+      actions: [...new Set(actions)],
+      beskillIds: [...beskillIds],
+      beskills,
+    };
   }
 }
 
@@ -670,6 +793,59 @@ class AttributeCalculator {
       return;
     }
     props.atk = Math.ceil(props.atk * ratio);
+  }
+
+  applyAllPropBeskills(props, beskills) {
+    const result = this.cloneProps(props || {});
+    let multiplier = 0;
+    let addition = 0;
+    for (const beskill of Array.isArray(beskills) ? beskills : []) {
+      if (beskill?.label !== 'allProp') continue;
+      const [multi, add] = this.resolveCoef(beskill.attribute);
+      multiplier += multi;
+      addition += add;
+    }
+    for (const prop of PROP_KEYS) {
+      if (result[prop] == null) continue;
+      result[prop] = Math.ceil(Number(result[prop]) * (1 + multiplier) + addition);
+    }
+    if (result.hp != null) result.maxHp = result.hp;
+    if (result.mp != null) result.maxMp = result.mp;
+    return result;
+  }
+
+  attachRebirthPhase(result, rebirth) {
+    if (!rebirth) return result;
+    const phaseTwo = {
+      phase: 2,
+      name: rebirth.beskills?.length > 0 ? '二阶段（复活·狂暴）' : '二阶段（复活）',
+      calculatedProps: this.applyAllPropBeskills(result.calculatedProps, rebirth.beskills),
+      hpCount: rebirth.useHpCount,
+      reburnDelayFram: rebirth.reburnDelayFram,
+      dieSkill: rebirth.dieSkill,
+      reburnSkill: rebirth.reburnSkill,
+      reburnVskill: rebirth.reburnVskill,
+      switchAI: rebirth.switchAI,
+      actions: rebirth.actions,
+      beskillIds: rebirth.beskillIds,
+      beskills: rebirth.beskills,
+      source: 'mapFunctions.type=15 + battle-config/entityCtg',
+    };
+    if (result.calculatedPropsDouble) {
+      phaseTwo.calculatedPropsDouble = this.applyAllPropBeskills(result.calculatedPropsDouble, rebirth.beskills);
+    }
+    result.phases = [
+      {
+        phase: 1,
+        name: '一阶段',
+        calculatedProps: this.cloneProps(result.calculatedProps),
+        calculatedPropsDouble: result.calculatedPropsDouble
+          ? this.cloneProps(result.calculatedPropsDouble)
+          : undefined,
+      },
+      phaseTwo,
+    ];
+    return result;
   }
 
   calculateBoss(bossId, stageLevel, options = {}) {
@@ -887,16 +1063,21 @@ function createFallbackBossEntries(stage) {
 
 function dedupeBossEntriesByBossId(entries) {
   const uniqueEntries = [];
-  const seenBossIds = new Set();
+  const seenBossIds = new Map();
 
   for (const entry of Array.isArray(entries) ? entries : []) {
     const rawBossId = entry?.bossId ?? entry?.id;
     const bossIdKey = rawBossId == null ? '' : String(rawBossId);
-    if (!bossIdKey || seenBossIds.has(bossIdKey)) {
+    if (!bossIdKey) {
+      continue;
+    }
+    if (seenBossIds.has(bossIdKey)) {
+      const existing = seenBossIds.get(bossIdKey);
+      if (!existing.rebirth && entry.rebirth) existing.rebirth = entry.rebirth;
       continue;
     }
 
-    seenBossIds.add(bossIdKey);
+    seenBossIds.set(bossIdKey, entry);
     uniqueEntries.push(entry);
   }
 
@@ -1326,7 +1507,7 @@ function writeBossOutput(groupedData, outPath, options = {}) {
   for (const group of groupedData) {
     utils.saveOutput(group.fileName, group, {
       system: 'BOSS 属性',
-      source: 'stage.*.json + monster.*.json + monsterAttribute.*.json + consts.*.json + leagueBossCopy.*.json + leagueBossReally.*.json + buildProtectKunLunWave.*.json + resources/map/*.json',
+      source: 'stage.*.json + monster.*.json + monsterAttribute.*.json + skill.*.json + beskิลl.*.json + consts.*.json + leagueBossCopy.*.json + leagueBossReally.*.json + buildProtectKunLunWave.*.json + resources/map/*.json + battle-config/entityCtg/*.json',
       grouping: '拆分为单个 stage.type 文件，便于维护与增量更新',
       stageType: group.type,
       stageTypeLabel: group.label,
@@ -1408,6 +1589,8 @@ function extractBossStats(options = {}) {
     stages,
     monsters,
     attrs,
+    skills,
+    beskills,
     consts,
     leagueBossCopies,
     leagueBossReallies,
@@ -1424,6 +1607,7 @@ function extractBossStats(options = {}) {
   const resolvedMapDir = ensureBossMaps(targetStages, resolvedOptions);
   const mapParser = new MapParser(resolvedMapDir);
   const calculator = new AttributeCalculator(monsters, attrs);
+  const rebirthResolver = new BattleRebirthResolver(monsters, skills, beskills);
   const starHavocCalculator = new AttributeCalculator(monsters, starHavocAttrs);
   const kunlunResolver = new KunlunWaveResolver(kunlunWaves);
   const stageById = new Map(stages.map((stage) => [stage.id, stage]));
@@ -1547,6 +1731,8 @@ function extractBossStats(options = {}) {
         calcResult.screen = bossEntry.screen;
         calcResult.source = bossEntry.source;
         calcResult.sourceField = bossEntry.sourceField;
+        const rebirth = rebirthResolver.resolve(bossEntry.id, bossEntry.rebirth);
+        calculator.attachRebirthPhase(calcResult, rebirth);
 
         if (stageType === 23) {
           calcResult.mode = stage.subType === 230002 ? 'speed' : 'normal';
