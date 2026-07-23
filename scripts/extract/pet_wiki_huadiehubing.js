@@ -566,6 +566,7 @@ function collectSacredFoxSummonEffects(displaySkillId, pet, ctx, warnings) {
   const shieldActionCfg = shieldSkill?.entityAction ? attackCfg?.[shieldSkill.entityAction] : null;
   const shieldBuffId = asArray(shieldActionCfg?.com?.find((com) => com.type === 1)?.buff)[0];
   const shieldBuff = ctx.buffById.get(shieldBuffId);
+  const armorBuff = ctx.buffById.get(asArray(shieldBuff?.attachBuff)[0]);
   const shieldPer = Array.isArray(shieldBuff?.value) && typeof shieldBuff.value[3] === "number"
     ? shieldBuff.value[3]
     : null;
@@ -610,7 +611,11 @@ function collectSacredFoxSummonEffects(displaySkillId, pet, ctx, warnings) {
       bindSource: "mechanismEffect",
       bindLabel: BIND_SOURCE_LABEL.mechanismEffect,
       value: { maxHpPer: shieldPer },
-      displayText: `冰狐战士登场时获得相当于自身最大生命${shieldPercent}%的寒冰盾，连同本体生命，未计防御时总承伤池相当于自身最大生命${totalDurabilityPercent}%；护盾无持续时间限制，只在登场时获得且不会自行恢复；寒冰盾不提供霸体。`,
+      displayText: `冰狐战士登场时获得相当于自身最大生命${shieldPercent}%的寒冰盾，连同本体生命，未计防御时总承伤池相当于自身最大生命${totalDurabilityPercent}%；护盾无持续时间限制，只在登场时获得且不会自行恢复；${armorBuff?.type === 23 && armorBuff?.qualified === 1
+        ? "该霸体仅在登场护盾技能期间生效，技能结束后清除。"
+        : armorBuff?.type === 23
+          ? "护盾存在期间附加霸体，护盾消失时霸体一并移除。"
+          : "寒冰盾不提供霸体。"}`,
     });
   }
   return out;
@@ -632,8 +637,10 @@ function collectSacredFoxSummonMechanics(ctx, warnings) {
     {
       label: "寒冰盾与霸体",
       value: armorBuff?.type === 23 && armorBuff?.qualified === 1
-        ? "数据层虽然让寒冰盾附加霸体 Buff，但该 Buff 被标记为技能限定，会在召唤物的登场护盾技能结束时清除；寒冰盾不会续挂或重新赋予霸体。因此护盾存在期间不具备霸体，冰狐战士仍会受到攻击硬直。"
-        : "寒冰盾不提供霸体，实战中冰狐战士仍会受到攻击硬直。",
+        ? "数据层让寒冰盾附加霸体 Buff，但该 Buff 被标记为技能限定，会在召唤物的登场护盾技能结束时清除；护盾后续不会重新赋予霸体。"
+        : armorBuff?.type === 23
+          ? "数据层让寒冰盾附加霸体 Buff，附加效果绑定在护盾上；护盾存在期间冰狐战士处于霸体，护盾消失时霸体一并移除。"
+          : "寒冰盾不提供霸体，实战中冰狐战士仍会受到攻击硬直。",
     },
   ];
 }

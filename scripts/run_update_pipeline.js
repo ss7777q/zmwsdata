@@ -162,7 +162,7 @@ async function main() {
   await runScript('scripts/sync_maps.js');
 
   console.log('[pipeline] sync battle config from upstream');
-  await runScript('scripts/sync_battle_config.js');
+  await runScript('scripts/sync_battle_config.js', ['--refresh-manifest']);
 
   console.log('[pipeline] sync dataApi from upstream');
   await runScript('scripts/sync_data_api.js');
