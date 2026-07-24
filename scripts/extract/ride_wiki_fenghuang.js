@@ -46,6 +46,34 @@ const FENGHUANG_BUFF = {
   ICE_SLOW: 4041301,
 };
 
+// 召唤子嗣：父技能 skillLvInhert=1 时，召唤物 skillIds 全部继承当前技能等级
+const FENGHUANG_CHILD = {
+  [FENGHUANG_SKILL.FIRE_CHILD]: {
+    monsterId: 2061300,
+    name: "赤凤之子",
+    durationSeconds: 30,
+    maxCount: 1,
+    inheritAttrs: "生命16.7%、回血16.7%，攻击/防御/命中/闪避/暴击/韧性/幸运/守护/穿透/减伤约100%；速度固定360",
+    skills: [
+      // attack1: 2012 有效；skill1: 2484 + 4×2015 有效 = 5 段
+      { skillId: 20613000001, label: "普攻", kind: "attack", hits: 1, grows: false },
+      { skillId: 20613000101, label: "烈火焚烧", kind: "active", hits: 5, grows: true, metricKey: "childSkillVal", metricLabel: "烈火焚烧固伤/段" },
+    ],
+  },
+  [FENGHUANG_SKILL.ICE_CHILD]: {
+    monsterId: 2061803,
+    name: "青鸾之子",
+    durationSeconds: 30,
+    maxCount: 1,
+    inheritAttrs: "生命51%、回血85%，攻击/防御/命中/闪避/暴击/韧性/幸运/守护/穿透/减伤约100%；速度固定300",
+    skills: [
+      // skill1: 2848 有效；skill2: 5×3662 有效（3667 notActive）
+      { skillId: 20618030101, label: "普攻攻击", kind: "attack", hits: 1, grows: false },
+      { skillId: 20618030201, label: "寒冰之球", kind: "active", hits: 5, grows: true, metricKey: "childSkillVal", metricLabel: "寒冰之球固伤/段" },
+    ],
+  },
+};
+
 const EFFECT_ONLY_SKILLS = new Set([
   FENGHUANG_SKILL.FIRE_CHILD,
   FENGHUANG_SKILL.ICE_CHILD,
@@ -284,23 +312,154 @@ function collectPassiveEffects(skillId, ctx, warnings) {
   return out;
 }
 
+function formatNumber(n, fixed = 3) {
+  if (typeof n !== "number" || !Number.isFinite(n)) return "?";
+  // 系数类常需保留 4 位（如 0.0374），整数固伤用 fixed=0
+  const text = Number(n.toFixed(fixed)).toString();
+  return text;
+}
+
+function formatPer(n) {
+  if (typeof n !== "number" || !Number.isFinite(n)) return "?";
+  // 去掉尾零，但至少保留到能区分 0.0374 / 0.0335
+  const fixed = Math.abs(n) > 0 && Math.abs(n) < 1 ? 4 : 3;
+  return Number(n.toFixed(fixed)).toString();
+}
+
 function collectSummonEffect(displaySkillId, ride, ctx, warnings) {
   const skill = ctx.skillById.get(displaySkillId);
   if (!skill) return [];
   const cfg = resolveRideCfgFile(skill, ride, ctx, warnings);
   const summon = cfg.actionCfg?.com?.find((c) => c.type === 13);
+  const child = FENGHUANG_CHILD[displaySkillId];
   if (!summon) {
     warnings.push({ code: eng.WARN.MISSING_ACTION_CFG, detail: `skill ${displaySkillId} 未找到召唤 com(type=13)` });
     return [];
   }
-  const names = asArray(summon.mIds).map((id) => ctx.monsterById.get(id)?.name || `怪物${id}`);
-  const inherit = summon.skillLvInhert === 1 ? "召唤物技能等级继承当前技能等级" : "召唤物技能等级未配置继承";
-  return [effectCard(
-    displaySkillId,
-    displaySkillId === FENGHUANG_SKILL.FIRE_CHILD ? "赤凤之子" : "青鸾之子",
-    "mechanismEffect",
-    `召唤${names.join("/")}协助战斗；${inherit}`,
-  )];
+  const monsterId = asArray(summon.mIds)[0];
+  const monster = ctx.monsterById.get(monsterId) || (child ? ctx.monsterById.get(child.monsterId) : null);
+  const name = child?.name || monster?.name || `怪物${monsterId ?? "?"}`;
+  const duration = typeof summon.time === "number"
+    ? (summon.time === -1 ? "无持续时间限制" : `持续${formatNumber(summon.time, 0)}秒`)
+    : (child ? `持续${child.durationSeconds}秒` : "持续时间未解析");
+  const maxCount = summon.maxCount ?? child?.maxCount ?? "?";
+  const skillLvInherit = summon.skillLvInhert === 1;
+
+  const out = [
+    effectCard(
+      displaySkillId,
+      name,
+      "mechanismEffect",
+      `召唤${name}协助战斗，最多同时存在${maxCount}只，${duration}。`,
+    ),
+  ];
+
+  if (child) {
+    for (const def of child.skills) {
+      const childSkill = ctx.skillById.get(def.skillId);
+      const row = childSkill ? ctx.skillLevelById.get(eng.skillLevelRowId(childSkill, 1)) : null;
+      if (!childSkill) {
+        warnings.push({ code: eng.WARN.MISSING_SKILL, detail: `${child.name} 技能 ${def.skillId} 缺失` });
+        continue;
+      }
+      if (!row) {
+        warnings.push({ code: eng.WARN.MISSING_SKILL_LEVEL, detail: `${child.name} 技能 ${def.skillId} Lv.1 缺失` });
+      }
+      const per = row?.damageAddPer ?? childSkill.damageAddPer ?? null;
+      const totalPer = typeof per === "number" ? Number((per * (def.hits || 1)).toFixed(4)) : null;
+      if (def.kind === "attack") {
+        out.push(effectCard(
+          def.skillId,
+          `${child.name}${def.label}`,
+          "mechanismEffect",
+          `${def.label}系数${formatPer(per)}，约${def.hits}段，总系数${formatPer(totalPer)}；技能等级表仅1级，不随父技能升级成长。`,
+        ));
+      } else {
+        out.push(effectCard(
+          def.skillId,
+          `${child.name}${def.label}`,
+          "mechanismEffect",
+          `${def.label}每段系数${formatPer(per)}，按动作约${def.hits}段，总系数${formatPer(totalPer)}；固伤随父技能等级成长，见成长数值。`,
+        ));
+      }
+    }
+  }
+
+  if (!skillLvInherit) {
+    warnings.push({ code: eng.WARN.MISSING_ACTION_CFG, detail: `skill ${displaySkillId} 召唤未配置 skillLvInhert` });
+  }
+  return out;
+}
+
+function collectSummonMechanics(displaySkillId, ride, ctx, warnings) {
+  const child = FENGHUANG_CHILD[displaySkillId];
+  if (!child) return [];
+  const skill = ctx.skillById.get(displaySkillId);
+  const cfg = skill ? resolveRideCfgFile(skill, ride, ctx, warnings) : null;
+  const summon = cfg?.actionCfg?.com?.find((c) => c.type === 13);
+  const skillLvInherit = summon?.skillLvInhert === 1;
+  const growSkills = child.skills.filter((s) => s.grows).map((s) => s.label).join("、");
+  const fixedSkills = child.skills.filter((s) => !s.grows).map((s) => s.label).join("、");
+  return [
+    {
+      label: "技能等级继承",
+      value: skillLvInherit
+        ? `召唤配置 skillLvInhert=1：${child.name} 的 skillIds 技能等级等于父技能当前等级。${growSkills || "成长技能"}的固伤读对应 skillLevel 行；${fixedSkills || "普攻"}仅有1级表，不随升级变化。攻击系数不随等级变化。`
+        : "召唤配置未开启技能等级继承，召唤物技能默认按1级结算。",
+    },
+    {
+      label: "属性继承",
+      value: `召唤物 source=1，创建时按怪物表系数从主人继承：${child.inheritAttrs}。升级父技能不直接改这些属性比例，主要提升召唤物技能固伤。`,
+    },
+  ];
+}
+
+function collectSummonLevelMetrics(displaySkillId, level, ctx, warnings) {
+  const child = FENGHUANG_CHILD[displaySkillId];
+  if (!child) return [];
+  const metricsOut = [];
+  for (const def of child.skills) {
+    if (!def.grows || !def.metricKey) continue;
+    const childSkill = ctx.skillById.get(def.skillId);
+    const row = childSkill ? ctx.skillLevelById.get(eng.skillLevelRowId(childSkill, level)) : null;
+    if (!childSkill) {
+      if (level === 1) warnings.push({ code: eng.WARN.MISSING_SKILL, detail: `${child.name} 成长技能 ${def.skillId} 缺失` });
+      continue;
+    }
+    if (!row) {
+      if (level === 1) warnings.push({ code: eng.WARN.MISSING_SKILL_LEVEL, detail: `${child.name} 成长技能 ${def.skillId} Lv.${level} 缺失` });
+      metricsOut.push({ key: def.metricKey, label: def.metricLabel, value: null, display: null });
+      continue;
+    }
+    const per = row.damageAddPer ?? null;
+    const val = row.damageAddVal ?? null;
+    const hits = def.hits || 1;
+    metricsOut.push({
+      key: def.metricKey,
+      label: def.metricLabel,
+      value: val,
+      display: typeof val === "number" ? formatNumber(val, 0) : null,
+    });
+    metricsOut.push({
+      key: `${def.metricKey}Total`,
+      label: `${def.label}总固伤`,
+      value: typeof val === "number" ? val * hits : null,
+      display: typeof val === "number" ? formatNumber(val * hits, 0) : null,
+    });
+    metricsOut.push({
+      key: `${def.metricKey}Per`,
+      label: `${def.label}段系数`,
+      value: per,
+      display: typeof per === "number" ? formatPer(per) : null,
+    });
+    metricsOut.push({
+      key: `${def.metricKey}TotalPer`,
+      label: `${def.label}总系数`,
+      value: typeof per === "number" ? Number((per * hits).toFixed(4)) : null,
+      display: typeof per === "number" ? formatPer(Number((per * hits).toFixed(4))) : null,
+    });
+  }
+  return metricsOut;
 }
 
 function collectShieldEffects(ctx, warnings) {
@@ -404,6 +563,7 @@ function makeEffectOnlyLevel(displaySkillId, level, ctx, warnings) {
   const skill = ctx.skillById.get(displaySkillId);
   const row = skill ? ctx.skillLevelById.get(eng.skillLevelRowId(skill, level)) : null;
   if (!row) warnings.push({ code: eng.WARN.MISSING_SKILL_LEVEL, detail: `技能 ${displaySkillId} Lv.${level} 缺少等级数据，无法展示机制成长` });
+  const metrics = collectSummonLevelMetrics(displaySkillId, level, ctx, warnings);
   return {
     level,
     roleLevel: row?.roleLevel ?? null,
@@ -414,6 +574,7 @@ function makeEffectOnlyLevel(displaySkillId, level, ctx, warnings) {
     totalPer: null,
     totalVal: null,
     addDefendVal: row?.addDefendVal ?? null,
+    metrics,
   };
 }
 
@@ -596,6 +757,7 @@ function buildSkillCard(displaySkillId, ride, slotLabel, slotKind, ctx) {
     : resolveRideReleaseTime(displaySkillId, ride, cfg, skill, ctx, warnings);
 
   const { fixedBuffs, growthBuffRefs } = collectBuffs(displaySkillId, concreteIds, ride, slotKind, ctx, warnings);
+  const mechanics = collectSummonMechanics(displaySkillId, ride, ctx, warnings);
   const levels = [];
   for (let lv = 1; lv <= maxLevel; lv++) {
     const l = computeRideLevel(displaySkillId, concreteIds, lv, ride, slotKind, ctx, warnings);
@@ -639,6 +801,7 @@ function buildSkillCard(displaySkillId, ride, slotLabel, slotKind, ctx) {
       cfgResolveSource: cfg.cfgResolveSource,
       referenceLevel: reference?.level ?? null,
       fixedBuffs,
+      mechanics: mechanics.length ? mechanics : undefined,
       metrics: metrics.computeMetrics(
         ctx.metricDefs, "header",
         { skillId: displaySkillId, totalPer: reference ? reference.totalPer : null, releaseSeconds: rel.releaseSeconds, segCount },
@@ -657,11 +820,14 @@ function buildSkillCard(displaySkillId, ride, slotLabel, slotKind, ctx) {
       totalPer: l.totalPer,
       totalVal: l.totalVal,
       growthBuffs: l.growthBuffs || [],
-      metrics: metrics.computeMetrics(
-        ctx.metricDefs, "level",
-        { skillId: displaySkillId, level: l.level, roleLevel: l.roleLevel, consumeMp: l.consumeMp, totalPer: l.totalPer, totalVal: l.totalVal, growthBuffs: l.growthBuffs || [], releaseSeconds: rel.releaseSeconds, segCount: l.segments.reduce((a, s) => a + (s.maxHit || 1), 0) },
-        ctx.helpers, l.level === 1 ? warnings : [],
-      ),
+      metrics: [
+        ...(l.metrics || []),
+        ...metrics.computeMetrics(
+          ctx.metricDefs, "level",
+          { skillId: displaySkillId, level: l.level, roleLevel: l.roleLevel, consumeMp: l.consumeMp, totalPer: l.totalPer, totalVal: l.totalVal, growthBuffs: l.growthBuffs || [], releaseSeconds: rel.releaseSeconds, segCount: l.segments.reduce((a, s) => a + (s.maxHit || 1), 0) },
+          ctx.helpers, l.level === 1 ? warnings : [],
+        ),
+      ],
     })),
     warnings,
   };
