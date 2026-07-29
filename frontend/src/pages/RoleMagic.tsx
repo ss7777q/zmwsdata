@@ -119,7 +119,7 @@ export default function RoleMagic({ dataSources, activeTab, onTabChange }: Props
     };
 
     const cards = useMemo(() => {
-        return magicLuckData.filter((item: any) => item.phases !== 2 && !item.name.includes('二阶')).map((luckItem: any) => {
+        return magicLuckData.filter((item: any) => item.phases !== 2 && !(item.name || '').includes('二阶')).map((luckItem: any) => {
             const weaponId = luckItem.id;
             const weaponName = luckItem.name;
 

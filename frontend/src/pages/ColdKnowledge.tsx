@@ -122,7 +122,7 @@ export default function ColdKnowledge({ dataSources }: { dataSources: Record<str
     if (category !== ALL_CATEGORY && article.category !== category) return false;
     return textMatches(article, query);
   }), [allArticles, category, query]);
-  const activeArticle = articles.find((article) => article.id === activeId) || articles[0] || allArticles[0];
+  const activeArticle = articles.find((article) => article.id === activeId) || articles[0] || null;
   const activeMechanismMarkdown = activeArticle?.mechanismMarkdown?.trim();
   useEffect(() => {
     if (allArticles.length > 0 && !allArticles.some((article) => article.id === activeId)) {

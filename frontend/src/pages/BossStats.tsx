@@ -29,7 +29,7 @@ export default function BossStats({ dataSources, searchQuery = '' }: Props) {
   } | undefined;
 
   const sortedGroups = useMemo(() => {
-    const order = ['主线', '精英', '噩梦', '幻境', '罗汉堂', '昆仑', '兜率宫', '十绝阵', '联盟BOSS', '七星战场'];
+    const order = ['主线', '精英', '噩梦', '幻境', '罗汉堂', '昆仑', '兜率宫', '十绝阵', '联盟BOSS', '七星战场', '葬灵洞', '灵宠天梯', '关卡小怪'];
     return [...groups].sort((a, b) => {
       const labelA = a.label || '';
       const labelB = b.label || '';
@@ -87,7 +87,7 @@ export default function BossStats({ dataSources, searchQuery = '' }: Props) {
   const typeTabs = useMemo(() => {
     const indexTypes = Array.isArray(bossIndex?.types) ? bossIndex.types : [];
     const totalStageCount = bossIndex?.summary?.stageCount ?? sortedGroups.reduce((sum, group) => sum + group.stageCount, 0);
-    const totalBossCount = allBosses.length;
+    const totalBossCount = bossIndex?.summary?.bossCount ?? allBosses.length;
     const displayedBossCounts = new Map<string, number>();
     for (const boss of allBosses) {
       const group = groups.find((item) => String(item.type) === String(boss.type));

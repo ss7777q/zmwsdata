@@ -160,11 +160,6 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
     return cols;
   }, [card.name, growthBuffGroups, rows, mappedMetrics]);
 
-  const isSkillExtraCard = card.extraKind === 'skillExtra' || card.header.kind === 'skillExtra';
-  const hasSkillExtraVal = isSkillExtraCard && rows.some((row) => row.totalVal != null);
-  const hasGrowthTable = cols.mp || cols.per || cols.val || hasSkillExtraVal || cols.baselineMultiplier || cols.baselineCorrection || cols.metrics.length > 0 || growthBuffCols.length > 0;
-  const lastRow = rows[rows.length - 1];
-
   if (card.error) {
     return (
       <div className="rounded-[20px] border border-dashed border-border bg-transparent p-5">
@@ -175,6 +170,11 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
       </div>
     );
   }
+
+  const isSkillExtraCard = card.extraKind === 'skillExtra' || card.header.kind === 'skillExtra';
+  const hasSkillExtraVal = isSkillExtraCard && rows.some((row) => row.totalVal != null);
+  const hasGrowthTable = cols.mp || cols.per || cols.val || hasSkillExtraVal || cols.baselineMultiplier || cols.baselineCorrection || cols.metrics.length > 0 || growthBuffCols.length > 0;
+  const lastRow = rows[rows.length - 1];
 
   const segGroups = describeSegments(card.header.segments);
   const headerMetrics = card.header.metrics ?? [];

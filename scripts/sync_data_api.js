@@ -5,6 +5,8 @@ const vm = require('vm');
 
 const ROOT = path.resolve(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'dataApi');
+const STAGING_DIR = path.join(ROOT, 'dataApi.staging');
+const BACKUP_DIR = path.join(ROOT, 'dataApi.backup');
 const RUNTIME_DIR = path.join(ROOT, 'data', 'runtime');
 const RUNTIME_MAIN_INDEX_PATH = path.join(RUNTIME_DIR, 'main-index.js');
 const RUNTIME_MAIN_META_PATH = path.join(RUNTIME_DIR, 'main-index.meta.json');
@@ -55,14 +57,27 @@ function resolveMainBundleEntry(settings) {
   return mainVersion ? `assets/main/index.${mainVersion}.js` : null;
 }
 
-function cleanDataDir() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-    return;
+function prepareStagingDir() {
+  fs.rmSync(STAGING_DIR, { recursive: true, force: true });
+  fs.mkdirSync(STAGING_DIR, { recursive: true });
+}
+
+// 全部下载成功后才用 staging 目录整体替换 dataApi/，
+// 避免下载中途失败留下残缺目录（旧数据先移到 backup，替换成功后删除）。
+function replaceDataDir() {
+  fs.rmSync(BACKUP_DIR, { recursive: true, force: true });
+  if (fs.existsSync(DATA_DIR)) {
+    fs.renameSync(DATA_DIR, BACKUP_DIR);
   }
-  for (const name of fs.readdirSync(DATA_DIR)) {
-    fs.rmSync(path.join(DATA_DIR, name), { recursive: true, force: true });
+  try {
+    fs.renameSync(STAGING_DIR, DATA_DIR);
+  } catch (error) {
+    if (fs.existsSync(BACKUP_DIR) && !fs.existsSync(DATA_DIR)) {
+      fs.renameSync(BACKUP_DIR, DATA_DIR);
+    }
+    throw error;
   }
+  fs.rmSync(BACKUP_DIR, { recursive: true, force: true });
 }
 
 function extractTable(jsCode, filename) {
@@ -202,7 +217,7 @@ async function syncRuntimeEmbeddedTables(settingsUrl, settings) {
   for (const tableName of RUNTIME_EMBEDDED_TABLES) {
     const table = extractRuntimeEmbeddedTable(runtimeCode, tableName);
     const json = tableToObjects(table, `${tableName}.runtime.js`);
-    const jsonPath = path.join(DATA_DIR, `${tableName}.runtime.json`);
+    const jsonPath = path.join(STAGING_DIR, `${tableName}.runtime.json`);
     fs.writeFileSync(jsonPath, `${JSON.stringify(json, null, 2)}\n`, 'utf8');
     console.log(`已从运行时提取 ${tableName}: ${json.length} 行`);
   }
@@ -228,18 +243,18 @@ async function main() {
   const configCount = downloads.filter((item) => item.isConfig).length;
   console.log(`配置表: ${configCount} 个, 附加文件: ${downloads.length - configCount} 个`);
 
-  cleanDataDir();
+  prepareStagingDir();
 
   let downloaded = 0;
   await runPool(downloads, async (item) => {
     const jsCode = await fetchText(item.url);
-    const jsPath = path.join(DATA_DIR, item.filename);
+    const jsPath = path.join(STAGING_DIR, item.filename);
     fs.writeFileSync(jsPath, jsCode, 'utf8');
 
     if (item.isConfig) {
       const table = extractTable(jsCode, item.filename);
       const json = tableToObjects(table, item.filename);
-      const jsonPath = path.join(DATA_DIR, item.filename.replace(/\.js$/, '.json'));
+      const jsonPath = path.join(STAGING_DIR, item.filename.replace(/\.js$/, '.json'));
       fs.writeFileSync(jsonPath, `${JSON.stringify(json, null, 2)}\n`, 'utf8');
     }
 
@@ -251,10 +266,13 @@ async function main() {
 
   await syncRuntimeEmbeddedTables(settingsUrl, settings);
 
+  replaceDataDir();
+
   console.log(`同步完成: ${DATA_DIR}`);
 }
 
 main().catch((error) => {
   console.error(error.stack || error.message || String(error));
+  fs.rmSync(STAGING_DIR, { recursive: true, force: true });
   process.exit(1);
 });

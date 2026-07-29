@@ -37,6 +37,9 @@ const DEFAULT_CONFIG = {
   starHavocAttrFile: utils.findTableFile('starHavocMonsterAttribute'),
   starHavocEventFile: utils.findTableFile('starHavocEvent'),
   starHavocRewardFile: utils.findTableFile('starHavocEventReward'),
+  petHoleFile: utils.findTableFile('petHole'),
+  petChampionTowerFile: utils.findTableFile('petChampionTower'),
+  petFile: utils.findTableFile('pet'),
   mapDir: findFirstExistingMapDir(),
   mapCacheRoot: DEFAULT_MAP_CACHE_ROOT,
   manifestPath: DEFAULT_MANIFEST_PATH,
@@ -55,6 +58,12 @@ const SPECIAL_STAGE_TYPE_CONFIG = {
     noteText: '',
     levelOverrideMode: 'input',
   },
+  8: {
+    noteText: '灵宠天梯守卫为灵宠而非怪物，属性为依据客户端公式推算的基础值（种族基础 + 满资质×配置系数×星级成长系数×等级），未计入装备、潜能与词缀加成，实际属性会更高；战力为官方配置值',
+  },
+  9: {
+    noteText: '葬灵洞每关等级固定：BOSS 与随从按 bossLevel、守卫灵宠按 guardLevel 结合 monsterAttribute 模板计算',
+  },
   33: {
     noteText: '联盟BOSS固定等级属性不变,噩梦与挑战属性会随世界等级改变,默认以当前版本满级展示',
     levelOverrideMode: 'preset',
@@ -67,6 +76,9 @@ const SPECIAL_STAGE_TYPE_CONFIG = {
     noteText: '七星战场使用固定等级档位计算属性',
     levelOverrideMode: 'preset',
   },
+  9999: {
+    noteText: '汇总各类关卡地图中的非 BOSS 刷怪点（小怪），属性按所在关卡默认等级计算；同关卡同 ID 小怪已去重',
+  },
 };
 
 const STAGE_TYPE_RULES = {
@@ -77,8 +89,8 @@ const STAGE_TYPE_RULES = {
   5: { label: '神兽森林', slug: 'divine_beast_forest', exportable: true },
   6: { label: '噩梦关卡', slug: 'nightmare', exportable: true },
   7: { label: '悬赏', slug: 'bounty', exportable: false, skipReason: '规则仍有问题，暂不导出' },
-  8: { label: '斗宠相关', slug: 'pet_duel', exportable: false, skipReason: '非 BOSS 关卡，暂不导出' },
-  9: { label: '藏灵洞', slug: 'hidden_cave', exportable: false, skipReason: 'BOSS 结构特殊，暂不导出' },
+  8: { label: '灵宠天梯', slug: 'pet_ladder', exportable: false, skipReason: '关卡地图无怪物，天梯守卫由 petChampionTower 配置生成（走专用构建逻辑）' },
+  9: { label: '葬灵洞', slug: 'hidden_cave', exportable: true },
   10: { label: 'PVP关卡', slug: 'pvp_10', exportable: false, skipReason: 'PVP 关卡，暂不导出' },
   11: { label: 'PVP关卡', slug: 'pvp_11', exportable: false, skipReason: 'PVP 关卡，暂不导出' },
   12: { label: 'PVP关卡', slug: 'pvp_12', exportable: false, skipReason: 'PVP 关卡，暂不导出' },
@@ -127,7 +139,13 @@ const STAGE_TYPE_RULES = {
   202: { label: '特殊关卡', slug: 'special_202', exportable: false, skipReason: '暂不导出' },
   203: { label: '特殊关卡', slug: 'special_203', exportable: false, skipReason: '暂不导出' },
   1002: { label: '兜率宫', slug: 'doushuai_palace', exportable: true },
+  9999: { label: '关卡小怪', slug: 'mobs', exportable: false, skipReason: '虚拟分组：由各类型关卡地图中的非 BOSS 刷怪点汇总生成' },
 };
+
+// 虚拟分组：汇总各可导出关卡地图里的非 BOSS 刷怪点（小怪）
+const MOB_GROUP_TYPE = 9999;
+// 不参与小怪汇总的类型：2 幻境基础关无地图；9 葬灵洞用 petHole 表；23 昆仑小怪有波次倍率另有专页；33 联盟BOSS 走配置表；45 七星战场用专属属性表
+const MOB_SKIP_TYPES = new Set([2, 9, 23, 33, 45]);
 
 class CommandParser {
   static parse() {
@@ -148,6 +166,9 @@ class CommandParser {
       starHavocAttrFile: DEFAULT_CONFIG.starHavocAttrFile,
       starHavocEventFile: DEFAULT_CONFIG.starHavocEventFile,
       starHavocRewardFile: DEFAULT_CONFIG.starHavocRewardFile,
+      petHoleFile: DEFAULT_CONFIG.petHoleFile,
+      petChampionTowerFile: DEFAULT_CONFIG.petChampionTowerFile,
+      petFile: DEFAULT_CONFIG.petFile,
       mapDir: DEFAULT_CONFIG.mapDir,
       mapCacheRoot: DEFAULT_CONFIG.mapCacheRoot,
       manifestPath: DEFAULT_CONFIG.manifestPath,
@@ -193,6 +214,12 @@ class CommandParser {
         args.starHavocEventFile = process.argv[++index];
       } else if (arg === '--star-havoc-reward-file') {
         args.starHavocRewardFile = process.argv[++index];
+      } else if (arg === '--pet-hole-file') {
+        args.petHoleFile = process.argv[++index];
+      } else if (arg === '--pet-champion-tower-file') {
+        args.petChampionTowerFile = process.argv[++index];
+      } else if (arg === '--pet-file') {
+        args.petFile = process.argv[++index];
       } else if (arg === '--map-dir') {
         args.mapDir = process.argv[++index];
       } else if (arg === '--map-cache-root') {
@@ -377,6 +404,15 @@ class DataLoader {
     console.log(`正在加载 starHavocEventReward 配置: ${this.config.starHavocRewardFile}`);
     const starHavocRewards = this.readJson(this.config.starHavocRewardFile) || [];
 
+    console.log(`正在加载 petHole 配置: ${this.config.petHoleFile}`);
+    const petHoleRows = this.readJson(this.config.petHoleFile) || [];
+
+    console.log(`正在加载 petChampionTower 配置: ${this.config.petChampionTowerFile}`);
+    const petChampionTowerRows = this.readJson(this.config.petChampionTowerFile) || [];
+
+    console.log(`正在加载 pet 配置: ${this.config.petFile}`);
+    const pets = this.readJson(this.config.petFile) || [];
+
     return {
       stages,
       monsters,
@@ -392,6 +428,9 @@ class DataLoader {
       starHavocAttrs,
       starHavocEvents,
       starHavocRewards,
+      petHoleRows,
+      petChampionTowerRows,
+      pets,
     };
   }
 }
@@ -538,6 +577,78 @@ class MapParser {
     }
 
     return results;
+  }
+
+  extractMobEntries(mapPayload) {
+    const creators = mapPayload?.triggers?.manCreater;
+    if (!creators || typeof creators !== 'object') {
+      return [];
+    }
+
+    const pointToScreen = this.buildPointScreenMap(mapPayload);
+    const results = [];
+
+    for (const [creatorKey, creatorCfg] of Object.entries(creators)) {
+      if (!creatorCfg) {
+        continue;
+      }
+
+      const isBoss = creatorCfg.isBoss === true
+        || creatorCfg.BossAppearHint === true
+        || creatorCfg.BossKillHint === true;
+
+      if (isBoss) {
+        continue;
+      }
+
+      const screenKey = String(creatorCfg.id ?? creatorKey);
+      // 小怪同样支持 RandomIds 随机替换池：默认 mIds 与候选 RandomIds 都视为可能出现的小怪
+      const monsterIds = new Set([
+        ...normalizeIds(creatorCfg.mIds),
+        ...normalizeIds(creatorCfg.RandomIds),
+      ]);
+      for (const monsterId of monsterIds) {
+        results.push({
+          id: monsterId,
+          creatorKey,
+          creator: creatorCfg,
+          screen: pointToScreen.get(screenKey) ?? null,
+          source: 'map',
+          sourceField: 'manCreater',
+        });
+      }
+    }
+
+    return results;
+  }
+
+  getMobEntriesByMapNames(mapValue) {
+    const mapNames = flattenStageMapNames(mapValue);
+    const merged = [];
+    const seen = new Set();
+
+    for (const mapName of mapNames) {
+      const mapPath = this.findMapFile(mapName);
+      if (!mapPath) {
+        continue;
+      }
+      let entries = [];
+      try {
+        const rawData = JSON.parse(fs.readFileSync(mapPath, 'utf8'));
+        entries = this.extractMobEntries(this.parseMapData(rawData));
+      } catch (error) {
+        console.warn(`[Warn] 读取地图文件出错 ${mapPath}: ${error.message}`);
+      }
+      for (const entry of entries) {
+        if (seen.has(entry.id)) {
+          continue;
+        }
+        seen.add(entry.id);
+        merged.push({ ...entry, mapName });
+      }
+    }
+
+    return merged;
   }
 
   findRebirthConfig(mapPayload, pointId) {
@@ -1470,6 +1581,295 @@ function buildStarHavocEventBossEntries(eventList) {
   return stageBossMap;
 }
 
+// ─── 葬灵洞（type 9）：petHole 表逐行生成伪关卡 ───────────────────────
+// BOSS/随从按 bossLevel、守卫灵宠按 guardLevel 结合 monsterAttribute 模板计算
+function buildPetHoleStageReports(stage, context) {
+  const stageReports = [];
+
+  for (const holeCfg of context.petHoleRows) {
+    if (utils.isInactiveDataApiRow(holeCfg)) {
+      continue;
+    }
+    const holeId = toNumber(holeCfg?.id);
+    const bossLevel = toNumber(holeCfg?.bossLevel);
+    const guardLevel = toNumber(holeCfg?.guardLevel, bossLevel);
+    const bossId = toNumber(holeCfg?.bossId);
+    if (holeId == null || bossLevel == null || bossId == null) {
+      continue;
+    }
+
+    const stageReport = {
+      stageId: `${stage.id}-${holeId}`,
+      stageName: `葬灵洞·第${holeId}关`,
+      stageLv: bossLevel,
+      type: stage.type,
+      subType: stage.subType,
+      mapName: stage.map,
+      source: 'petHole',
+      status: 'success',
+      description: stage.name || '',
+      stageDesc: stage.dstageDesc || '',
+      petHole: {
+        holeId,
+        bossLevel,
+        guardLevel,
+        recommendPower: Array.isArray(holeCfg.power) && toNumber(holeCfg.power[2], -1) > 0
+          ? toNumber(holeCfg.power[2])
+          : null,
+        elitePower: Array.isArray(holeCfg.power) && toNumber(holeCfg.power[0], -1) > 0
+          ? toNumber(holeCfg.power[0])
+          : null,
+      },
+      bossData: [],
+    };
+
+    const combatants = [
+      { id: bossId, level: bossLevel, role: 'boss', roleLabel: 'BOSS' },
+      ...normalizeIds(holeCfg.bossEntourage).map((id) => ({ id, level: bossLevel, role: 'entourage', roleLabel: 'BOSS随从' })),
+      ...normalizeIds(holeCfg.guardPet).map((id) => ({ id, level: guardLevel, role: 'guard', roleLabel: '守卫灵宠' })),
+    ];
+
+    for (const combatant of combatants) {
+      try {
+        const calcResult = context.calculator.calculateBoss(combatant.id, combatant.level, {
+          includeFormula: true,
+        });
+        calcResult.source = 'petHole';
+        calcResult.petHoleRole = combatant.role;
+        calcResult.petHoleRoleLabel = combatant.roleLabel;
+        if (combatant.role !== 'boss') {
+          calcResult.remark = [combatant.roleLabel, calcResult.remark].filter(Boolean).join(' · ');
+        }
+        stageReport.bossData.push(calcResult);
+      } catch (error) {
+        stageReport.bossData.push({
+          id: combatant.id,
+          bossId: combatant.id,
+          source: 'petHole',
+          petHoleRole: combatant.role,
+          petHoleRoleLabel: combatant.roleLabel,
+          error: error.message,
+        });
+        stageReport.status = 'partial_error';
+      }
+    }
+
+    // 同一关里 BOSS 与守卫等级不同，不能按 bossId 去重跨等级条目；仅去除完全同角色同 ID 的重复
+    const seen = new Set();
+    stageReport.bossData = stageReport.bossData.filter((item) => {
+      const key = `${item.petHoleRole}|${item.id}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    if (stageReport.bossData.length > 0) {
+      stageReports.push(stageReport);
+    }
+  }
+
+  return stageReports;
+}
+
+// ─── 灵宠天梯（type 8, 万兽争锋）：petChampionTower 守卫灵宠基础属性 ──────
+// 客户端公式：stat = ceil(pet.base + 资质 × 每星系数 modulus[star-1] × 等级)
+// 资质取 pet.<attr>Quality[star-1]（该星级满资质）× 配置 quality 系数；
+// hitVal/crit=力+敏, lucky=力+运, dodge=体+敏, tenacity/guardian=体+运
+// 装备/潜能/词缀的生成逻辑在远端服务器，无法本地还原，故仅导出基础属性并注明
+const PET_QUALITY_SOURCES = {
+  atk: ['strQuality'],
+  hp: ['vitQuality'],
+  def: ['dexQuality'],
+  healHp: ['luckQuality'],
+  hitVal: ['strQuality', 'dexQuality'],
+  crit: ['strQuality', 'dexQuality'],
+  lucky: ['strQuality', 'luckQuality'],
+  dodge: ['vitQuality', 'dexQuality'],
+  tenacity: ['vitQuality', 'luckQuality'],
+  guardian: ['vitQuality', 'luckQuality'],
+};
+
+function calculatePetGuardProps(petTplt, star, level, qualityRate) {
+  const starIndex = Math.max(0, Math.min(toNumber(star, 1) - 1, 8));
+  const props = {};
+
+  for (const prop of PROP_KEYS) {
+    props[prop] = toNumber(petTplt[prop], 0);
+  }
+
+  for (const [prop, sources] of Object.entries(PET_QUALITY_SOURCES)) {
+    const modulusArr = petTplt[`${prop}Modulus`];
+    const modulus = Array.isArray(modulusArr) ? toNumber(modulusArr[starIndex] ?? modulusArr[0], 0) : 0;
+    let quality = 0;
+    for (const sourceKey of sources) {
+      const qualityArr = petTplt[sourceKey];
+      const maxQuality = Array.isArray(qualityArr) ? toNumber(qualityArr[starIndex] ?? qualityArr[0], 0) : 0;
+      quality += maxQuality * qualityRate;
+    }
+    props[prop] = Math.ceil(toNumber(petTplt[prop], 0) + quality * modulus * level);
+  }
+
+  props.maxHp = props.hp;
+  props.maxMp = props.mp;
+  return props;
+}
+
+function buildPetLadderStageReports(stage, context) {
+  const stageReports = [];
+  const activeTowerRows = context.petChampionTowerRows.filter((row) => !utils.isInactiveDataApiRow(row));
+  const floorRowCount = new Map();
+  for (const towerCfg of activeTowerRows) {
+    const floor = toNumber(towerCfg?.floor);
+    if (floor != null) {
+      floorRowCount.set(floor, (floorRowCount.get(floor) || 0) + 1);
+    }
+  }
+
+  for (const towerCfg of activeTowerRows) {
+    const floor = toNumber(towerCfg?.floor);
+    const level = toNumber(towerCfg?.level);
+    if (floor == null || level == null) {
+      continue;
+    }
+
+    const worldLvRange = Array.isArray(towerCfg.worldLv) ? towerCfg.worldLv.map((value) => toNumber(value)) : null;
+    const hasSiblingRows = (floorRowCount.get(floor) || 0) > 1;
+    const worldLvSuffix = hasSiblingRows && worldLvRange
+      ? `（世界等级${worldLvRange[0]}-${worldLvRange[1]}）`
+      : '';
+
+    const stageReport = {
+      stageId: `${stage.id}-${towerCfg.id}`,
+      stageName: `灵宠天梯·第${floor}层${worldLvSuffix}`,
+      stageLv: level,
+      type: stage.type,
+      subType: stage.subType,
+      mapName: stage.map,
+      source: 'petChampionTower',
+      status: 'success',
+      description: stage.name || '',
+      stageDesc: stage.dstageDesc || '',
+      petLadder: {
+        floor,
+        worldLv: worldLvRange,
+        star: toNumber(towerCfg.star),
+        level,
+        quality: toNumber(towerCfg.quality),
+        power: toNumber(towerCfg.power),
+        point: toNumber(towerCfg.point),
+      },
+      bossData: [],
+    };
+
+    const guardPetIds = normalizeIds(towerCfg.guardPet);
+    for (const petId of guardPetIds) {
+      const petTplt = context.petById.get(petId);
+      if (!petTplt) {
+        stageReport.bossData.push({
+          id: petId,
+          bossId: petId,
+          source: 'petChampionTower',
+          error: `找不到 ID 为 ${petId} 的 pet 配置`,
+        });
+        stageReport.status = 'partial_error';
+        continue;
+      }
+
+      const star = toNumber(towerCfg.star, 1);
+      const qualityRate = toNumber(towerCfg.quality, 0);
+      const calculatedProps = calculatePetGuardProps(petTplt, star, level, qualityRate);
+      stageReport.bossData.push({
+        id: petId,
+        bossId: petId,
+        name: petTplt.name || '',
+        remark: `守卫灵宠 · ${star}星 · 资质${Math.round(qualityRate * 100)}%`,
+        level,
+        petStar: star,
+        petQualityRate: qualityRate,
+        resist: null,
+        resistEntries: [],
+        resistRoleEntries: [],
+        resistRolePvpEntries: [],
+        baseCalculatedProps: calculatedProps,
+        calculatedProps,
+        source: 'petChampionTower',
+        calcNote: '基础属性（未含装备/潜能/词缀），实际属性更高',
+      });
+    }
+
+    if (stageReport.bossData.length > 0) {
+      stageReports.push(stageReport);
+    }
+  }
+
+  return stageReports;
+}
+
+// ─── 关卡小怪（虚拟 type 9999）：各类型关卡地图非 BOSS 刷怪点 ────────────
+function buildMobStageReports(targetStages, context) {
+  const stageReports = [];
+
+  for (const stage of targetStages) {
+    const stageType = toNumber(stage.type);
+    if (MOB_SKIP_TYPES.has(stageType)) {
+      continue;
+    }
+
+    const rule = getStageTypeRule(stageType);
+    const mobEntries = context.mapParser.getMobEntriesByMapNames(stage.map);
+    if (mobEntries.length === 0) {
+      continue;
+    }
+
+    const stageLevel = toNumber(stage.lv, 1);
+    const stageReport = {
+      stageId: stage.id,
+      stageName: `${stage.name || `关卡 ${stage.id}`}`,
+      stageLv: stageLevel,
+      type: MOB_GROUP_TYPE,
+      subType: stage.type,
+      mapName: stage.map,
+      source: 'map',
+      status: 'success',
+      description: `${rule.label}小怪`,
+      stageDesc: stage.remark || '',
+      originType: stage.type,
+      originTypeLabel: rule.label,
+      bossData: [],
+    };
+
+    for (const mobEntry of mobEntries) {
+      try {
+        // 小怪不支持等级覆写，不输出 calcFormula/baseCalculatedProps 以控制文件体积
+        const calcResult = context.calculator.calculateBoss(mobEntry.id, stageLevel, {});
+        delete calcResult.baseCalculatedProps;
+        calcResult.creatorId = mobEntry.creatorKey;
+        calcResult.screen = mobEntry.screen;
+        calcResult.source = mobEntry.source;
+        calcResult.sourceField = mobEntry.sourceField;
+        stageReport.bossData.push(calcResult);
+      } catch (error) {
+        stageReport.bossData.push({
+          id: mobEntry.id,
+          bossId: mobEntry.id,
+          creatorId: mobEntry.creatorKey,
+          source: mobEntry.source,
+          sourceField: mobEntry.sourceField,
+          error: error.message,
+        });
+        stageReport.status = 'partial_error';
+      }
+    }
+
+    dedupeStageReportBossData(stageReport);
+    if (stageReport.bossData.length > 0) {
+      stageReports.push(stageReport);
+    }
+  }
+
+  return stageReports;
+}
+
 function writeBossOutput(groupedData, outPath, options = {}) {
   if (outPath) {
     ensureDir(path.dirname(outPath));
@@ -1600,6 +2000,9 @@ function extractBossStats(options = {}) {
     starHavocAttrs,
     starHavocEvents,
     starHavocRewards,
+    petHoleRows,
+    petChampionTowerRows,
+    pets,
   } = loader.loadAll();
 
   const targetStages = stages.filter((stage) => shouldExportStage(stage, resolvedOptions));
@@ -1613,6 +2016,7 @@ function extractBossStats(options = {}) {
   const stageById = new Map(stages.map((stage) => [stage.id, stage]));
   const roguelikeBaseById = new Map(roguelikeBases.map((item) => [item.id, item]));
   const roguelikeById = new Map(roguelikes.map((item) => [item.id, item]));
+  const petById = new Map(pets.filter((item) => item && item.id != null).map((item) => [item.id, item]));
   const constsByKey = buildConstsMap(consts);
   const starHavocEventBossEntriesByStage = buildStarHavocEventBossEntries(starHavocEvents);
   const levelTemplates = buildLevelTemplateMap(attrs);
@@ -1636,11 +2040,29 @@ function extractBossStats(options = {}) {
     }));
   }
 
+  // 灵宠天梯（type 8 不在 targetStages 内：关卡地图无怪物，守卫来自 petChampionTower）
+  if (resolvedOptions.types.length === 0 || resolvedOptions.types.includes(8)) {
+    const petLadderStage = stages.find((stage) => toNumber(stage.type) === 8 && toNumber(stage.subType) === 80002);
+    if (petLadderStage) {
+      results.push(...buildPetLadderStageReports(petLadderStage, {
+        petChampionTowerRows,
+        petById,
+      }));
+    }
+  }
+
   console.log(`开始处理 stage 列表 (总计: ${targetStages.length} / 原始 ${stages.length})`);
 
   for (const stage of targetStages) {
     const stageType = toNumber(stage.type);
     if (stageType === 33) {
+      continue;
+    }
+    if (stageType === 9) {
+      results.push(...buildPetHoleStageReports(stage, {
+        calculator,
+        petHoleRows,
+      }));
       continue;
     }
     if (stageType === 2) {
@@ -1765,6 +2187,17 @@ function extractBossStats(options = {}) {
     }
   }
 
+  // 关卡小怪虚拟分组（type 9999）：小怪来源为全部可导出关卡地图
+  if (resolvedOptions.types.length === 0 || resolvedOptions.types.includes(MOB_GROUP_TYPE)) {
+    const mobSourceStages = resolvedOptions.types.length === 0
+      ? targetStages
+      : stages.filter((stage) => shouldExportStage(stage, { ...resolvedOptions, types: [] }));
+    results.push(...buildMobStageReports(mobSourceStages, {
+      mapParser,
+      calculator,
+    }));
+  }
+
   const groupedData = buildStageGroups(results);
   const illusionGroup = groupedData.find((group) => toNumber(group.type) === 2);
   if (illusionGroup) {
@@ -1810,6 +2243,14 @@ function extractBossStats(options = {}) {
       max: maxConfiguredLevel,
     };
     leagueBossGroup.degreeWorldLv = leagueBossDegreeWorldLv;
+  }
+
+  // 新增分组的说明文案（灵宠天梯 / 葬灵洞 / 关卡小怪）
+  for (const specialType of [8, 9, MOB_GROUP_TYPE]) {
+    const group = groupedData.find((item) => toNumber(item.type) === specialType);
+    if (group && SPECIAL_STAGE_TYPE_CONFIG[specialType]) {
+      group.noteText = SPECIAL_STAGE_TYPE_CONFIG[specialType].noteText;
+    }
   }
 
   return groupedData;

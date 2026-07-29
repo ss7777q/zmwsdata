@@ -239,8 +239,10 @@ function toSortableNumber(value: number | string | null | undefined) {
 }
 
 function compareBossDesc(lhs: FlattenedBoss, rhs: FlattenedBoss) {
-  const leftType = toSortableNumber(lhs.type);
-  const rightType = toSortableNumber(rhs.type);
+  // 关卡小怪虚拟分组(9999)在聚合视图中始终排在最后
+  const normalizeType = (value: number | null) => (value === 9999 ? -1 : value);
+  const leftType = normalizeType(toSortableNumber(lhs.type));
+  const rightType = normalizeType(toSortableNumber(rhs.type));
   if (leftType != null && rightType != null && leftType !== rightType) {
     return rightType - leftType;
   }

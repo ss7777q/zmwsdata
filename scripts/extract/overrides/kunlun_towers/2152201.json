@@ -1,0 +1,96 @@
+{
+  "group": 2152201,
+  "groupName": "神箭塔",
+  "category": "输出塔",
+  "role": "超远射程单体狙击塔，优先点杀旗兵，满级击杀目标时引发范围爆炸。",
+  "overview": "神箭塔由神箭手驻守，发射威力巨大的追踪箭矢狙击远处目标，射程接近全屏；只要场上出现旗兵，无论旗兵在哪，神箭塔都会无视其他敌人优先射击旗兵。三级普攻机制相同，升级主要提升攻击力：攻击系数 1级0.89 → 2级2.914 → 3级7.365（实际伤害随关卡成长）。3级耀金神箭塔额外获得被动：每当击败一个目标，就在该目标位置引发一次爆炸，对周围敌人造成溅射伤害——每个被波及的敌人最多受到4次爆炸伤害，每次为塔攻击力的100%。",
+  "targeting": "锁定单体目标发射追踪箭矢，箭会一路转向追击直至命中；射程接近全屏，可攻击空中敌人。索敌优先级：全场范围内只要有旗兵存在，就优先锁定旗兵（仅嘲讽效果能改变这一优先级），没有旗兵时按常规就近索敌。",
+  "counters": "反制旗兵与远处高价值单体的首选；射程几乎覆盖全场，适合放在后排安全位补远程火力；3级的击杀爆炸让它对成群小怪也有清扫收尾能力。",
+  "weaknesses": "攻速中等且普攻为单体，面对海量杂兵的持续清场效率不如范围塔；命中无减速、中毒等附加控制效果，纯输出。",
+  "synergy": "",
+  "levels": [
+    {
+      "id": 2152201,
+      "name": "灵木神箭塔",
+      "level": 1,
+      "attack": {
+        "atkCoef": 0.89,
+        "hpCoef": 1,
+        "atkCd": 2,
+        "range": 1500
+      },
+      "skills": [
+        {
+          "id": 21522010101,
+          "name": "追踪神箭（普通攻击）",
+          "slot": "atkIds",
+          "cd": 0,
+          "desc": "向锁定的目标射出一支追踪箭矢：箭先以抛物线飞出，随后加速转为追踪弹道，一路转向追击目标，命中造成塔攻击力100%的伤害。射程接近全屏，可命中空中敌人。"
+        }
+      ],
+      "buffs": [],
+      "mechanics": "基础形态。官方描述：『攻击：中 攻速：中。神箭手发射威力巨大的箭矢攻击超远距离外的目标，优先瞄准旗兵（推荐：反制旗兵）』。"
+    },
+    {
+      "id": 2152202,
+      "name": "坚石神箭塔",
+      "level": 2,
+      "attack": {
+        "atkCoef": 2.914,
+        "hpCoef": 1,
+        "atkCd": 2,
+        "range": 1500
+      },
+      "skills": [
+        {
+          "id": 21522020101,
+          "name": "追踪神箭（普通攻击）",
+          "slot": "atkIds",
+          "cd": 0,
+          "desc": "与1级机制完全相同的追踪箭普攻，仅攻击力提升。"
+        }
+      ],
+      "buffs": [],
+      "mechanics": "相比1级为纯数值升级：攻击系数 0.89 → 2.914（约3.3倍）。官方描述改为『攻击：高』，机制无变化。"
+    },
+    {
+      "id": 2152203,
+      "name": "耀金神箭塔",
+      "level": 3,
+      "attack": {
+        "atkCoef": 7.365,
+        "hpCoef": 1,
+        "atkCd": 2,
+        "range": 1500
+      },
+      "skills": [
+        {
+          "id": 21522030101,
+          "name": "追踪神箭（普通攻击）",
+          "slot": "atkIds",
+          "cd": 0,
+          "desc": "同前两级的追踪箭普攻，攻击力进一步大幅提升。"
+        },
+        {
+          "id": 21522010201,
+          "name": "击杀爆炸（被动）",
+          "slot": "vSkill",
+          "cd": 0,
+          "desc": "每当击败一个目标，立刻在该目标位置引发一次爆炸（必定触发、无冷却）：爆炸持续0.6秒，覆盖约300距离见方的区域，可同时波及大量敌人；范围内每个敌人最多被炸中4次（每次间隔约0.09秒），每次造成塔攻击力100%的伤害——单个敌人最多合计吃到塔攻击力400%的爆炸伤害，且各敌人的次数互相独立。"
+        }
+      ],
+      "buffs": [],
+      "mechanics": "3级独有：新增击杀爆炸被动——普攻击败目标后在其位置产生范围爆炸（对应官方描述『若击败目标会造成爆炸范围伤害』），爆炸对每个敌人最多4跳、每跳为塔攻击力的100%。攻击系数 2.914 → 7.365。"
+    }
+  ],
+  "economy": {
+    "buildCost": 222,
+    "upgradeCosts": [444, 740],
+    "dismantleReturns": [111, 333, 703]
+  },
+  "special": {},
+  "sources": "buildProtectKunLun.77f24.json（2152201/2152202/2152203）; monster.7652d.json（同三 id：atk/hp/atkCd/atkIds/vSkill/initBeSkill/lockdis/cfgFile）; skill.7c8c8.json（21522010101/21522020101/21522030101/21522010201）; beskill.4f7c5.json（7027001 kill_vskill）; file/battle-config/entityCtg/215220{1,2,3}-monster_cfg_shenjianta.json（attack1/vskill 帧动作与 bId）; file/battle-config/bullets.json（子弹 2485/101644/2486）; 引擎分析 scratch/kunlun_engine/beskill-labels.json（kill_vskill 触发链与 2486 maxHit=4 为按目标计数，confirmed）、aicfg-towers.json（旗兵优先=LockRangeHaveMId[2151802,2153601,2153602]+SetAtkAssignMid，范围近全图，优先级仅次于嘲讽，confirmed；atkCd 为死配置，实际攻击间隔由 attack1 动作帧长决定）、skill-falloff-atkcd.json（lockRange=[xOffset,yOffset,width,height] 世界像素，confirmed）",
+  "uncertainties": [
+    "skill.decreasePercentage=[15,0.01] 的确切含义（疑似超距/多目标衰减参数）未能从表结构与引擎分析中确认。"
+  ]
+}

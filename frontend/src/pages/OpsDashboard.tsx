@@ -91,12 +91,12 @@ export default function OpsDashboard() {
     const maxLevel = Number(maxLevelInput);
     const intervalMinutes = Number(autoRefreshIntervalInput);
 
-    if (!Number.isInteger(maxLevel) || maxLevel < 0) {
+    if (maxLevelInput.trim() === '' || !Number.isInteger(maxLevel) || maxLevel < 0) {
       window.alert('最大等级必须是非负整数');
       return;
     }
 
-    if (!Number.isInteger(intervalMinutes) || intervalMinutes <= 0) {
+    if (autoRefreshIntervalInput.trim() === '' || !Number.isInteger(intervalMinutes) || intervalMinutes <= 0) {
       window.alert('自动更新周期必须是正整数分钟');
       return;
     }
@@ -453,8 +453,8 @@ export default function OpsDashboard() {
               <div className="text-sm text-slate-400">暂无任务日志。</div>
             ) : (
               <div className="space-y-2 font-mono text-xs leading-6">
-                {latestLogLines.map((line) => (
-                  <div key={line} className="break-all text-slate-200">{line}</div>
+                {latestLogLines.map((line, index) => (
+                  <div key={`${index}-${line}`} className="break-all text-slate-200">{line}</div>
                 ))}
               </div>
             )}

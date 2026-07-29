@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import CostBadge from '../components/ui/CostBadge';
 import { ChevronDown, ChevronUp } from 'lucide-react';
@@ -54,13 +54,27 @@ export default function RoleEquip({ dataSources }: RoleEquipProps) {
         return map;
     }, [list]);
 
-    // 初始化默认选中
-    useMemo(() => {
-        if (activeGroup === null && groupedData.size > 0) {
-            const firstKey = Array.from(groupedData.keys())[0];
-            setActiveGroup(firstKey);
+    // 分组按钮的显示顺序：等级降序，'none'（神化/魔化）排最后
+    const sortedGroupEntries = useMemo(() => {
+        return Array.from(groupedData.entries()).sort((a, b) => {
+            if (a[0] === 'none') return 1;
+            if (b[0] === 'none') return -1;
+            return (b[0] as number) - (a[0] as number);
+        });
+    }, [groupedData]);
+
+    // 初始化/修正选中分组：默认选显示顺序的第一个；数据更新导致当前分组消失时同样回退
+    useEffect(() => {
+        if (sortedGroupEntries.length === 0) return;
+        if (activeGroup === null || !groupedData.has(activeGroup)) {
+            setActiveGroup(sortedGroupEntries[0][0]);
         }
-    }, [groupedData, activeGroup]);
+    }, [sortedGroupEntries, groupedData, activeGroup]);
+
+    const selectGroup = (groupId: number | 'none') => {
+        setActiveGroup(groupId);
+        setExpandedCards({}); // 切换分组时重置展开状态，避免下标串位到另一件装备
+    };
 
     const nav = (
         <div className="flex gap-2 p-1 bg-surface border border-border rounded-xl w-max max-w-[calc(100vw-2rem)] overflow-x-auto custom-scrollbar relative z-10 shadow-sm">
@@ -100,16 +114,12 @@ export default function RoleEquip({ dataSources }: RoleEquipProps) {
                     选择特定等级/套装后加载详情
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    {Array.from(groupedData.entries()).sort((a, b) => {
-                        if (a[0] === 'none') return 1;
-                        if (b[0] === 'none') return -1;
-                        return (b[0] as number) - (a[0] as number); // 大数字（高等级/高阶）排在前面
-                    }).map(([groupId, items]) => {
+                    {sortedGroupEntries.map(([groupId, items]) => {
                         const selected = activeGroup === groupId;
                         return (
                             <button
                                 key={groupId}
-                                onClick={() => setActiveGroup(groupId)}
+                                onClick={() => selectGroup(groupId)}
                                 className={clsx(
                                     "px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border active:scale-95",
                                     selected

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import SkillCard, { type SkillCardData } from '../components/wiki/SkillCard';
 import { useDataFiles } from '../hooks/useGameData';
@@ -78,6 +78,12 @@ export default function RoleWiki({ dataSources }: Props) {
   // null = 跟随默认档位;非 null = 用户手动选择的等级集合
   const [picked, setPicked] = useState<number[] | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'active' | 'passive'>('all');
+
+  // 角色变化时重置筛选状态(覆盖按钮切换、浏览器前进/后退、直链等所有导航方式)
+  useEffect(() => {
+    setPicked(null);
+    setFilterType('all');
+  }, [activeRole]);
   const detailResult = useDataFiles(activeRole ? [activeRole] : [], Boolean(activeRole));
   const mergedSources = useMemo(
     () => ({ ...dataSources, ...detailResult.dataSources }),
@@ -113,8 +119,6 @@ export default function RoleWiki({ dataSources }: Props) {
 
   const switchRole = (key: string) => {
     navigate(`/role_wiki/${ROLE_ROUTE_BY_FILE[key] ?? 'wukong'}`);
-    setPicked(null); // 切角色回到默认档位
-    setFilterType('all');
   };
 
   // 把每个槽展开成要展示的卡片列表(觉醒合并:相同的不重复出卡,只在基础卡加标记)

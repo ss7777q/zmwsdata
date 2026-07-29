@@ -259,7 +259,7 @@ export default function RogueItems({ dataSources }: Props) {
     });
   }, [items, query, typeFilter]);
 
-  const activeItem = filteredItems.find((item) => item.id === selectedId) || filteredItems[0] || items[0] || null;
+  const activeItem = filteredItems.find((item) => item.id === selectedId) || filteredItems[0] || null;
   const activeDamageMechanics = activeItem?.damageMechanics || [];
   const visibleDerivedMechanics = activeItem
     ? activeItem.derivedMechanics.filter((item) => !activeDamageMechanics.includes(item))

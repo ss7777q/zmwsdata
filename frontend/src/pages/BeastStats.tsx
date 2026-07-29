@@ -73,7 +73,10 @@ export default function BeastStats({ detailSource, lineupSource, playerSource, l
           }));
         }
 
-        if (tasks.length === 0) return;
+        if (tasks.length === 0) {
+          if (!cancelled) setErrorMessage(null); // 数据已齐时也要清掉上次的错误，避免永久卡在错误页
+          return;
+        }
         await Promise.all(tasks);
         if (!cancelled) setErrorMessage(null);
       } catch (error) {

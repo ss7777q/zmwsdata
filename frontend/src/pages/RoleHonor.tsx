@@ -312,7 +312,7 @@ export default function RoleHonor({ dataSources }: Props) {
             </label>
           </div>
           <div className="mobile-scroll-container p-3 pt-0 xl:p-3">
-            <div className="mobile-scroll-list-xl max-h-[70vh]">
+            <div className="mobile-scroll-list-xl custom-scrollbar max-h-[70vh] xl:overflow-y-auto">
               {filteredGroups.map((group) => {
                 const selected = activeGroup?.id === group.id;
                 return (

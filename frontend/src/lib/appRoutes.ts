@@ -22,6 +22,8 @@ export const SYSTEM_PATHS: Record<string, string> = {
   call_god: '/call_god',
   rogue_item: '/rogue_item',
   stage_rewards: '/stage_rewards',
+  power_requirements: '/power_requirements',
+  kunlun: '/kunlun',
   boss: '/boss',
   resist: '/resist',
   player_lookup: '/player_lookup',
@@ -46,6 +48,8 @@ export const DEFAULT_SYSTEM_PATHS: Record<string, string> = {
   call_god: '/call_god/stats',
   rogue_item: '/rogue_item/list',
   stage_rewards: '/stage_rewards/list',
+  power_requirements: '/power_requirements/list',
+  kunlun: '/kunlun/towers',
   boss: '/boss/mainline',
   resist: '/resist/standard',
   player_lookup: '/player_lookup/search',
@@ -97,6 +101,8 @@ const VALID_PATHS: Record<string, string[]> = {
   call_god: ['/call_god/stats', '/call_god/stones', '/call_god/boss', '/call_god/common_skills', '/call_god/talents'],
   rogue_item: ['/rogue_item/list'],
   stage_rewards: ['/stage_rewards/list'],
+  power_requirements: ['/power_requirements/list'],
+  kunlun: ['/kunlun/towers', '/kunlun/stages', '/kunlun/pvp'],
   resist: ['/resist/standard'],
   player_lookup: ['/player_lookup/search'],
   cold_knowledge: ['/cold_knowledge/list'],
@@ -123,6 +129,8 @@ export const BOSS_FILE_BY_ROUTE: Record<string, string> = {
   arhat_hall: 'boss_type_0004_arhat_hall',
   divine_beast_forest: 'boss_type_0005_divine_beast_forest',
   nightmare: 'boss_type_0006_nightmare',
+  pet_ladder: 'boss_type_0008_pet_ladder',
+  hidden_cave: 'boss_type_0009_hidden_cave',
   qixi_event: 'boss_type_0018_qixi_event',
   kunlun: 'boss_type_0023_kunlun',
   chaos_gate: 'boss_type_0032_chaos_gate',
@@ -138,6 +146,7 @@ export const BOSS_FILE_BY_ROUTE: Record<string, string> = {
   juezhen_nightmare: 'boss_type_0104_juezhen_nightmare',
   linglong_tower: 'boss_type_0201_linglong_tower',
   doushuai_palace: 'boss_type_1002_doushuai_palace',
+  mobs: 'boss_type_9999_mobs',
 };
 
 export const BOSS_ROUTE_BY_FILE = Object.fromEntries(Object.entries(BOSS_FILE_BY_ROUTE).map(([route, file]) => [file, route]));
@@ -258,7 +267,12 @@ export function getRequiredDataFiles(system: string, pathname: string, rawSearch
     return [];
   }
   if (system === 'rogue_item') return ['rogue_item_analysis'];
+  if (system === 'kunlun') {
+    if (normalized.endsWith('/pvp')) return ['kunlun_pvp_analysis'];
+    return ['kunlun_analysis'];
+  }
   if (system === STAGE_REWARDS_SYSTEM) return ['stage_reward_exp_soul'];
+  if (system === 'power_requirements') return ['power_requirements'];
   if (system === 'boss') {
     if (normalized.endsWith('/all') || normalized.endsWith('/search')) return [BOSS_INDEX_FILE, ...ALL_BOSS_FILES];
     const routeKey = normalized.slice('/boss/'.length);

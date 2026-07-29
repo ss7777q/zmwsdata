@@ -1,0 +1,126 @@
+{
+  "key": "atk_haiou",
+  "kind": "攻方兵营",
+  "groupName": "海鸥营",
+  "element": "无(海鸥/鹰怪的攻击不附带元素,不触发元素抗性加减伤)",
+  "resist": "小兵(海鸥/鹰怪):风抗+20%、雷抗-20%;兵营建筑本体无抗性",
+  "role": "飞行系空袭营。整局唯一走空中专线的兵营路线,产出的小兵全程飞行,直接越过地面防线骚扰、分推,逼对手补对空塔。",
+  "overview": "攻方飞行系兵营,共2级:海鸥营→鹰怪营。每波开始时放出一批飞行小兵,沿专属空中航线直扑对方阵地。飞行单位可以越过厚土墙、木刺陷阱等一切地面阻挡,但会被投网塔拽落并减速。小兵攻击不带元素;自身受风系伤害-20%、受雷系伤害+20%。",
+  "targeting": "小兵沿固定空中航线推进,发现面前约350距离内的敌方目标就停下攻击,每2秒出手一次;没有目标时继续朝对方神坛飞行。",
+  "counters": "克制纯地面防线:厚土墙/巨石墙、木刺陷阱、投矛塔等针对地面的布置全部被飞行航线绕开;对手没有对空手段时,海鸥群可以一路直冲神坛。",
+  "weaknesses": "雷抗-20%,被雷属性的水母塔攻击时多受20%伤害,且水母塔的范围晕眩对成群海鸥非常致命;投网塔专门控空,会把飞行单位拽落并降低移速;小兵生命系数只有0.9/0.95,在各兵营小兵中偏脆,经不起集火。",
+  "synergy": "配合地面主力营(猴系、牛系等)双线施压,迫使防守方把金币分摊到对空塔;出兵量大(每波4~5只),建筑点涨得快,适合当作解锁高级建筑的发动机;拆掉换建时返还金币也较高。",
+  "levels": [
+    {
+      "id": 10110401,
+      "name": "海鸥营",
+      "level": 1,
+      "unlock": {
+        "buildPoints": 26,
+        "buildCost": 600,
+        "upgradeCost": 750,
+        "perWave": 4
+      },
+      "stats": {
+        "atkCoef": 1,
+        "hpCoef": 1
+      },
+      "skills": [
+        {
+          "name": "放飞海鸥",
+          "desc": "每波开始时放出4只海鸥,每隔0.5秒起飞1只,沿空中专线向对方阵地进发。"
+        }
+      ],
+      "buffs": [],
+      "mechanics": "建筑生命约118万,本体不攻击、无抗性。每产出1只海鸥,己方建筑点+1(每波+4);每波开始时该营额外产出240攻击金币;拆除返还300金币。升级到鹰怪营需要局内累计42建筑点并支付750金币。",
+      "unit": {
+        "id": 10110402,
+        "name": "海鸥",
+        "stats": {
+          "hpCoef": 0.9,
+          "atkCoef": 2,
+          "baseHp": "约15.5万(未乘波次成长)",
+          "baseAtk": "约3.45万(未乘波次成长)",
+          "waveScaling": "生命第1波约276万→第7波约3068万;攻击第1波约7.5万→第7波约26.1万",
+          "moveSpeed": 240,
+          "attackInterval": "2秒"
+        },
+        "skills": [
+          {
+            "name": "三向风羽",
+            "desc": "向前方上、中、下三个方向各甩出一道羽刃,每道命中1个敌人,各造成海鸥攻击力100%的伤害,命中还会把敌人击退并硬直约0.3秒。"
+          }
+        ],
+        "desc": "飞行单位。沿空中专线飞行,无视地面墙体与陷阱,会被投网塔拽落。移速240属于中上水平,生命偏低,靠数量和航线优势换伤害。"
+      }
+    },
+    {
+      "id": 10110411,
+      "name": "鹰怪营",
+      "level": 2,
+      "unlock": {
+        "buildPoints": 42,
+        "buildCost": null,
+        "upgradeCost": null,
+        "perWave": 5
+      },
+      "stats": {
+        "atkCoef": 1,
+        "hpCoef": 1
+      },
+      "skills": [
+        {
+          "name": "放出鹰怪",
+          "desc": "每波开始时放出5只鹰怪,每隔0.5秒起飞1只,沿空中专线向对方阵地进发。"
+        }
+      ],
+      "buffs": [],
+      "mechanics": "由海鸥营升级而来(需局内累计42建筑点+750金币),已是最高级。建筑生命约118万,本体不攻击。每产出1只鹰怪,己方建筑点+1(每波+5);每波开始时该营额外产出720攻击金币,是1级的3倍;拆除返还675金币。2级相比1级:每波出兵4只→5只,小兵生命系数0.9→0.95,命中硬直0.3秒→0.5秒并附带击退。",
+      "unit": {
+        "id": 10110412,
+        "name": "鹰怪",
+        "stats": {
+          "hpCoef": 0.95,
+          "atkCoef": 2,
+          "baseHp": "约16.4万(未乘波次成长)",
+          "baseAtk": "约3.45万(未乘波次成长)",
+          "waveScaling": "生命第1波约291万→第7波约3239万;攻击第1波约7.5万→第7波约26.1万",
+          "moveSpeed": 240,
+          "attackInterval": "2秒"
+        },
+        "skills": [
+          {
+            "name": "俯冲抓击",
+            "desc": "锁定目标后向前下方俯冲,利爪造成鹰怪攻击力100%的伤害,命中把敌人击退并硬直约0.5秒;得手后会振翅拉开位置,再度进入俯冲。"
+          }
+        ],
+        "desc": "飞行单位。妖化猛禽,和海鸥同样走空中专线、无视地面阻挡、会被投网塔拽落。单次抓击的控制比海鸥更强,配合每波5只的数量,骚扰和收割能力明显提升。"
+      }
+    }
+  ],
+  "featureText": {
+    "10110401": "特性：飞行专家：走特定路线\n抗性：水20  木-20\n海风养出的轻羽哨营，盘旋侦察引风扰阵。",
+    "10110411": "特性：飞行专家：走特定路线\n抗性：暗20  光-20\n妖化猛禽盘踞高空，俯冲夺命如天罚，将目标撕碎于利爪之下。"
+  },
+  "sources": [
+    "kunlunPvpBuild 行 10110401/10110411(index.4e973.js 内嵌表): routeType=11(空中专线), number=4/3, unlockCost=26/42, buildCost=600, upgradeCost=750, waveCoin=240/720, dismantleReturn=300/675, text=featureText",
+    "monster.7652d.json 10110401/10110411(兵营): hp=1, atk=1, atkCd=2, resist=null, skillIds=[101104010101/101104110101], appearSkill=1011040*0001, linkMonster=[10110402/10110412], file=niaobingying",
+    "monster.7652d.json 10110402 海鸥: hp=0.9, atk=2, spd=240, atkCd=2, isSpriteFly=1, resist=[[6,20],[8,-20]], skillIds=[101104020101]; 10110412 鹰怪: hp=0.95, atk=2, spd=240, resist同, skillIds=[101104120101]",
+    "skill.7c8c8.json: 兵营/小兵技能 attribute=0(无元素), damageAddPer=1(100%攻); 海鸥 lockRange=[0,-100,350,400]; 鹰怪 lockRange=[0,-200,300,300], addDefendVal=200, priority=1",
+    "entityCtg/10110401-monster_cfg_niaobingying.json: flyMonster=1, skill1 = 子弹(bId103854)+召唤com(type13, mIds=[10110402], noAsCallMonster, noClear) + 2×type58(count=4, delayAdd=15帧=0.5秒间隔); 10110411 同构 count=5, mIds=[10110412], bId103855",
+    "entityCtg/10110402-monster_cfg_haiou.json: flyMonster=1, skill_1 = bId227(自身特效) + 3组 bId103778/103779(角度15/0/345 三方向), 103779 damage com stiff=0.3、hitMoveSpd击退, maxHit=1",
+    "entityCtg/10110412-monster_cfg_yingguai.json: flyMonster=1, skill_1 = bId430(rect抓击, stiff=0.5, hitMoveSpd=[45,405]击退) + type7位移(3帧内前100/下50俯冲); skill_2 = type7位移(30帧内后220/上100)+type23; aiCfg节点 [[15,506001,1015],[15,3801]]",
+    "bullets.json 227/430/103778/103779/103854/103855: 均为动画/命中盒定义, 伤害走 skill damageAddPer=1",
+    "rule_defKunLunPvp(js_ruleclass.txt): enterWave 时兵营入 mReleaseList 逐帧 releaseSkillWithIdx(1,1)→每波出兵一轮; onCallMonster 对兵营产出小兵 ++buildCoin(建筑点); generateBuilding 用 kunlunPvpAttribute[lv=200].buildHp=1180122.01; 小兵基准 hp=172437.37/atk=17243.74, 再乘 buildProtectKunLunWave hp 17.78~197.71 / atk 2.163~7.572",
+    "换算: 30帧=1秒; delayAdd=15帧=0.5秒; 建筑hp=ceil(1×1180122.01)≈118.0万; 海鸥基准hp=0.9×172437≈15.5万, 鹰怪=0.95×172437≈16.4万, 攻=2×17243.74≈3.45万"
+  ],
+  "uncertainties": [
+    "出兵数量文案与配置不一致:鹰怪营 UI 会显示『每波解锁3个』(number=3),但实际出兵组件 count=5(每波5只、间隔0.5秒),本档按实际配置写5只,实战以游戏内为准",
+    "抗性文案与数据不一致:兵营 text 写海鸥营『水20 木-20』、鹰怪营『暗20 光-20』,但小兵 resist 数据实为风+20/雷-20;本档 resist 采用数据值,游戏内展示可能沿用 text 文案",
+    "鹰怪的后撤机动(skill_2:1秒内向后上方位移约220/100)未挂在 monster.skillIds 中,推测由 AI 节点触发,触发时机与其中 type23 组件的含义未验证,unit.desc 中『振翅拉开位置』为据此的谨慎描述",
+    "entityCtg 的 modelConfigs['0'] 分支只含单发召唤组件(无循环出兵、无 noAsCallMonster 标记),该分支的选取条件未确认;若该分支生效则出兵节奏与建筑点计数可能不同",
+    "召唤组件带 noAsCallMonster 标记:海鸥/鹰怪不吃『对召唤物增伤』类加成;规则代码 onCallMonster 未检查该标记,判断产兵仍正常+1建筑点,未实测",
+    "升级到鹰怪营是否同样需要局内累计42建筑点:按 isMoneyEnough 对目标配置 unlockCost 的通用判定推断为需要,未实测",
+    "波次成长换算出的实战数值(第1波约276万血等)基于 lv=200 基准与全场85%减伤环境,量级看似夸张但为引擎实际公式结果,实测显示值可能经过压缩展示"
+  ]
+}

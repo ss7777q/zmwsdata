@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { ModulePage, Overview } from '../components/roleExtremeStats/RoleExtremeStatsViews';
@@ -86,11 +86,19 @@ export default function RoleExtremeStats({ dataSources }: Props) {
     });
   }, [rawModules, effectiveHeroId]);
 
+  const previousPriorityRef = useRef<AttributePriority | null>(null);
+
   useEffect(() => {
     if (rawModules.length === 0 || attributePriority.length === 0) return;
     const next = buildPriorityStageSelections(rawModules, attributePriority, effectiveHeroId);
     setStageSelections(previous => (sameStageSelections(previous, next) ? previous : next));
-    setCustomSelections({});
+    // 只有优先级本身发生变化时才清空用户的自定义选择；
+    // 挂载/数据加载时（previousPriorityRef 为 null）不清，避免每次进页面丢配置。
+    const previousPriority = previousPriorityRef.current;
+    if (previousPriority !== null && !sameFieldList(previousPriority, attributePriority)) {
+      setCustomSelections({});
+    }
+    previousPriorityRef.current = attributePriority;
   }, [rawModules, effectiveHeroId, attributePriority]);
 
   const handleSelectStageKey = (moduleKey: string, stageKey: string) => {

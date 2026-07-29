@@ -182,6 +182,7 @@ export function useDataFiles(requiredNames: readonly string[], enabled = true) {
 
     async function init() {
       setLoading(true);
+      setErrors({}); // 路由/依赖变化时先清掉上一组文件的错误，避免残留横幅
       const nextErrors: Record<string, string> = {};
       try {
         const { files } = await loadDataManifest();

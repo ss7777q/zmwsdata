@@ -1,0 +1,60 @@
+{
+  "group": 2151901,
+  "groupName": "雷电塔（霹雳→雷鸣→雷霆）",
+  "category": "输出塔",
+  "role": "中攻速多目标群体输出塔，3级追加概率晕眩控制。",
+  "overview": "仙童站在塔上，向塔前大范围区域降下落雷，约每1.6秒攻击一次。每次落雷对区域内的敌人同时结算伤害：1级最多同时劈中6个、2级7个、3级8个，空中敌人同样会被命中。攻击力逐级大幅提升（约为1级的3.3倍、6.5倍）。升到3级雷霆塔后，每次落雷命中的敌人各有约52%的概率被晕眩1秒（无法移动、攻击和使用技能）。官方描述：1/2级『攻击：中 攻速：中，仙童会站在塔上发射落雷，同时攻击至多名敌人（推荐：中期前排）』；3级『攻击：高 攻速：中，……有概率眩晕敌人（推荐：后期前排）』。",
+  "targeting": "攻击范围是以塔为中心、左右各约800距离、纵向约800距离的大矩形（接近半屏），范围内敌人按上限数量（6/7/8个）同时被落雷命中，可以命中空中单位，无需锁定单一目标。",
+  "counters": "克制密集成群的前排推进部队——一次落雷同时打6-8个目标，群伤效率高；3级每次命中约52%的晕眩概率对前排肉盾和成群小怪有很强的滞留控制效果，适合中期至后期主力输出位。",
+  "weaknesses": "对单个目标每次攻击只造成一跳伤害，打高血量精英不如专精单体的塔；1、2级没有任何控制效果，纯输出；攻击间隔约1.6秒属中等偏慢，面对高速冲脸的少量敌人反应偏慢。",
+  "synergy": "",
+  "levels": [
+    {
+      "id": 2151901,
+      "name": "霹雳塔",
+      "level": 1,
+      "attack": { "atkCoef": 0.671, "hpCoef": 1, "atkIntervalSec": 1.6, "range": [-800, -375, 1600, 800] },
+      "skills": [
+        { "id": 21519010101, "name": "落雷", "slot": "atkIds", "cd": 0, "desc": "向范围内降下落雷，单次最多同时命中6个敌人，每个被命中的敌人受到一次塔攻击力100%的雷电伤害；约每1.6秒攻击一次。" },
+        { "id": 21519030201, "name": "雷击闪光", "slot": "vSkill", "cd": 0, "desc": "命中位置绽开的雷击闪光，纯视觉表现，无伤害。" },
+        { "id": 21519010001, "name": "登场雷光", "slot": "appearSkill", "cd": 0, "desc": "建塔时的登场动画与塔顶常驻的雷电光效，无伤害。" }
+      ],
+      "buffs": [],
+      "mechanics": "基础形态：区域落雷群攻，单次最多命中6个敌人；本级没有晕眩等任何控制效果。"
+    },
+    {
+      "id": 2151902,
+      "name": "雷鸣塔",
+      "level": 2,
+      "attack": { "atkCoef": 2.216, "hpCoef": 1, "atkIntervalSec": 1.6, "range": [-800, -375, 1600, 800] },
+      "skills": [
+        { "id": 21519020101, "name": "落雷", "slot": "atkIds", "cd": 0, "desc": "机制同1级，单次最多同时命中7个敌人。" },
+        { "id": 21519030201, "name": "雷击闪光", "slot": "vSkill", "cd": 0, "desc": "同1级：命中位置的雷击闪光表现，无伤害。" },
+        { "id": 21519010001, "name": "登场雷光", "slot": "appearSkill", "cd": 0, "desc": "同1级：登场动画与塔顶常驻雷电光效，无伤害。" }
+      ],
+      "buffs": [],
+      "mechanics": "相比1级：攻击力系数 0.671→2.216（约3.3倍），单次命中上限 6→7 个；仍然没有控制效果。"
+    },
+    {
+      "id": 2151903,
+      "name": "雷霆塔",
+      "level": 3,
+      "attack": { "atkCoef": 4.387, "hpCoef": 1, "atkIntervalSec": 1.6, "range": [-800, -375, 1600, 800] },
+      "skills": [
+        { "id": 21519030101, "name": "落雷·雷霆", "slot": "atkIds", "cd": 0, "desc": "机制同前，单次最多同时命中8个敌人；每个被命中的敌人各有约52%的概率被晕眩1秒——每次命中独立判定，没有触发冷却和次数限制。" },
+        { "id": 21519030201, "name": "雷击闪光", "slot": "vSkill", "cd": 0, "desc": "同前：命中位置的雷击闪光表现，无伤害。" },
+        { "id": 21519010001, "name": "登场雷光", "slot": "appearSkill", "cd": 0, "desc": "同前：登场动画与塔顶常驻雷电光效（塔身略大）。" }
+      ],
+      "buffs": [
+        { "id": 3003803, "name": "晕眩", "effect": "无法移动、攻击和使用技能，持续1秒；硬控，不可叠加，重复命中只会重新计时。落雷命中时约52%概率附加。" }
+      ],
+      "mechanics": "相比2级：攻击力系数 2.216→4.387（约2倍），单次命中上限 7→8 个；核心新增——每次落雷命中的每个敌人各有约52%概率被晕眩1秒，官方描述也从此级起标注『有概率眩晕敌人』。"
+    }
+  ],
+  "economy": { "buildCost": 210, "upgradeCosts": [420, 700], "dismantleReturns": [105, 315, 665] },
+  "special": {},
+  "sources": "dataApi/buildProtectKunLun.77f24.json（三级塔定义/费用/dstageDesc）、dataApi/monster.7652d.json（2151901-03：atk/hp/atkCd/atkIds/vSkill/appearSkill/cfgFile）、dataApi/skill.7c8c8.json（21519010101/21519020101/21519030101/21519030201/21519010001）、dataApi/beskill.4f7c5.json（7006601-03）、dataApi/buff.07768.json（3003801-03）、file/battle-config/entityCtg/2151901~03-monster_cfg_leidianta_*.json（attack1/appear/vskill 帧组件与 bId 1740-1750）、file/battle-config/bullets.json（maxHitDestroy=6/7/8、com 命中组件）、scratch/kunlun_engine/beskill-labels.json（atkAddBuff 触发链路：rate=0.5222 即 52.22% 每次命中独立判定、cd=0 无冷却、limit=-1 不限技能属性；rate=0 时 1/2 级恒不触发，cd=300 帧=10秒但因 rate=0 永不生效——引擎 index.4e973.js @14794956 BeSkill.get 门控已确认）、scratch/kunlun_engine/buff-time-units.json（buff time=30 逻辑帧=1秒，confirmed）、scratch/kunlun_engine/skill-falloff-atkcd.json + aicfg-towers.json（塔实际攻击周期=attack1 动作帧长/30，本塔三级 attack1 均为48帧≈1.6秒；monster.atkCd=2 为死配置，AI 树 [AtkRangeHaveEnemy→Attack] 无额外冷却节点，resources/aiCfg.json 2151901-03 已核）",
+  "uncertainties": [
+    "skill.decreasePercentage=[15,0.01] 的确切含义（推测为超距/多目标衰减参数）未能从表结构或已查引擎结论确认。"
+  ]
+}

@@ -35,6 +35,7 @@ const MODULES = [
   { key: 'extreme_stats', file: 'role_extreme_stats.js', label: '角色 → 极限属性 source map' },
   { key: 'boss',      file: 'boss.js',           label: 'BOSS 属性' },
   { key: 'stage_rewards', file: 'stage_rewards.js', label: '关卡奖励' },
+  { key: 'power_requirements', file: 'power_requirements.js', label: '战力需求' },
   { key: 'pet',       file: 'pet.js',            label: '宠物系统' },
   { key: 'ride',      file: 'ride.js',           label: '坐骑系统' },
   { key: 'role_wiki_wukong',   file: 'role_wiki_wukong.js',   label: '角色技能 Wiki → 孙悟空' },
@@ -70,6 +71,7 @@ const MODULES = [
   { key: 'pet_wiki_tuzi', file: 'pet_wiki_tuzi.js', label: '宠物技能 Wiki → 皓月兔皇/暗月兔皇' },
   { key: 'pet_wiki_laoshu', file: 'pet_wiki_laoshu.js', label: '宠物技能 Wiki → 暗夜鼠王/冥甲鼠王' },
   { key: 'pet_skill_baseline', file: 'pet_skill_baseline.js', label: '宠物技能 Wiki → 基准值 X' },
+  { key: 'kunlun',    file: 'kunlun.js',         label: '昆仑解析' },
   { key: 'beast',     file: 'beast_stats.js',    label: '万兽统计' },
   { key: 'cold_knowledge', file: 'cold_knowledge.js', label: '冷知识机制文章' },
 ];
@@ -135,4 +137,5 @@ console.log('══════════════════════�
 if (errors.length > 0) {
   console.log('\n⚠️  失败详情:');
   errors.forEach(e => console.log(`  · ${e.module}: ${e.error}`));
+  process.exitCode = 1;
 }

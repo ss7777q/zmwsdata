@@ -93,10 +93,6 @@ export default function RoleStarStone({ dataSources }: { dataSources: Record<str
 
 
 
-    const activeStone = useMemo(() => {
-        return starStones.find((item) => item.id === selectedId) || starStones[0] || null;
-    }, [selectedId, starStones]);
-
     const filteredStones = useMemo(() => {
         const query = searchQuery.trim().toLowerCase();
         return starStones.filter((stone) => {
@@ -115,6 +111,11 @@ export default function RoleStarStone({ dataSources }: { dataSources: Record<str
             return matchesSearch && matchesType && matchesPool;
         });
     }, [searchQuery, selectedType, selectedPool, starStones]);
+
+    // 只从过滤结果中取选中项：过滤为空时右侧详情同步为空，不再残留不匹配的旧数据
+    const activeStone = useMemo(() => {
+        return filteredStones.find((item) => item.id === selectedId) || filteredStones[0] || null;
+    }, [selectedId, filteredStones]);
 
     useEffect(() => {
         if (filteredStones.length === 0) return;
@@ -367,9 +368,11 @@ export default function RoleStarStone({ dataSources }: { dataSources: Record<str
                         <span className={clsx('px-2.5 py-0.5 rounded-lg text-xs font-bold border flex items-center gap-1', themeClasses.chip)}>
                             {activeStone.typeName}词条
                         </span>
-                        <span className="px-2.5 py-0.5 rounded-lg text-xs font-bold border border-border/80 bg-slate-500/[0.04] dark:bg-black/10 text-textSub">
-                            {activeStone.ownership.name}
-                        </span>
+                        {activeStone.ownership?.name ? (
+                            <span className="px-2.5 py-0.5 rounded-lg text-xs font-bold border border-border/80 bg-slate-500/[0.04] dark:bg-black/10 text-textSub">
+                                {activeStone.ownership.name}
+                            </span>
+                        ) : null}
                     </div>
 
                     <div className="flex flex-col gap-3">

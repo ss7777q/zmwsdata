@@ -352,11 +352,21 @@ function resolveJsConfigRemotePath(relativePath) {
 function evaluateSettings(settingsCode) {
   const sandbox = { window: {} };
   vm.createContext(sandbox);
-  vm.runInContext(settingsCode, sandbox);
+  vm.runInContext(settingsCode, sandbox, { timeout: 5000, filename: 'settings.js' });
   if (!sandbox.window._CCSettings) {
     throw new Error('Unable to evaluate window._CCSettings from settings.js');
   }
   return sandbox.window._CCSettings;
+}
+
+// savePath 源自远程 bundle 清单，必须限制在输出目录内，防止 `..`/绝对路径写到任意位置
+function resolveOutputPath(outDir, savePath) {
+  const resolvedOutDir = path.resolve(outDir);
+  const resolved = path.resolve(resolvedOutDir, savePath);
+  if (resolved !== resolvedOutDir && !resolved.startsWith(resolvedOutDir + path.sep)) {
+    throw new Error(`Unsafe save path escapes output directory: ${savePath}`);
+  }
+  return resolved;
 }
 
 function buildAssetEntries(baseUrl, bundleInfo) {
@@ -733,7 +743,7 @@ async function executeTask(task, index, total, context) {
 }
 
 async function downloadStaticTask(task, label, context) {
-  const outputPath = path.resolve(context.options.outDir, task.savePath);
+  const outputPath = resolveOutputPath(context.options.outDir, task.savePath);
   if (!context.options.overwrite && (await exists(outputPath))) {
     console.log(`[${label}] SKIP ${task.kind} ${task.savePath}`);
     return { status: 'skipped', task };
@@ -746,7 +756,7 @@ async function downloadStaticTask(task, label, context) {
 }
 
 async function downloadJsonAsset(task, label, context) {
-  const outputPath = path.resolve(context.options.outDir, task.savePath);
+  const outputPath = resolveOutputPath(context.options.outDir, task.savePath);
   if (!context.options.overwrite && (await exists(outputPath))) {
     console.log(`[${label}] SKIP json-asset ${task.savePath}`);
     return { status: 'skipped', task };
@@ -770,7 +780,7 @@ async function downloadJsonAsset(task, label, context) {
 }
 
 async function downloadNativeAsset(task, label, context) {
-  const outputPathBase = path.resolve(context.options.outDir, task.savePath);
+  const outputPathBase = resolveOutputPath(context.options.outDir, task.savePath);
   if (!context.options.overwrite) {
     const existing = await findExistingNativeOutput(outputPathBase);
     if (existing) {

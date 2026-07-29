@@ -85,10 +85,10 @@ function extractBossResults(dataSources: Record<string, GameDataFile>, query: st
     });
 
     results.push({
-      id: `boss-${boss.stageId}-${boss.id}`,
+      id: `boss-${boss.stageId}-${boss.id}-${boss.displayPhase ?? 0}`,
       source: 'boss',
       category: boss.typeLabel || 'BOSS 属性',
-      title: boss.name || '未知 BOSS',
+      title: boss.displayPhaseName ? `${boss.name || '未知 BOSS'}（${boss.displayPhaseName}）` : (boss.name || '未知 BOSS'),
       subtitle: `${boss.stageName || '-'}${boss.level ?? boss.stageLv ? ` · Lv.${boss.level ?? boss.stageLv}` : ''}`,
       details,
       matches,

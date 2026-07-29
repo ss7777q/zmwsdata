@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import type { BeastDetailResponse, BeastPlayerAnalysisResponse } from '../../lib/api';
 import { DETAIL_PAGE_SIZE, EmptyState, formatSeasonLabel, getPetSpeciesName, normalizeAliasList } from './beastStatsShared';
 
@@ -269,8 +269,8 @@ export function PlayerTab({ source, detailSource }: { source: BeastPlayerAnalysi
                 {pageRows.map((row) => {
                   const expanded = expandedUid === row.uid;
                   return (
-                    <>
-                      <tr key={row.uid} className="hover:bg-surface/60">
+                    <Fragment key={row.uid}>
+                      <tr className="hover:bg-surface/60">
                         <td className="px-4 py-3 font-semibold">{row.rank}</td>
                         <td className="px-4 py-3 font-mono text-textSub">{row.uid}</td>
                         <td className="px-4 py-3">
@@ -282,7 +282,7 @@ export function PlayerTab({ source, detailSource }: { source: BeastPlayerAnalysi
                       </tr>
 
                       {expanded ? (
-                        <tr key={`${row.uid}-expanded`} className="bg-surface/40">
+                        <tr className="bg-surface/40">
                           <td colSpan={4} className="px-4 py-4">
                             <div className="space-y-4">
                               <div className="rounded-2xl border border-border bg-card p-4">
@@ -352,7 +352,7 @@ export function PlayerTab({ source, detailSource }: { source: BeastPlayerAnalysi
                           </td>
                         </tr>
                       ) : null}
-                    </>
+                    </Fragment>
                   );
                 })}
               </tbody>

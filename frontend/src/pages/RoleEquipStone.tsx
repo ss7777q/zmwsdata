@@ -23,7 +23,7 @@ export default function RoleEquipStone({ dataSources }: Props) {
                         </div>
 
                         <div className="p-4 space-y-3">
-                            {groupData.levels.sort((a: any, b: any) => a.level - b.level).map((levelItem: any, lIdx: number) => (
+                            {[...(groupData.levels || [])].sort((a: any, b: any) => a.level - b.level).map((levelItem: any, lIdx: number) => (
                                 <div key={lIdx} className="flex flex-col gap-2 py-2 border-b border-border/50 last:border-0 last:pb-0">
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm font-semibold flex items-center gap-2">

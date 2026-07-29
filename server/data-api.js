@@ -1276,7 +1276,10 @@ function ensureAdmin(req, res) {
     return false;
   }
   const adminToken = getAdminToken();
-  if (!adminToken) return true;
+  if (!adminToken) {
+    json(res, 403, { error: '未配置管理员令牌：请在 settings.js 的 server.adminToken 中设置非空令牌后重启服务。' });
+    return false;
+  }
   if (readAdminToken(req) === adminToken) return true;
   json(res, 401, { error: 'Admin token required' });
   return false;
