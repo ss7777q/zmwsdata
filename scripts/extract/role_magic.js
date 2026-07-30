@@ -513,7 +513,8 @@ const SOUL_GUIDES = {
   19: { text: '器魂被动在使用罗悲净瓶时触发：立即回复魔法；如果这次没有驱散到异常状态，会额外缩短本次法宝冷却。', kind: 'bottle' },
   20: { text: '器魂被动在使用浮行如意期间生效：提升移动速度，并提高浮行如意轨迹灼烧和爆燃造成的伤害。', kind: 'ruyi' },
   21: { text: '器魂被动强化多智石莲：把阶段切换扩展到第四阶段；使用多智石莲时还会额外获得 7秒防御提升。额外防御提升随器魂等级成长，详细数值见器魂被动成长表。', kind: 'lotus' },
-  22: { text: '器魂被动在攻击命中后判定：有 1.11% 概率降低敌人防御，持续 5秒；同时放大风廉羽扇生成的龙卷风范围。最多存 1次触发机会，后续每 30秒恢复 1次；触发成功后有 2秒内部间隔。削防数值和龙卷风范围随器魂等级成长，详细数值见器魂被动成长表。', kind: 'fan' }
+  22: { text: '器魂被动在攻击命中后判定：有 1.11% 概率降低敌人防御，持续 5秒；同时放大风廉羽扇生成的龙卷风范围。最多存 1次触发机会，后续每 30秒恢复 1次；触发成功后有 2秒内部间隔。削防数值和龙卷风范围随器魂等级成长，详细数值见器魂被动成长表。', kind: 'fan' },
+  23: { text: '器魂被动强化萍雨水盂：使用期间每次免疫减益时恢复生命，恢复量随免疫次数递减；免疫结束时，若免疫次数较少，则按次数额外恢复生命。各档恢复比例随器魂等级成长，详细数值见器魂被动成长表。', kind: 'regen' }
 };
 
 function nestedBuffFromBesSkill(beskill, buffMap) {
@@ -527,6 +528,15 @@ function chargeRecoveryText(beskill) {
   if (!beskill.chargedNumber || beskill.chargedNumber <= 0) return '无';
   if (typeof beskill.chargedCd !== 'number') fail(`器魂 ${beskill.id} 缺少充能恢复帧数`);
   return secondsFromFrames(beskill.chargedCd);
+}
+
+function backParamText(beskill) {
+  const values = beskill?.attribute?.backParam;
+  if (!Array.isArray(values) || values.length === 0) fail(`器魂 ${beskill.id} 缺少 backParam 恢复比例`);
+  return values.map((value, index) => {
+    if (!Array.isArray(value) || typeof value[0] !== 'number') fail(`器魂 ${beskill.id} 的 backParam 第 ${index + 1} 档无效`);
+    return `第${index + 1}档 ${pct(value[0])}`;
+  }).join('；');
 }
 
 function soulGrowthTable(groupId, soulRows, beskillMap, buffMap) {
@@ -632,6 +642,11 @@ function soulGrowthTable(groupId, soulRows, beskillMap, buffMap) {
         { label: '命中防御降低', value: row => formatReductionPair(nestedBuffFromBesSkill(firstBe(row, be => be.label === 'buff'), buffMap).value) },
         { label: '龙卷风范围变为', value: row => `${trimNumber(firstBe(row, be => be.label === 'magicSkillScale').attribute.scale, 4)}倍` }
       ], rows, '当前配置没有可展示的器魂被动成长项。');
+    case 'regen':
+      return table('器魂被动成长表', [
+        { label: '免疫期间恢复生命（按次数）', value: row => backParamText(firstBe(row, be => be.label === 'magicSumBuffFrameAddHp')) },
+        { label: '免疫结束补偿恢复生命（按次数）', value: row => backParamText(firstBe(row, be => be.label === 'magicSumBuffFrameEndAddHp')) }
+      ], rows, SOUL_NO_GROWTH_TEXT);
     default:
       fail(`未知器魂展示类型: ${guide.kind}`);
   }
