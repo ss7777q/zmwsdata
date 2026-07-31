@@ -19,6 +19,7 @@ import {
   normalizeRoutePath,
   OPS_SYSTEM,
   PLAYER_LOOKUP_SYSTEM,
+  RESOURCE_ACQUISITION_SYSTEM,
   resolveSystemFromPath,
   STAGE_REWARDS_SYSTEM,
   supportsGlobalSearch,
@@ -39,6 +40,7 @@ const BossStats = lazy(() => import('./pages/BossStats'));
 const CallGodStats = lazy(() => import('./pages/CallGodStats'));
 const RogueItems = lazy(() => import('./pages/RogueItems'));
 const StageRewards = lazy(() => import('./pages/StageRewards'));
+const ResourceAcquisition = lazy(() => import('./pages/ResourceAcquisition'));
 const KunlunAnalysis = lazy(() => import('./pages/KunlunAnalysis'));
 const PowerRequirements = lazy(() => import('./pages/PowerRequirements'));
 const ResistStats = lazy(() => import('./pages/ResistStats'));
@@ -64,6 +66,7 @@ const SYSTEM_META: Record<string, { title: string; description: string }> = {
   call_god: { title: '神魔属性/神石获取', description: '查看神魔模板属性、倍率规则与最终属性预览。' },
   rogue_item: { title: '局内道具', description: '聚合局内道具阶段配置与已验证的人话机制说明。' },
   stage_rewards: { title: '关卡奖励', description: '查看主线、罗汉堂和噩梦关卡的基础经验与灵魂。' },
+  resource_acquisition: { title: '资源获取', description: '查看惊喜宝箱、神秘商店与黑市商店的商品池。' },
   power_requirements: { title: '战力需求', description: '汇总神魔星级、玲珑宝塔品阶、副本推荐战力等所有需要战力的玩法门槛。' },
   kunlun: { title: '昆仑解析', description: '解析守护昆仑塔防模式的全部防御塔机制、属性成长与关卡波次配置。' },
   boss: { title: 'BOSS 属性', description: '按关卡 Type 分类展示各关卡 Boss 的属性数据。' },
@@ -86,7 +89,7 @@ function NoticeBanner() {
   );
 }
 
-const KNOWN_SYSTEMS = ['role_wiki', 'role_equip', 'role_spiritual', 'role_starstone', 'role_wing', 'role_cultivate', 'pet', 'beast_stats', 'ride', 'role_fashion', 'role_honor', 'role_extreme_stats', 'call_god', 'rogue_item', 'stage_rewards', 'power_requirements', 'kunlun', 'boss', 'resist', 'player_lookup', 'cold_knowledge', 'help', 'ops'] as const;
+const KNOWN_SYSTEMS = ['role_wiki', 'role_equip', 'role_spiritual', 'role_starstone', 'role_wing', 'role_cultivate', 'pet', 'beast_stats', 'ride', 'role_fashion', 'role_honor', 'role_extreme_stats', 'call_god', 'rogue_item', 'stage_rewards', 'resource_acquisition', 'power_requirements', 'kunlun', 'boss', 'resist', 'player_lookup', 'cold_knowledge', 'help', 'ops'] as const;
 const COPY_POLLUTION_TEXT = 'data.zmwsrank.top';
 
 function PageFallback() {
@@ -450,6 +453,7 @@ function App() {
                       {activeSystem === 'call_god' && <CallGodStats dataSources={dataSources} />}
                       {activeSystem === 'rogue_item' && <RogueItems dataSources={dataSources} />}
                       {activeSystem === STAGE_REWARDS_SYSTEM && <StageRewards dataSources={dataSources} />}
+                      {activeSystem === RESOURCE_ACQUISITION_SYSTEM && <ResourceAcquisition dataSources={dataSources} />}
                       {activeSystem === 'power_requirements' && <PowerRequirements dataSources={dataSources} />}
                       {activeSystem === 'kunlun' && <KunlunAnalysis dataSources={dataSources} />}
                       {activeSystem === 'boss' && <BossStats dataSources={dataSources} searchQuery={searchQuery} />}
