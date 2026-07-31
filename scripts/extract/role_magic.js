@@ -530,12 +530,14 @@ function chargeRecoveryText(beskill) {
   return secondsFromFrames(beskill.chargedCd);
 }
 
-function backParamText(beskill) {
+function backParamText(beskill, labels = [], zeroText) {
   const values = beskill?.attribute?.backParam;
   if (!Array.isArray(values) || values.length === 0) fail(`器魂 ${beskill.id} 缺少 backParam 恢复比例`);
   return values.map((value, index) => {
     if (!Array.isArray(value) || typeof value[0] !== 'number') fail(`器魂 ${beskill.id} 的 backParam 第 ${index + 1} 档无效`);
-    return `第${index + 1}档 ${pct(value[0])}`;
+    const label = labels[index] || `第${index + 1}档`;
+    const amount = zeroText !== undefined && value[0] === 0 ? zeroText : pct(value[0]);
+    return `${label} ${amount}`;
   }).join('；');
 }
 
@@ -644,8 +646,8 @@ function soulGrowthTable(groupId, soulRows, beskillMap, buffMap) {
       ], rows, '当前配置没有可展示的器魂被动成长项。');
     case 'regen':
       return table('器魂被动成长表', [
-        { label: '免疫期间恢复生命（按次数）', value: row => backParamText(firstBe(row, be => be.label === 'magicSumBuffFrameAddHp')) },
-        { label: '免疫结束补偿恢复生命（按次数）', value: row => backParamText(firstBe(row, be => be.label === 'magicSumBuffFrameEndAddHp')) }
+        { label: '每次成功免疫时恢复生命（最大生命）', value: row => backParamText(firstBe(row, be => be.label === 'magicSumBuffFrameAddHp'), ['第1次', '第2次', '第3次']) },
+        { label: '免疫结束时补偿恢复生命（最大生命）', value: row => backParamText(firstBe(row, be => be.label === 'magicSumBuffFrameEndAddHp'), ['未免疫', '免疫1次', '免疫2次及以上'], '无') }
       ], rows, SOUL_NO_GROWTH_TEXT);
     default:
       fail(`未知器魂展示类型: ${guide.kind}`);

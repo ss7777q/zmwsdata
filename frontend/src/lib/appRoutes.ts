@@ -5,6 +5,7 @@ export const PLAYER_LOOKUP_SYSTEM = 'player_lookup';
 export const HELP_SYSTEM = 'help';
 export const COLD_KNOWLEDGE_SYSTEM = 'cold_knowledge';
 export const STAGE_REWARDS_SYSTEM = 'stage_rewards';
+export const RESOURCE_ACQUISITION_SYSTEM = 'resource_acquisition';
 
 export const SYSTEM_PATHS: Record<string, string> = {
   role_wiki: '/role_wiki',
@@ -22,6 +23,7 @@ export const SYSTEM_PATHS: Record<string, string> = {
   call_god: '/call_god',
   rogue_item: '/rogue_item',
   stage_rewards: '/stage_rewards',
+  resource_acquisition: '/resource_acquisition',
   power_requirements: '/power_requirements',
   kunlun: '/kunlun',
   boss: '/boss',
@@ -48,6 +50,7 @@ export const DEFAULT_SYSTEM_PATHS: Record<string, string> = {
   call_god: '/call_god/stats',
   rogue_item: '/rogue_item/list',
   stage_rewards: '/stage_rewards/list',
+  resource_acquisition: '/resource_acquisition/boxes',
   power_requirements: '/power_requirements/list',
   kunlun: '/kunlun/towers',
   boss: '/boss/mainline',
@@ -101,6 +104,7 @@ const VALID_PATHS: Record<string, string[]> = {
   call_god: ['/call_god/stats', '/call_god/stones', '/call_god/boss', '/call_god/common_skills', '/call_god/talents'],
   rogue_item: ['/rogue_item/list'],
   stage_rewards: ['/stage_rewards/list'],
+  resource_acquisition: ['/resource_acquisition/boxes', '/resource_acquisition/secret_shop', '/resource_acquisition/black_market'],
   power_requirements: ['/power_requirements/list'],
   kunlun: ['/kunlun/towers', '/kunlun/stages', '/kunlun/pvp'],
   resist: ['/resist/standard'],
@@ -272,6 +276,7 @@ export function getRequiredDataFiles(system: string, pathname: string, rawSearch
     return ['kunlun_analysis'];
   }
   if (system === STAGE_REWARDS_SYSTEM) return ['stage_reward_exp_soul'];
+  if (system === RESOURCE_ACQUISITION_SYSTEM) return ['resource_acquisition'];
   if (system === 'power_requirements') return ['power_requirements'];
   if (system === 'boss') {
     if (normalized.endsWith('/all') || normalized.endsWith('/search')) return [BOSS_INDEX_FILE, ...ALL_BOSS_FILES];

@@ -35,6 +35,7 @@ const MODULES = [
   { key: 'extreme_stats', file: 'role_extreme_stats.js', label: '角色 → 极限属性 source map' },
   { key: 'boss',      file: 'boss.js',           label: 'BOSS 属性' },
   { key: 'stage_rewards', file: 'stage_rewards.js', label: '关卡奖励' },
+  { key: 'resource_acquisition', file: 'resource_acquisition.js', label: '资源获取' },
   { key: 'power_requirements', file: 'power_requirements.js', label: '战力需求' },
   { key: 'pet',       file: 'pet.js',            label: '宠物系统' },
   { key: 'ride',      file: 'ride.js',           label: '坐骑系统' },

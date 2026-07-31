@@ -1,4 +1,4 @@
-import { Award, BookOpenText, Box, Castle, CircleHelp, ChevronLeft, ChevronRight, Dog, Flame, Gauge, Gift, PackageOpen, Search, ServerCog, Shield, Skull, Star, Trophy, User, Zap, Sliders } from 'lucide-react';
+import { Award, BookOpenText, Box, Castle, CircleHelp, ChevronLeft, ChevronRight, Dog, Flame, Gauge, Gift, PackageOpen, PackageSearch, Search, ServerCog, Shield, Skull, Star, Trophy, User, Zap, Sliders } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface SideNavProps {
@@ -26,6 +26,7 @@ const menuItems = [
   { id: 'call_god', label: '神魔相关', icon: Flame },
   { id: 'rogue_item', label: '局内道具', icon: PackageOpen },
   { id: 'stage_rewards', label: '关卡奖励', icon: Gift },
+  { id: 'resource_acquisition', label: '资源获取', icon: PackageSearch },
   { id: 'power_requirements', label: '战力需求', icon: Gauge },
   { id: 'kunlun', label: '昆仑解析', icon: Castle },
   { id: 'boss', label: 'BOSS 属性', icon: Skull },
