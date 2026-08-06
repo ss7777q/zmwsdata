@@ -1,0 +1,10 @@
+# Copy this file to .dev.vars for local Pages Functions testing.
+# Never commit .dev.vars or put API keys in frontend VITE_* variables.
+QA_MODE=live
+QA_BASE_URL=http://localhost:8090
+QA_API_KEY=replace-with-local-test-key
+QA_AUTH_HEADER=Authorization
+QA_MODEL_ORDER=deepseek-v4-flash,deepseek-v4-pro,DeepSeek-V3.2,gemini-3.5-flash,gemini-3.5-flash-low,gemini-3.5-flash-extra-low,gemini-3-flash
+# Cloudflare AI Gateway compatibility endpoints use: QA_AUTH_HEADER=cf-aig-authorization
+# For multiple independent channels, set QA_PROVIDERS_JSON to a JSON array with
+# name, baseUrl, apiKey, authHeader, and models fields.

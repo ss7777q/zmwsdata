@@ -4,6 +4,7 @@ export const EXTREME_STATS_SYSTEM = 'role_extreme_stats';
 export const PLAYER_LOOKUP_SYSTEM = 'player_lookup';
 export const HELP_SYSTEM = 'help';
 export const COLD_KNOWLEDGE_SYSTEM = 'cold_knowledge';
+export const QA_SYSTEM = 'qa';
 export const STAGE_REWARDS_SYSTEM = 'stage_rewards';
 export const RESOURCE_ACQUISITION_SYSTEM = 'resource_acquisition';
 
@@ -30,6 +31,7 @@ export const SYSTEM_PATHS: Record<string, string> = {
   resist: '/resist',
   player_lookup: '/player_lookup',
   cold_knowledge: '/cold_knowledge',
+  qa: '/qa',
   help: '/help',
   ops: '/ops',
 };
@@ -57,6 +59,7 @@ export const DEFAULT_SYSTEM_PATHS: Record<string, string> = {
   resist: '/resist/standard',
   player_lookup: '/player_lookup/search',
   cold_knowledge: '/cold_knowledge/list',
+  qa: '/qa',
   help: '/help/index',
   ops: '/ops/dashboard',
 };
@@ -110,6 +113,7 @@ const VALID_PATHS: Record<string, string[]> = {
   resist: ['/resist/standard'],
   player_lookup: ['/player_lookup/search'],
   cold_knowledge: ['/cold_knowledge/list'],
+  qa: ['/qa'],
   help: ['/help/index'],
   ops: ['/ops/dashboard'],
 };
@@ -195,7 +199,7 @@ export function normalizeRoutePath(pathname: string, showOps: boolean) {
 }
 
 export function isNoDataSystem(system: string) {
-  return [OPS_SYSTEM, PLAYER_LOOKUP_SYSTEM, HELP_SYSTEM].includes(system);
+  return [OPS_SYSTEM, PLAYER_LOOKUP_SYSTEM, HELP_SYSTEM, QA_SYSTEM].includes(system);
 }
 
 export function supportsGlobalSearch(system: string) {

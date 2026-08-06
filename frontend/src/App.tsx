@@ -19,6 +19,7 @@ import {
   normalizeRoutePath,
   OPS_SYSTEM,
   PLAYER_LOOKUP_SYSTEM,
+  QA_SYSTEM,
   RESOURCE_ACQUISITION_SYSTEM,
   resolveSystemFromPath,
   STAGE_REWARDS_SYSTEM,
@@ -49,6 +50,7 @@ const HelpCenter = lazy(() => import('./pages/HelpCenter'));
 const OpsDashboard = lazy(() => import('./pages/OpsDashboard'));
 const BeastStats = lazy(() => import('./pages/BeastStats'));
 const ColdKnowledge = lazy(() => import('./pages/ColdKnowledge'));
+const QaAssistant = lazy(() => import('./pages/QaAssistant'));
 
 const SYSTEM_META: Record<string, { title: string; description: string }> = {
   role_wiki: { title: '角色技能', description: '查看角色各技能的伤害、段数、释放时间与等级成长。' },
@@ -73,6 +75,7 @@ const SYSTEM_META: Record<string, { title: string; description: string }> = {
   resist: { title: '抗值标准', description: '查看 exp.json 中的防御抗值和通用抗值标准值。' },
   player_lookup: { title: '玩家改名记录', description: '按 UID 查看历史名字记录。' },
   cold_knowledge: { title: '冷知识', description: '把底层机制报告整理成玩家能直接理解的机制文章。' },
+  qa: { title: '问答助手', description: '基于本站资料回答技能、养成、关卡与机制问题。' },
   help: { title: '帮助与反馈', description: '了解网站用途、模块说明和使用方式，也可以直接提交建议反馈。' },
   ops: { title: '资源运维', description: '仅在使用专用启动命令后开放，用于手动同步资源、更新数据与查看日志。' },
 };
@@ -89,7 +92,7 @@ function NoticeBanner() {
   );
 }
 
-const KNOWN_SYSTEMS = ['role_wiki', 'role_equip', 'role_spiritual', 'role_starstone', 'role_wing', 'role_cultivate', 'pet', 'beast_stats', 'ride', 'role_fashion', 'role_honor', 'role_extreme_stats', 'call_god', 'rogue_item', 'stage_rewards', 'resource_acquisition', 'power_requirements', 'kunlun', 'boss', 'resist', 'player_lookup', 'cold_knowledge', 'help', 'ops'] as const;
+const KNOWN_SYSTEMS = ['role_wiki', 'role_equip', 'role_spiritual', 'role_starstone', 'role_wing', 'role_cultivate', 'pet', 'beast_stats', 'ride', 'role_fashion', 'role_honor', 'role_extreme_stats', 'call_god', 'rogue_item', 'stage_rewards', 'resource_acquisition', 'power_requirements', 'kunlun', 'boss', 'resist', 'player_lookup', 'cold_knowledge', 'qa', 'help', 'ops'] as const;
 const COPY_POLLUTION_TEXT = 'data.zmwsrank.top';
 
 function PageFallback() {
@@ -460,6 +463,7 @@ function App() {
                       {activeSystem === 'resist' && <ResistStats dataSources={dataSources} />}
                       {activeSystem === PLAYER_LOOKUP_SYSTEM && <PlayerLookup />}
                       {activeSystem === COLD_KNOWLEDGE_SYSTEM && <ColdKnowledge dataSources={dataSources} />}
+                      {activeSystem === QA_SYSTEM && <QaAssistant />}
                       {activeSystem === HELP_SYSTEM && <HelpCenter />}
                       {activeSystem === OPS_SYSTEM && <OpsDashboard />}
                     </Suspense>

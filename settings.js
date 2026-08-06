@@ -5,7 +5,7 @@ module.exports = {
     "adminToken": ""
   },
   "data": {
-    "maxLevel": 230
+    "maxLevel": 235
   },
   "autoRefresh": {
     "enabled": true,

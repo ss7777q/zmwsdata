@@ -1,5 +1,5 @@
 /**
- * 宠物技能 Wiki - 神霄花仙/玄蝶仙子/千年冰狐/圣冰天狐提取脚本
+ * 宠物技能 Wiki - 神霄花仙/天阳花仙/玄蝶仙子/千年冰狐/圣冰天狐提取脚本
  *
  * 宠物入口从 pet.skillActive/skillPassive/skillSp 和 pet.monsterId 取展示技能；
  * 普攻从宠物 monster.atkIds 取。伤害、释放时间、buff 成长继续走 skill ->
@@ -16,7 +16,7 @@ const FORCE = process.argv.includes("--force");
 
 const BATTLE_FRAMES_PER_SECOND = 30;
 const GUIDE_PATH = "D:/zmws/保存网页资源/4399_Threads_Download/【结弦】花花蝴蝶冰冰~数值百科_64189062/content.md";
-const PET_IDS = [190000073, 190000103, 190000033, 190000034];
+const PET_IDS = [190000073, 190000193, 190000103, 190000033, 190000034];
 
 const SACRED_FOX_ROCK_AI = {
   noRockBehaviorId: 428001,
@@ -62,6 +62,11 @@ const PET_SKILL = {
   SACRED_FOX_PASSIVE_FROST: 20420040601,
   SACRED_FOX_PASSIVE_FLY: 20420040701,
   SACRED_FOX_SUMMON_ATTACK: 20420060001,
+  TIANYANG_SKILL_1: 20421020101,
+  TIANYANG_SKILL_2: 20421020201,
+  TIANYANG_SKILL_3: 20421020301,
+  TIANYANG_SP: 20421020401,
+  TIANYANG_PASSIVE: 20421020501,
 };
 
 const PET_BUFF = {
@@ -165,6 +170,18 @@ const DAMAGE_PATCHES = new Map([
     kind: "entityLinkedMultiHit",
     source: "entityCtg:2042004-monster_cfg_shenghuabinghu skill5_1 八枚冰刺加一枚巨型冰刺，共9段",
   }],
+  [20421020101, {
+    sourceSkillId: 20421020101,
+    hits: 20,
+    kind: "entityLinkedMultiHit",
+    source: "entityCtg:2042104-monster_cfg_lingkuixianzi 万曦逐敌20连击",
+  }],
+  [20421010101, {
+    sourceSkillId: 20421010101,
+    hits: 20,
+    kind: "entityLinkedMultiHit",
+    source: "entityCtg:2042101-monster_cfg_guangguanghua 万曦逐敌20连击",
+  }],
 ]);
 
 function guideRelease(seconds, source) {
@@ -206,6 +223,11 @@ const GUIDE_CD_SECONDS = new Map([
   [PET_SKILL.FOX_SKILL_2, 15],
   [PET_SKILL.FOX_SKILL_3, 20],
   [PET_SKILL.FOX_SP, 30],
+  // 天阳花仙的自动释放间隔由专用行为配置控制。
+  [PET_SKILL.TIANYANG_SKILL_1, 12],
+  [PET_SKILL.TIANYANG_SKILL_2, 15],
+  [PET_SKILL.TIANYANG_SKILL_3, 30],
+  [PET_SKILL.TIANYANG_SP, 30],
 ]);
 
 const EFFECT_ONLY_SKILLS = new Set([
@@ -1034,6 +1056,7 @@ function buildSkillCard(displaySkillId, pet, slotLabel, slotKind, ctx) {
       referenceLevel: reference?.level ?? null,
       fixedBuffs,
       mechanics: skillMechanics,
+      totalValLabel: skillOv?.header?.totalValLabel || (displaySkillId === 20421020201 || displaySkillId === 20421010201 ? "额外生命值" : null),
       metrics: metrics.computeMetrics(
         ctx.metricDefs, "header",
         { skillId: displaySkillId, totalPer: reference ? reference.totalPer : null, releaseSeconds: rel.releaseSeconds, segCount },
@@ -1044,11 +1067,14 @@ function buildSkillCard(displaySkillId, pet, slotLabel, slotKind, ctx) {
     slotLabel,
     slotKind,
     levels: levels.map((l) => {
-      const levelMetrics = metrics.computeMetrics(
+      let levelMetrics = metrics.computeMetrics(
         ctx.metricDefs, "level",
         { skillId: displaySkillId, level: l.level, roleLevel: l.roleLevel, consumeMp: l.consumeMp, totalPer: l.totalPer, totalVal: l.totalVal, growthBuffs: l.growthBuffs || [], releaseSeconds: rel.releaseSeconds, segCount: l.segments.reduce((sum, s) => sum + (s.maxHit || 1), 0) },
         ctx.helpers, l.level === 1 ? warnings : [],
       );
+      if (displaySkillId === 20421020201 || displaySkillId === 20421010201) {
+        levelMetrics = levelMetrics.filter((m) => m.key !== "atkConv");
+      }
       levelMetrics.push(...collectSacredFoxSummonLevelMetrics(displaySkillId, l.level, ctx, warnings));
       return {
         level: l.level,
@@ -1112,7 +1138,7 @@ function buildSlots(pet, ctx) {
 }
 
 function extract() {
-  console.log("\n🌸 宠物技能 Wiki → 神霄花仙/玄蝶仙子/千年冰狐/圣冰天狐");
+  console.log("\n🌸 宠物技能 Wiki → 神霄花仙/天阳花仙/玄蝶仙子/千年冰狐/圣冰天狐");
 
   const ctx = {
     petById: idx(u.loadTable("pet")),
@@ -1168,10 +1194,10 @@ function extract() {
   const payload = {
     petGroup: {
       key: "huadiehubing",
-      name: "神霄花仙/玄蝶仙子/千年冰狐/圣冰天狐",
+      name: "神霄花仙/天阳花仙/玄蝶仙子/千年冰狐/圣冰天狐",
       guidePath: GUIDE_PATH,
       petIds: PET_IDS,
-      note: "宠物技能 Wiki 使用满级作为卡片表头参考值，逐级成长见下方成长数值表；花仙治疗、玄蝶恶咒、冰狐与圣冰天狐的多段技能按攻略或实际动作链重组，圣冰天狐额外展示召唤物寒冰盾、巨岩充能、破冰与飞行机制。",
+      note: "宠物技能 Wiki 使用满级作为卡片表头参考值，逐级成长见下方成长数值表；花仙治疗、天阳花仙的太阳能量/光团循环、玄蝶恶咒、冰狐与圣冰天狐的多段技能按攻略或实际动作链重组。",
     },
     variants,
   };
@@ -1179,7 +1205,7 @@ function extract() {
   u.saveOutput("pet_wiki_huadiehubing", payload, {
     system: "pet_wiki",
     sourceFiles: ["pet.*.json", "skill.*.json", "skillLevel.*.json", "monster.*.json", "beskill.*.json", "behavior.*.json", "buff.*.json", "consts.*.json", "exp.*.json", "bullets.json", "entityCtg/*.json", "data/runtime/main-index.js", "aiCfg:2042004", GUIDE_PATH],
-    note: "神霄花仙/玄蝶仙子/千年冰狐/圣冰天狐宠物技能 Wiki，包括普攻、主动技能、无双、被动、治疗、召唤、护盾、充能、破冰和减益效果。",
+    note: "神霄花仙/天阳花仙/玄蝶仙子/千年冰狐/圣冰天狐宠物技能 Wiki，包括普攻、主动技能、无双、被动、治疗、太阳能量、光团、护盾回收、召唤、充能、破冰和减益效果。",
   });
 
   for (const v of variants) {

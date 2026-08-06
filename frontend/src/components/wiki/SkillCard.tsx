@@ -333,7 +333,7 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
                   <Th sticky>等级</Th>
                   {cols.mp && <Th>耗蓝</Th>}
                   {cols.per && <Th>总系数</Th>}
-                  {(cols.val || hasSkillExtraVal) && <Th>{isSkillExtraCard ? '技能固伤' : '总固伤'}</Th>}
+                  {(cols.val || hasSkillExtraVal) && <Th>{isSkillExtraCard ? '技能固伤' : (card.header.totalValLabel || '总固伤')}</Th>}
                   {cols.baselineMultiplier && <Th>固伤倍率</Th>}
                   {cols.baselineCorrection && <Th>固伤修正</Th>}
                   {growthBuffCols.map((c) => (

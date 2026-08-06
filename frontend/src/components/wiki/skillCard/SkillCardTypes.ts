@@ -153,6 +153,7 @@ export interface SkillCardData {
     mechanics?: SkillMechanic[];
     chainViz?: SkillChainViz | null;
     note?: string | null;
+    totalValLabel?: string | null;
   };
   maxLevel: number;
   levels: SkillLevel[];

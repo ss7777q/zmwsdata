@@ -1,5 +1,6 @@
 name = "datazmws"
 pages_build_output_dir = "frontend/dist"
+compatibility_date = "2026-08-05"
 
 [vars]
 VITE_STATIC_DATA_BASE = "/data"
@@ -7,6 +8,7 @@ VITE_STATIC_DATA_BASE = "/data"
 VITE_SERVER_API_BASE = "https://api.zmwsrank.top"
 # 访问统计默认走同源 Pages Functions。临时切回旧服务器时再填写这个值。
 VITE_VISITOR_API_BASE = ""
+QA_MODEL_ORDER = "deepseek-v4-flash,deepseek-v4-pro,DeepSeek-V3.2,gemini-3.5-flash,gemini-3.5-flash-low,gemini-3.5-flash-extra-low,gemini-3-flash"
 
 # D1 绑定名固定为 VISITOR_STATS_DB，Pages Functions 代码会读取 env.VISITOR_STATS_DB。
 [[d1_databases]]

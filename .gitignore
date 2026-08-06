@@ -6,6 +6,10 @@ frontend/public/data/
 .env
 .env.*
 !.env.cloudflare.example
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+测试用baseurl与key.txt
 .wrangler/
 
 *.log

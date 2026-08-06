@@ -2,9 +2,10 @@ const LEGACY_API_BASE = (import.meta.env.VITE_DATA_API_BASE || '').replace(/\/$/
 const SERVER_API_BASE = (import.meta.env.VITE_SERVER_API_BASE || LEGACY_API_BASE).replace(/\/$/, '');
 const VISITOR_API_BASE = (import.meta.env.VITE_VISITOR_API_BASE || '').replace(/\/$/, '');
 const STATIC_DATA_BASE = (import.meta.env.VITE_STATIC_DATA_BASE || '').replace(/\/$/, '');
+const SAME_ORIGIN_API_PREFIXES = ['/api/battlefield', '/api/qa'];
 
 export function apiUrl(path: string) {
-  if (path === '/api/battlefield' || path.startsWith('/api/battlefield?') || path.startsWith('/api/battlefield/')) {
+  if (SAME_ORIGIN_API_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}?`) || path.startsWith(`${prefix}/`))) {
     return path;
   }
   return SERVER_API_BASE ? `${SERVER_API_BASE}${path}` : path;
@@ -156,6 +157,32 @@ export interface ColdKnowledgeMeta {
 export interface ColdKnowledgeResponse {
   _meta: ColdKnowledgeMeta;
   data: ColdKnowledgeArticle[];
+}
+
+export interface QaHistoryMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface QaCitation {
+  index: number;
+  title: string;
+  source: string;
+  score: number;
+}
+
+export interface QaResponse {
+  answer: string;
+  citations: QaCitation[];
+  model: string;
+  provider: string;
+  files: string[];
+  attempts: Array<{
+    provider: string;
+    model: string;
+    status: number;
+    error: string;
+  }>;
 }
 
 export interface BeastPetEntry {
@@ -334,4 +361,21 @@ export async function fetchColdKnowledge(signal?: AbortSignal) {
     { cache: 'no-store', signal }
   );
   return readJsonResponse<ColdKnowledgeResponse>(response);
+}
+
+export async function askQuestion(
+  question: string,
+  history: QaHistoryMessage[] = [],
+  signal?: AbortSignal
+) {
+  const response = await fetch(apiUrl('/api/qa/ask'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ question, history }),
+    cache: 'no-store',
+    signal,
+  });
+  return readJsonResponse<QaResponse>(response);
 }

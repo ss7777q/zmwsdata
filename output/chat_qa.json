@@ -1,0 +1,820 @@
+{
+  "_meta": {
+    "name": "chat_qa",
+    "system": "chat_qa",
+    "extractedAt": "2026-08-05T16:49:49.271Z",
+    "source": "chunk_0001.jsonl",
+    "sourceRecords": 48783,
+    "sourceReplies": 4742,
+    "selectedReplies": 29,
+    "selectedAdjacentPairs": 19,
+    "uniqueQuestions": 46,
+    "notes": "由直接回复和明确相邻问答整理；内容可能过时，仅作辅助参考。"
+  },
+  "data": [
+    {
+      "id": "chat-254f14ee9e2b1b39",
+      "title": "必须要用里面的软件登陆 才能显示百分比吗，能不能单独只要这个功能",
+      "category": "安装与登录",
+      "question": "必须要用里面的软件登陆 才能显示百分比吗，能不能单独只要这个功能",
+      "answer": "把其他功能关了",
+      "answers": [
+        "把其他功能关了"
+      ],
+      "confidence": 0.67,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-07-19",
+      "sourceMessageIds": [
+        "7664246030748585482"
+      ],
+      "referencedMessageIds": [
+        "7664246030748585483"
+      ]
+    },
+    {
+      "id": "chat-512db0fd4a75b955",
+      "title": "打开方式不对是啥意思",
+      "category": "运行与更新",
+      "question": "打开方式不对是啥意思",
+      "answer": "可能是网络啥的吧",
+      "answers": [
+        "可能是网络啥的吧"
+      ],
+      "confidence": 0.55,
+      "evidence": "adjacent_messages",
+      "sourceDate": "2026-07-13",
+      "sourceMessageIds": [],
+      "referencedMessageIds": []
+    },
+    {
+      "id": "chat-99e5c3e6ae8aadfd",
+      "title": "大佬，解压好了，怎么用啊",
+      "category": "安装与登录",
+      "question": "大佬，解压好了，怎么用啊",
+      "answer": "直接双击点应用程序即可",
+      "answers": [
+        "直接双击点应用程序即可"
+      ],
+      "confidence": 0.67,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-06-24",
+      "sourceMessageIds": [
+        "7654913461644393557"
+      ],
+      "referencedMessageIds": [
+        "7654913461644393558"
+      ]
+    },
+    {
+      "id": "chat-88fea59fd8113a87",
+      "title": "大佬，造梦无双那些算出来的数据网址是什么",
+      "category": "网站与数据",
+      "question": "大佬，造梦无双那些算出来的数据网址是什么",
+      "answer": "data.zmwsrank.top",
+      "answers": [
+        "data.zmwsrank.top"
+      ],
+      "confidence": 0.83,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-07-28",
+      "sourceMessageIds": [
+        "7741765705241281791"
+      ],
+      "referencedMessageIds": [
+        "7667548670283020925"
+      ]
+    },
+    {
+      "id": "chat-54ca6f3eb2e31adb",
+      "title": "大佬们 有角色升级经验需求，和主线关卡经验吗",
+      "category": "网站与数据",
+      "question": "大佬们 有角色升级经验需求，和主线关卡经验吗",
+      "answer": "你去公告里第二个网站看看",
+      "answers": [
+        "你去公告里第二个网站看看"
+      ],
+      "confidence": 0.59,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-06-29",
+      "sourceMessageIds": [
+        "7656651534772915399"
+      ],
+      "referencedMessageIds": [
+        "7656651534772915400"
+      ]
+    },
+    {
+      "id": "chat-34c2d47849c23875",
+      "title": "弹了一个窗口说什么exe发布者未知，大概这个意思",
+      "category": "运行与更新",
+      "question": "弹了一个窗口说什么exe发布者未知，大概这个意思",
+      "answer": "这个不是报错，算正常运行",
+      "answers": [
+        "这个不是报错，算正常运行"
+      ],
+      "confidence": 0.59,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-06-24",
+      "sourceMessageIds": [
+        "7654819565460093437"
+      ],
+      "referencedMessageIds": [
+        "7654819565460093438"
+      ]
+    },
+    {
+      "id": "chat-3bf0eba1b26f1eac",
+      "title": "话说要咋更新呀",
+      "category": "插件与直装",
+      "question": "话说要咋更新呀",
+      "answer": "脚本是可以云更新的；主程序文件得手动下载",
+      "answers": [
+        "脚本是可以云更新的；主程序文件得手动下载"
+      ],
+      "confidence": 0.59,
+      "evidence": "adjacent_messages",
+      "sourceDate": "2026-07-13",
+      "sourceMessageIds": [],
+      "referencedMessageIds": []
+    },
+    {
+      "id": "chat-c5fac2e24da807ae",
+      "title": "浏览器打开就没有",
+      "category": "安装与登录",
+      "question": "浏览器打开就没有",
+      "answer": "你往下划一下试试",
+      "answers": [
+        "你往下划一下试试"
+      ],
+      "confidence": 0.67,
+      "evidence": "adjacent_messages",
+      "sourceDate": "2026-06-18",
+      "sourceMessageIds": [],
+      "referencedMessageIds": []
+    },
+    {
+      "id": "chat-c00e1216ce8248dd",
+      "title": "那渠道服咋用？",
+      "category": "安装与登录",
+      "question": "那渠道服咋用？",
+      "answer": "渠道服只能原生安装包",
+      "answers": [
+        "渠道服只能原生安装包"
+      ],
+      "confidence": 0.55,
+      "evidence": "adjacent_messages",
+      "sourceDate": "2026-06-26",
+      "sourceMessageIds": [],
+      "referencedMessageIds": []
+    },
+    {
+      "id": "chat-9bb21951284400d7",
+      "title": "能不能查到uid",
+      "category": "运行与更新",
+      "question": "能不能查到uid",
+      "answer": "上传的是uid和战力",
+      "answers": [
+        "上传的是uid和战力"
+      ],
+      "confidence": 0.55,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-07-31",
+      "sourceMessageIds": [
+        "7742737204678686858"
+      ],
+      "referencedMessageIds": [
+        "7668520170064800948"
+      ]
+    },
+    {
+      "id": "chat-877d3f24cac37800",
+      "title": "你下载的有是吗",
+      "category": "插件与直装",
+      "question": "你下载的有是吗",
+      "answer": "没下之前试了试，下了插件以后发现edge浏览器重复登录了",
+      "answers": [
+        "没下之前试了试，下了插件以后发现edge浏览器重复登录了"
+      ],
+      "confidence": 0.71,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-07-05",
+      "sourceMessageIds": [
+        "7658923547765425317"
+      ],
+      "referencedMessageIds": [
+        "7658923547765425354"
+      ]
+    },
+    {
+      "id": "chat-5ee9ecd0bd15e30d",
+      "title": "什么浏览器看的，自带的吗",
+      "category": "安装与登录",
+      "question": "什么浏览器看的，自带的吗",
+      "answer": "臭米浏览器",
+      "answers": [
+        "臭米浏览器"
+      ],
+      "confidence": 0.67,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-07-30",
+      "sourceMessageIds": [
+        "7668162791359375882"
+      ],
+      "referencedMessageIds": [
+        "7668162791359375883"
+      ]
+    },
+    {
+      "id": "chat-2de3fda91e588c8e",
+      "title": "手机的能用电脑的下载不了诶",
+      "category": "安装与登录",
+      "question": "手机的能用电脑的下载不了诶",
+      "answer": "你换个浏览器试试",
+      "answers": [
+        "你换个浏览器试试"
+      ],
+      "confidence": 0.67,
+      "evidence": "adjacent_messages",
+      "sourceDate": "2026-07-06",
+      "sourceMessageIds": [],
+      "referencedMessageIds": []
+    },
+    {
+      "id": "chat-aefd8910ee9fa033",
+      "title": "手机网页的有人能发下吗？",
+      "category": "网站与数据",
+      "question": "手机网页的有人能发下吗？",
+      "answer": "我修了一下，等一下我传个新版本",
+      "answers": [
+        "我修了一下，等一下我传个新版本"
+      ],
+      "confidence": 0.71,
+      "evidence": "adjacent_messages",
+      "sourceDate": "2026-07-13",
+      "sourceMessageIds": [],
+      "referencedMessageIds": []
+    },
+    {
+      "id": "chat-398067831f7ecd42",
+      "title": "手机怎么用电脑的键位",
+      "category": "网站与数据",
+      "question": "手机怎么用电脑的键位",
+      "answer": "浏览器网页",
+      "answers": [
+        "浏览器网页"
+      ],
+      "confidence": 0.55,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-07-25",
+      "sourceMessageIds": [
+        "7666498387124970698"
+      ],
+      "referencedMessageIds": [
+        "7666498387124970699"
+      ]
+    },
+    {
+      "id": "chat-40b4ae2fdd0a7024",
+      "title": "手机直装只有渠道服吗？",
+      "category": "插件与直装",
+      "question": "手机直装只有渠道服吗？",
+      "answer": "只有官服",
+      "answers": [
+        "只有官服"
+      ],
+      "confidence": 0.67,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-07-26",
+      "sourceMessageIds": [
+        "7666709572085065903"
+      ],
+      "referencedMessageIds": [
+        "7666709572085065904"
+      ]
+    },
+    {
+      "id": "chat-5119218e032cc2dc",
+      "title": "所以软件这本质是网页版的吗",
+      "category": "网站与数据",
+      "question": "所以软件这本质是网页版的吗",
+      "answer": "对，本质上是网页版",
+      "answers": [
+        "对，本质上是网页版"
+      ],
+      "confidence": 0.67,
+      "evidence": "adjacent_messages",
+      "sourceDate": "2026-06-24",
+      "sourceMessageIds": [],
+      "referencedMessageIds": []
+    },
+    {
+      "id": "chat-3cdf8f36fb989a5b",
+      "title": "他的插件还有这个功能吗",
+      "category": "插件与直装",
+      "question": "他的插件还有这个功能吗",
+      "answer": "有，可以看宝箱的",
+      "answers": [
+        "有，可以看宝箱的"
+      ],
+      "confidence": 0.67,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-07-01",
+      "sourceMessageIds": [
+        "7657448951690655487"
+      ],
+      "referencedMessageIds": [
+        "7657448951690655488"
+      ]
+    },
+    {
+      "id": "chat-d3ab5c350b91c820",
+      "title": "通过uid怎么查4399账号",
+      "category": "运行与更新",
+      "question": "通过uid怎么查4399账号",
+      "answer": "这个做不到\n查不到的，如果能查到，号就没了",
+      "answers": [
+        "这个做不到",
+        "查不到的，如果能查到，号就没了"
+      ],
+      "confidence": 0.71,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-08-01",
+      "sourceMessageIds": [
+        "7668868905705008727",
+        "7668870325653592145"
+      ],
+      "referencedMessageIds": [
+        "7668868905705008728",
+        "7668870325653592146"
+      ]
+    },
+    {
+      "id": "chat-c263cafbac52ea2d",
+      "title": "玩浏览器没用过全屏吗",
+      "category": "网站与数据",
+      "question": "玩浏览器没用过全屏吗",
+      "answer": "估计没用过全屏网址",
+      "answers": [
+        "估计没用过全屏网址"
+      ],
+      "confidence": 0.67,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-07-27",
+      "sourceMessageIds": [
+        "7667161302744102949"
+      ],
+      "referencedMessageIds": [
+        "7667161302744102950"
+      ]
+    },
+    {
+      "id": "chat-e23641a2d6706349",
+      "title": "网址里面可以做战力对比吗？",
+      "category": "网站与数据",
+      "question": "网址里面可以做战力对比吗？",
+      "answer": "其实做了",
+      "answers": [
+        "其实做了"
+      ],
+      "confidence": 0.67,
+      "evidence": "adjacent_messages",
+      "sourceDate": "2026-07-11",
+      "sourceMessageIds": [],
+      "referencedMessageIds": []
+    },
+    {
+      "id": "chat-e44977a99da841fa",
+      "title": "为什么会有.qq",
+      "category": "安装与登录",
+      "question": "为什么会有.qq",
+      "answer": "我是QQ登录的",
+      "answers": [
+        "我是QQ登录的"
+      ],
+      "confidence": 0.55,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-06-24",
+      "sourceMessageIds": [
+        "7654866023517286846"
+      ],
+      "referencedMessageIds": [
+        "7654866023517286847"
+      ]
+    },
+    {
+      "id": "chat-30f06080b4077d72",
+      "title": "为什么手机版还是打不开",
+      "category": "安装与登录",
+      "question": "为什么手机版还是打不开",
+      "answer": "手机浏览器的 bug",
+      "answers": [
+        "手机浏览器的 bug"
+      ],
+      "confidence": 0.67,
+      "evidence": "adjacent_messages",
+      "sourceDate": "2026-07-15",
+      "sourceMessageIds": [],
+      "referencedMessageIds": []
+    },
+    {
+      "id": "chat-cab6b1bc108c93cd",
+      "title": "为什么网页版的很卡总是连接中，用群主的这个就很流畅呀",
+      "category": "网站与数据",
+      "question": "为什么网页版的很卡总是连接中，用群主的这个就很流畅呀",
+      "answer": "之前倒是做过一个类似的微端，那样直接把文件路由到本地目录的",
+      "answers": [
+        "之前倒是做过一个类似的微端，那样直接把文件路由到本地目录的"
+      ],
+      "confidence": 0.71,
+      "evidence": "adjacent_messages",
+      "sourceDate": "2026-07-11",
+      "sourceMessageIds": [],
+      "referencedMessageIds": []
+    },
+    {
+      "id": "chat-2ab66957ec94c542",
+      "title": "为什么我电脑版的没有图标",
+      "category": "安装与登录",
+      "question": "为什么我电脑版的没有图标",
+      "answer": "你重新下载一下",
+      "answers": [
+        "你重新下载一下"
+      ],
+      "confidence": 0.55,
+      "evidence": "adjacent_messages",
+      "sourceDate": "2026-06-24",
+      "sourceMessageIds": [],
+      "referencedMessageIds": []
+    },
+    {
+      "id": "chat-cb3097dafa6b0ffc",
+      "title": "为什么我看不了宠物装备属性百分比",
+      "category": "网站与数据",
+      "question": "为什么我看不了宠物装备属性百分比",
+      "answer": "网站上没这个东西",
+      "answers": [
+        "网站上没这个东西"
+      ],
+      "confidence": 0.55,
+      "evidence": "adjacent_messages",
+      "sourceDate": "2026-06-21",
+      "sourceMessageIds": [],
+      "referencedMessageIds": []
+    },
+    {
+      "id": "chat-36df76c34e116af8",
+      "title": "问一下那个造梦西游之黎尤浩劫篇的数据站是哪个网址啊",
+      "category": "网站与数据",
+      "question": "问一下那个造梦西游之黎尤浩劫篇的数据站是哪个网址啊",
+      "answer": "https://zmxy6.zmwsrank.top/",
+      "answers": [
+        "https://zmxy6.zmwsrank.top/"
+      ],
+      "confidence": 0.83,
+      "evidence": "adjacent_messages",
+      "sourceDate": "2026-07-07",
+      "sourceMessageIds": [],
+      "referencedMessageIds": []
+    },
+    {
+      "id": "chat-12349df541be6e4f",
+      "title": "我咋没看懂仓库为啥增加了",
+      "category": "运行与更新",
+      "question": "我咋没看懂仓库为啥增加了",
+      "answer": "我在外面测试的，我怕他回收我先放仓库",
+      "answers": [
+        "我在外面测试的，我怕他回收我先放仓库"
+      ],
+      "confidence": 0.71,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-08-03",
+      "sourceMessageIds": [
+        "7669839717137307556"
+      ],
+      "referencedMessageIds": [
+        "7669839717137307557"
+      ]
+    },
+    {
+      "id": "chat-24a6b0f83afe13ea",
+      "title": "我怎么没看到推送上传",
+      "category": "运行与更新",
+      "question": "我怎么没看到推送上传",
+      "answer": "因为还没弄好",
+      "answers": [
+        "因为还没弄好"
+      ],
+      "confidence": 0.67,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-08-02",
+      "sourceMessageIds": [
+        "7743608337190299991"
+      ],
+      "referencedMessageIds": [
+        "7669391302803310716"
+      ]
+    },
+    {
+      "id": "chat-94e67bba78ab0017",
+      "title": "下哪个是新版本",
+      "category": "安装与登录",
+      "question": "下哪个是新版本",
+      "answer": "重新下载就好了",
+      "answers": [
+        "重新下载就好了"
+      ],
+      "confidence": 0.55,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-07-22",
+      "sourceMessageIds": [
+        "7739573009066469612"
+      ],
+      "referencedMessageIds": [
+        "7665355973119228953"
+      ]
+    },
+    {
+      "id": "chat-07cd879566926bd0",
+      "title": "下载完怎么弄嘞",
+      "category": "安装与登录",
+      "question": "下载完怎么弄嘞",
+      "answer": "直接安装啊",
+      "answers": [
+        "直接安装啊"
+      ],
+      "confidence": 0.67,
+      "evidence": "adjacent_messages",
+      "sourceDate": "2026-06-24",
+      "sourceMessageIds": [],
+      "referencedMessageIds": []
+    },
+    {
+      "id": "chat-4572035db6a1ac4c",
+      "title": "一键放入指的是什么",
+      "category": "运行与更新",
+      "question": "一键放入指的是什么",
+      "answer": "仓库已有的自动堆叠，有这个就好太多太多了",
+      "answers": [
+        "仓库已有的自动堆叠，有这个就好太多太多了"
+      ],
+      "confidence": 0.59,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-07-27",
+      "sourceMessageIds": [
+        "7667152987501389022"
+      ],
+      "referencedMessageIds": [
+        "7667152987501389023"
+      ]
+    },
+    {
+      "id": "chat-ab138758fc987ec8",
+      "title": "有个问题，为啥副本内切屏的时候切回来必须鼠标点一下才可以移动，浏览器就不需要",
+      "category": "安装与登录",
+      "question": "有个问题，为啥副本内切屏的时候切回来必须鼠标点一下才可以移动，浏览器就不需要",
+      "answer": "下次大更新一起改了吧",
+      "answers": [
+        "下次大更新一起改了吧"
+      ],
+      "confidence": 0.67,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-06-30",
+      "sourceMessageIds": [
+        "7731450753146342058"
+      ],
+      "referencedMessageIds": [
+        "7657233718425013884"
+      ]
+    },
+    {
+      "id": "chat-b6aac2a8c4d836e5",
+      "title": "有佬教教手机版怎么搞吗",
+      "category": "运行与更新",
+      "question": "有佬教教手机版怎么搞吗",
+      "answer": "群文件的文件夹",
+      "answers": [
+        "群文件的文件夹"
+      ],
+      "confidence": 0.55,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-07-28",
+      "sourceMessageIds": [
+        "7667411609092649209"
+      ],
+      "referencedMessageIds": [
+        "7667411609092649210"
+      ]
+    },
+    {
+      "id": "chat-065bbbb6f4633192",
+      "title": "有没有大佬知道怎么把电脑的默认下载路径改到D盘",
+      "category": "安装与登录",
+      "question": "有没有大佬知道怎么把电脑的默认下载路径改到D盘",
+      "answer": "各个软件都有自己的默认设置\n安装软件的时候改软件安装路径",
+      "answers": [
+        "各个软件都有自己的默认设置",
+        "安装软件的时候改软件安装路径"
+      ],
+      "confidence": 0.71,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-08-02",
+      "sourceMessageIds": [
+        "7669249451396140570",
+        "7669251998886069164"
+      ],
+      "referencedMessageIds": [
+        "7669249451396140571",
+        "7669251998886069165"
+      ]
+    },
+    {
+      "id": "chat-11ceec6e9d646858",
+      "title": "有哪位大佬有造梦西游六wiki网站吗",
+      "category": "网站与数据",
+      "question": "有哪位大佬有造梦西游六wiki网站吗",
+      "answer": "zmxy6.zmwsrank.top",
+      "answers": [
+        "zmxy6.zmwsrank.top"
+      ],
+      "confidence": 0.83,
+      "evidence": "adjacent_messages",
+      "sourceDate": "2026-07-09",
+      "sourceMessageIds": [],
+      "referencedMessageIds": []
+    },
+    {
+      "id": "chat-1493b54776df6815",
+      "title": "有造六的吗？",
+      "category": "运行与更新",
+      "question": "有造六的吗？",
+      "answer": "群文件有",
+      "answers": [
+        "群文件有"
+      ],
+      "confidence": 0.55,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-08-04",
+      "sourceMessageIds": [
+        "7670051438942565141"
+      ],
+      "referencedMessageIds": [
+        "7670051438942565142"
+      ]
+    },
+    {
+      "id": "chat-62c0992f92601fc5",
+      "title": "怎么查的",
+      "category": "网站与数据",
+      "question": "怎么查的",
+      "answer": "就是查询账号记录，看是不是正常玩家",
+      "answers": [
+        "就是查询账号记录，看是不是正常玩家"
+      ],
+      "confidence": 0.59,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-07-27",
+      "sourceMessageIds": [
+        "7667147861124374944"
+      ],
+      "referencedMessageIds": [
+        "7667147861124374945"
+      ]
+    },
+    {
+      "id": "chat-97f0d9df0ad6d634",
+      "title": "怎么感觉在这上面玩画质有点模糊",
+      "category": "插件与直装",
+      "question": "怎么感觉在这上面玩画质有点模糊",
+      "answer": "在线玩上面一直都很模糊",
+      "answers": [
+        "在线玩上面一直都很模糊"
+      ],
+      "confidence": 0.55,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-07-22",
+      "sourceMessageIds": [
+        "7665355424954904140"
+      ],
+      "referencedMessageIds": [
+        "7665355424954904141"
+      ]
+    },
+    {
+      "id": "chat-0b4b1fac89c8f1e8",
+      "title": "怎么个登不上去",
+      "category": "安装与登录",
+      "question": "怎么个登不上去",
+      "answer": "一直卡在登录界面连接中，换正常的无双又能进去",
+      "answers": [
+        "一直卡在登录界面连接中，换正常的无双又能进去"
+      ],
+      "confidence": 0.59,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-08-02",
+      "sourceMessageIds": [
+        "7669456618745288991"
+      ],
+      "referencedMessageIds": [
+        "7669456618745288992"
+      ]
+    },
+    {
+      "id": "chat-fd0b140f799daae3",
+      "title": "怎么没网址了？",
+      "category": "网站与数据",
+      "question": "怎么没网址了？",
+      "answer": "因为会屏蔽",
+      "answers": [
+        "因为会屏蔽"
+      ],
+      "confidence": 0.67,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-07-30",
+      "sourceMessageIds": [
+        "7668296037512768253"
+      ],
+      "referencedMessageIds": [
+        "7668296037512768254"
+      ]
+    },
+    {
+      "id": "chat-b05faec5674ee1bb",
+      "title": "这个群文件怎么用",
+      "category": "运行与更新",
+      "question": "这个群文件怎么用",
+      "answer": "应该是直接用吧；手机版不支持",
+      "answers": [
+        "应该是直接用吧；手机版不支持"
+      ],
+      "confidence": 0.71,
+      "evidence": "adjacent_messages",
+      "sourceDate": "2026-06-24",
+      "sourceMessageIds": [],
+      "referencedMessageIds": []
+    },
+    {
+      "id": "chat-0a8f56834b001b21",
+      "title": "这个网站的文本内容都是ai读代码生成的吗？",
+      "category": "网站与数据",
+      "question": "这个网站的文本内容都是ai读代码生成的吗？",
+      "answer": "大部分是吧；我只写了格式示例",
+      "answers": [
+        "大部分是吧；我只写了格式示例"
+      ],
+      "confidence": 0.71,
+      "evidence": "adjacent_messages",
+      "sourceDate": "2026-07-31",
+      "sourceMessageIds": [],
+      "referencedMessageIds": []
+    },
+    {
+      "id": "chat-dad5650cd6577b8e",
+      "title": "这个网站为什么用不了",
+      "category": "网站与数据",
+      "question": "这个网站为什么用不了",
+      "answer": "你换个浏览器试试",
+      "answers": [
+        "你换个浏览器试试"
+      ],
+      "confidence": 0.67,
+      "evidence": "adjacent_messages",
+      "sourceDate": "2026-07-06",
+      "sourceMessageIds": [],
+      "referencedMessageIds": []
+    },
+    {
+      "id": "chat-4e9d8a1ca2ec0049",
+      "title": "这啥？就只是打开造梦无双吗？",
+      "category": "网站与数据",
+      "question": "这啥？就只是打开造梦无双吗？",
+      "answer": "其实是打开网页版的造梦无双",
+      "answers": [
+        "其实是打开网页版的造梦无双"
+      ],
+      "confidence": 0.59,
+      "evidence": "adjacent_messages",
+      "sourceDate": "2026-07-13",
+      "sourceMessageIds": [],
+      "referencedMessageIds": []
+    },
+    {
+      "id": "chat-e4864964ec9d8185",
+      "title": "这是插件吗",
+      "category": "插件与直装",
+      "question": "这是插件吗",
+      "answer": "形式是一个WebView2的软件",
+      "answers": [
+        "形式是一个WebView2的软件"
+      ],
+      "confidence": 0.71,
+      "evidence": "direct_reply",
+      "sourceDate": "2026-06-21",
+      "sourceMessageIds": [
+        "7728019916623977156"
+      ],
+      "referencedMessageIds": [
+        "7653802880931349007"
+      ]
+    }
+  ]
+}

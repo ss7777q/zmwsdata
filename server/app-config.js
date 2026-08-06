@@ -11,7 +11,7 @@ const DEFAULT_SETTINGS = {
     adminToken: '',
   },
   data: {
-    maxLevel: 220,
+    maxLevel: 235,
   },
   autoRefresh: {
     enabled: true,

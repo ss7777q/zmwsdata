@@ -1,4 +1,4 @@
-import { Award, BookOpenText, Box, Castle, CircleHelp, ChevronLeft, ChevronRight, Dog, Flame, Gauge, Gift, PackageOpen, PackageSearch, Search, ServerCog, Shield, Skull, Star, Trophy, User, Zap, Sliders } from 'lucide-react';
+import { Award, BookOpenText, Box, Castle, CircleHelp, ChevronLeft, ChevronRight, Dog, Flame, Gauge, Gift, MessageCircleQuestion, PackageOpen, PackageSearch, Search, ServerCog, Shield, Skull, Star, Trophy, User, Zap, Sliders } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface SideNavProps {
@@ -33,6 +33,7 @@ const menuItems = [
   { id: 'resist', label: '抗值标准', icon: Shield },
   { id: 'player_lookup', label: '玩家改名记录', icon: Search },
   { id: 'cold_knowledge', label: '冷知识', icon: BookOpenText },
+  { id: 'qa', label: '问答助手', icon: MessageCircleQuestion },
   { id: 'help', label: '帮助与反馈', icon: CircleHelp },
   { id: 'ops', label: '资源运维', icon: ServerCog },
 ];
