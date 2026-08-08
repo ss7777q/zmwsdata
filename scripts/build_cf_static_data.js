@@ -9,6 +9,7 @@ const PUBLIC_DATA_DIR = path.join(ROOT, 'frontend', 'public', 'data');
 const MANIFEST_PATH = path.join(PUBLIC_DATA_DIR, 'manifest.json');
 const CALL_GOD_BATTLEFIELD_SOURCE_SCRIPT = path.join(ROOT, 'scripts', 'extract', 'call_god_battlefield_source.js');
 const CALL_GOD_BATTLEFIELD_OUTPUT = path.join(OUTPUT_DIR, 'call_god_battlefield_source.json');
+const EXCLUDED_STATIC_DATA_FILES = new Set(['chat_qa.json']);
 const { DEFAULT_SETTINGS, loadAppSettings } = require('../server/app-config');
 
 function getConfiguredMaxLevel() {
@@ -161,7 +162,7 @@ for (const fileName of fs.readdirSync(PUBLIC_DATA_DIR).filter((name) => name.end
 const configuredMaxLevel = getConfiguredMaxLevel();
 
 const files = fs.readdirSync(OUTPUT_DIR)
-  .filter((name) => name.endsWith('.json'))
+  .filter((name) => name.endsWith('.json') && !EXCLUDED_STATIC_DATA_FILES.has(name))
   .sort((left, right) => left.localeCompare(right))
   .map((fileName) => {
     const sourcePath = path.join(OUTPUT_DIR, fileName);
