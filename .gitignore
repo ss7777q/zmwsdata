@@ -24,3 +24,11 @@ Thumbs.db
 file/runtime/
 temp/
 deploy/packages/
+
+# data pipeline artifacts (synced from upstream client)
+dataApi/
+dataApi.staging/
+dataApi.backup/
+dataApi*.zip
+data/runtime/
+data/pet-arena-history-raw/*
