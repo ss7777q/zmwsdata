@@ -60,6 +60,16 @@ VITE_STATIC_DATA_STREAM=false
 服务器 API 域名使用 `https://api.zmwsrank.top`，主站域名 `https://data.zmwsrank.top` 保留给用户访问前端页面。
 `VITE_VISITOR_API_BASE` 留空时，访问统计走同源 Pages Function；临时切回旧服务器时才填写服务器地址。
 
+## 静态资源 404 保护
+
+`frontend/functions/_middleware.js` 是根中间件，用于防止 SPA 回退毒化静态资源缓存。
+
+`_redirects` 的 `/* /index.html 200` 会让所有不存在的路径返回 `index.html`（200）。如果浏览器残留的旧版 `index.html` 引用了已不存在的哈希资源（如 `/assets/chart-vendor-*.js`），该请求会被回退成 HTML，并带上 `/assets/*` 的 `Cache-Control: max-age=31536000, immutable`——浏览器会把这段 HTML 当作 JS 缓存一整年，表现为：
+
+- 控制台报错 `Failed to load module script ... MIME type of "text/html"`
+- 页面白屏，且刷新也无法恢复
+
+中间件对带资源扩展名的路径（`.js`、`.css`、`.json`、字体、图片等）拦截这种回退响应，改写为真正的 `404` 并带 `Cache-Control: no-store`：错误诚实可见、不会被缓存，用户刷新一次即可自愈。正常资源、SPA 路由回退和 `/api/*` Functions 均不受影响。
 ## Windows 一键部署
 
 项目根目录放置 `.env`，字段可参考 `.env.cloudflare.example`。真实 token 不提交到 git。
