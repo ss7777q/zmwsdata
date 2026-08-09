@@ -22,6 +22,8 @@ pnpm-debug.log*
 Thumbs.db
 
 file/runtime/
+file/battle-config/
+file/map-cache/
 temp/
 deploy/packages/
 
