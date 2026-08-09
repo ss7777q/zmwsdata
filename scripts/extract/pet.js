@@ -169,16 +169,37 @@ function extractPetSkill() {
     a.level - b.level || a.itemId - b.itemId || a.skillId - b.skillId
   );
 
+  const sumCosts = (sourceLevels) => {
+    const totals = new Map();
+    for (const row of sourceLevels) {
+      for (const cost of row.upgradeCost || []) {
+        const key = `${cost.itemId}|${cost.name}`;
+        const current = totals.get(key) || { itemId: cost.itemId, name: cost.name, count: 0 };
+        current.count += Number(cost.count) || 0;
+        totals.set(key, current);
+      }
+    }
+    return [...totals.values()].sort((left, right) => left.itemId - right.itemId);
+  };
+  const maxLevel = levels.at(-1)?.level ?? null;
+
   u.saveOutput('pet_skill', {
     levels,
     byItem,
-    specialCases
+    specialCases,
+    upgradeSummary: {
+      maxLevel,
+      levelSemantics: 'level 表示升级后的目标等级；Lv.1 行是学习成本，已学会 Lv.1 的技能升到满级时从 Lv.2 开始累加。',
+      learningCost: sumCosts(levels.filter((row) => row.level === 1)),
+      fromLevel1ToMax: sumCosts(levels.filter((row) => row.level > 1)),
+      fromUnlearnedToMax: sumCosts(levels),
+    },
   }, {
     system: '宠物 → 技能升级',
     source: 'pet.*.json + skillLevel.*.json',
     costType: 'skillLevel.soulCost（实际主要为宠技要诀）',
     dedup: '按(等级,道具)取众数；异常值单列 specialCases',
-    note: `技能来源 pet.skillActive/skillPassive/skillSp，共${petSkillIds.size}个技能`
+    note: `技能来源 pet.skillActive/skillPassive/skillSp，共${petSkillIds.size}个技能；Lv.1 为学习成本，已学会 Lv.1 后升满级请读取 upgradeSummary.fromLevel1ToMax。`
   });
 }
 
@@ -491,3 +512,4 @@ function extract() {
 
 if (require.main === module) extract();
 module.exports = extract;
+module.exports.extractPetSkill = extractPetSkill;

@@ -176,6 +176,9 @@ async function main() {
   );
   printStageReport(EXPORT_JSON_STAGE, exportChanges);
 
+  console.log('[pipeline] build generic QA catalog');
+  await runScript('scripts/build_qa_catalog.js');
+
   writeReport([summarizeStage(EXPORT_JSON_STAGE, exportChanges)]);
   console.log(`[pipeline] change report: ${REPORT_PATH}`);
 

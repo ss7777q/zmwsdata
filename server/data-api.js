@@ -9,6 +9,7 @@ const { Worker } = require('worker_threads');
 const { DatabaseSync } = require('node:sqlite');
 const { DEFAULT_SETTINGS, loadAppSettings, persistAppSettings } = require('./app-config');
 const { createBattlefieldService } = require('./battlefield-service');
+const { createQaCatalog } = require('./qa-catalog');
 
 const ROOT = path.resolve(__dirname, '..');
 const OUTPUT_DIR = path.join(ROOT, 'output');
@@ -19,6 +20,7 @@ const VISITOR_DB_PATH = process.env.DATA_API_VISITOR_DB_PATH || path.join(RUNTIM
 const STATUS_PATH = path.join(RUNTIME_DIR, 'update-status.json');
 const FEEDBACK_PATH = path.join(RUNTIME_DIR, 'feedback-submissions.jsonl');
 const VISITOR_STATS_PATH = path.join(RUNTIME_DIR, 'visitor-stats.json');
+const QA_CATALOG_DB_PATH = path.join(RUNTIME_DIR, 'qa-catalog.db');
 const WEB_DIST_DIR = process.env.DATA_API_WEB_DIST_DIR
   || (fs.existsSync(path.join(ROOT, 'web-dist')) ? path.join(ROOT, 'web-dist') : path.join(ROOT, 'frontend', 'dist'));
 const OPS_ENABLED = ['1', 'true', 'on', 'yes'].includes(String(process.env.DATA_API_ENABLE_OPS || 'false').toLowerCase());
@@ -65,6 +67,7 @@ const playerLookupRateWindowByIp = new Map();
 const feedbackRateWindowByIp = new Map();
 const visitorRegisterRateWindowByIp = new Map();
 let visitorStatsDb = null;
+const qaCatalog = createQaCatalog({ outputDir: OUTPUT_DIR, dbPath: QA_CATALOG_DB_PATH });
 
 function createInitialSettings() {
   return JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
@@ -488,6 +491,11 @@ function createRequestError(code, message) {
   const err = new Error(message);
   err.code = code;
   return err;
+}
+
+function qaCatalogErrorStatus(error) {
+  const message = String(error?.message || error || '');
+  return /required|invalid|unknown|must resolve|query is required/i.test(message) ? 400 : 500;
 }
 
 function getClientIp(req) {
@@ -1232,6 +1240,7 @@ async function tryServeFrontend(pathname, res) {
 
 async function emitFileChange(fileName, eventType) {
   if (!fileName || !fileName.endsWith('.json')) return;
+  qaCatalog.invalidate();
   const name = fileName.slice(0, -5);
   const fp = path.join(OUTPUT_DIR, fileName);
   try {
@@ -1547,6 +1556,49 @@ const server = http.createServer(async (req, res) => {
       maxLevel: getConfiguredMaxLevel(),
       defaultMaxLevel: DEFAULT_SETTINGS.data.maxLevel
     });
+    return;
+  }
+
+  if (req.method === 'GET' && pathname === '/api/qa/catalog/status') {
+    try {
+      json(res, 200, qaCatalog.status());
+    } catch (err) {
+      json(res, 500, { error: 'QA catalog unavailable: ' + (err.message || String(err)) });
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && pathname === '/api/qa/catalog/search') {
+    try {
+      const body = await readRequestBody(req);
+      json(res, 200, qaCatalog.search({
+        query: body.query,
+        scope: body.scope,
+        maxResults: body.max_results ?? body.maxResults,
+      }));
+    } catch (err) {
+      json(res, qaCatalogErrorStatus(err), { error: 'QA catalog search failed: ' + (err.message || String(err)) });
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && pathname === '/api/qa/catalog/read') {
+    try {
+      const body = await readRequestBody(req);
+      json(res, 200, qaCatalog.read(body));
+    } catch (err) {
+      json(res, qaCatalogErrorStatus(err), { error: 'QA catalog read failed: ' + (err.message || String(err)) });
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && pathname === '/api/qa/catalog/query') {
+    try {
+      const body = await readRequestBody(req);
+      json(res, 200, qaCatalog.query(body));
+    } catch (err) {
+      json(res, qaCatalogErrorStatus(err), { error: 'QA catalog query failed: ' + (err.message || String(err)) });
+    }
     return;
   }
 
@@ -1871,6 +1923,7 @@ const server = http.createServer(async (req, res) => {
 function shutdown() {
   if (scheduleTimer) clearTimeout(scheduleTimer);
   stopOutputWatcher();
+  qaCatalog.close();
   if (runningChild) runningChild.kill('SIGTERM');
   if (playerLookupWorker) {
     void playerLookupWorker.terminate();

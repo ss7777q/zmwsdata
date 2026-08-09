@@ -9,6 +9,7 @@
 - 访问统计由 Cloudflare Pages Functions + D1 承担，接口路径保持 `/api/visitor-stats*` 不变。
 - 玩家查询、反馈、神魔战场计算、运维接口继续请求你的服务器后端。
 - 角色技能 Wiki 以测试性功能接入 CF 前端，静态 JSON 一并从 `output/role_wiki_*.json` 复制到 Pages 产物。
+- 问答模型仍由 Pages Function 调用，但资料检索走服务器端通用 QA catalog，不再把大 JSON 整体读入 Function。
 
 ## 本地构建
 
@@ -140,3 +141,17 @@ npm run build:cf
 ```
 
 这样用户访问的大部分流量都会由 Cloudflare 承载，服务器主要保留动态查询和后台更新能力。
+
+## 问答资料目录
+
+`output/*.json` 是网站展示源数据；服务器会把它们编译成被忽略的运行时文件 `file/runtime/qa-catalog.db`。目录只保存文件元数据、可检索摘要、中文 n-gram 和 JSON Pointer，不复制完整原始记录。
+
+问答使用三个通用只读接口：
+
+```text
+POST /api/qa/catalog/search
+POST /api/qa/catalog/read
+POST /api/qa/catalog/query
+```
+
+`scripts/run_update_pipeline.js` 在 `extract_all` 后自动重建目录；服务器也会在目录缺失或输出文件变化后按需重建。Pages Functions 通过 `QA_CATALOG_BASE` 访问目录，生产值已写入 `wrangler.toml`，本地值见 `.dev.vars.example`。

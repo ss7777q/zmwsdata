@@ -45,6 +45,7 @@ const PET_GROUP_TYPES = {
 const PET_TYPE_OVERRIDES = {
   pet_wiki_huadiehubing: {
     190000073: "灵兽",
+    190000193: "灵兽",
     190000034: "圣兽",
   },
 };

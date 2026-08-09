@@ -24,7 +24,7 @@ const SLOT_DEFS = [
 ];
 
 const SHIELD_SKILLS = new Set([20629020301, 20629030301]);
-const FORCE_FIXED_BUFFS = new Set([35003101, 35003102, 501000101]);
+const FORCE_FIXED_BUFFS = new Set([35003101, 35003102]);
 
 const BIND_SOURCE_LABEL = {
   beSkill: "被动技能",
@@ -176,7 +176,8 @@ function pushBuffCard(out, displaySkillId, baseBuffId, rawBuff, bindSource, ctx,
 
 function collectBeskillEffects(displaySkillId, ctx, warnings) {
   const skill = ctx.skillById.get(displaySkillId);
-  const out = [];
+  const fixedBuffs = [];
+  const growthBuffRefs = [];
   const beSkillIds = [].concat(skill?.beSkill || [], skill?.beSkill2 || []).filter(Boolean);
 
   for (const beSkillId of beSkillIds) {
@@ -189,8 +190,35 @@ function collectBeskillEffects(displaySkillId, ctx, warnings) {
     if (be.label === "pixieHitAddBuffs") {
       const buffIds = asArray(be.attribute?.buffs).filter(Boolean);
       for (const buffId of buffIds) {
-        const rawBuff = ctx.buffById.get(buffId);
-        pushBuffCard(out, displaySkillId, buffId, rawBuff, "beskillEffect", ctx, warnings, null);
+        const g1 = FORCE_FIXED_BUFFS.has(buffId)
+          ? { levelMode: "fixed", effectiveBuffId: buffId, buff: ctx.buffById.get(buffId) || null }
+          : eng.resolveBuffGrowth(buffId, 1, ctx.buffById, warnings);
+        if (!g1.buff) continue;
+        const rawBuff1 = resolveRawBuff(g1.buff, ctx.buffById);
+        const base = {
+          baseBuffId: buffId,
+          name: rawBuff1.name || `buff${buffId}`,
+          text: rawBuff1.text || null,
+          time: rawBuff1.time ?? null,
+          bindSource: "beskillEffect",
+          bindLabel: BIND_SOURCE_LABEL.beskillEffect,
+          levelMode: g1.levelMode,
+        };
+        const override = ctx.overrides.resolveBuff(displaySkillId, buffId);
+        const label = `[ride beskill buff ${buffId} ${base.name}] `;
+        if (g1.levelMode === "growth") {
+          growthBuffRefs.push({ ...base, override, label });
+        } else {
+          const engBuff = { ...base, value: buffValueSummary(rawBuff1) };
+          if (override) {
+            const { merged, warnings: w } = ov.mergeBuff(engBuff, override, rawBuff1, label);
+            warnings.push(...w);
+            fixedBuffs.push(merged);
+          } else {
+            fixedBuffs.push(engBuff);
+          }
+        }
+        if (ctx.emitTemplate) ctx.overrides.recordBuff(displaySkillId, buffId, rawBuff1, null);
       }
       continue;
     }
@@ -198,7 +226,7 @@ function collectBeskillEffects(displaySkillId, ctx, warnings) {
     const target = EXTRA_DAMAGE_TARGET[be.label];
     if (target) {
       const rate = be.attribute?.rate;
-      out.push({
+      fixedBuffs.push({
         baseBuffId: beSkillId,
         name: be.name || "额外伤害",
         text: be.text || null,
@@ -211,7 +239,7 @@ function collectBeskillEffects(displaySkillId, ctx, warnings) {
     }
   }
 
-  return out;
+  return { fixedBuffs, growthBuffRefs };
 }
 
 function collectBuffs(displaySkillId, concreteIds, ride, slotKind, ctx, warnings) {
@@ -262,7 +290,9 @@ function collectBuffs(displaySkillId, concreteIds, ride, slotKind, ctx, warnings
       if (ctx.emitTemplate) ctx.overrides.recordBuff(displaySkillId, ref.baseBuffId, rawBuff1, null);
     }
 
-    fixedBuffs.push(...collectBeskillEffects(skillId, ctx, warnings));
+    const beRes = collectBeskillEffects(skillId, ctx, warnings);
+    fixedBuffs.push(...beRes.fixedBuffs);
+    growthBuffRefs.push(...beRes.growthBuffRefs);
   }
 
   if (slotKind === "passive") fixedBuffs.push(...collectPassiveEffects(displaySkillId, ctx, warnings));

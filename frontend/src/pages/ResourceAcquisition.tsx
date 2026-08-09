@@ -142,6 +142,13 @@ function formatWait(waitHours: number) {
   return waitHours > 0 ? `${waitHours} 小时` : '立即开启';
 }
 
+function formatProbability(weight: number, totalWeight: number) {
+  if (totalWeight <= 0 || weight <= 0) return '0%';
+  const percentage = (weight / totalWeight) * 100;
+  if (percentage < 0.01) return '<0.01%';
+  return `${percentage.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1')}%`;
+}
+
 function formatConditions(item: ShopItem) {
   const conditions: string[] = [];
   if (item.unlockStage) conditions.push(`主线达到 ${item.unlockStage.name}`);
@@ -202,11 +209,12 @@ function SurpriseBoxesView({ payload }: { payload: ResourceAcquisitionPayload })
   );
 
   if (!activeLevel) return <EmptyState />;
+  const totalWeight = activeLevel.boxes.reduce((sum, box) => sum + Math.max(0, box.poolWeight), 0);
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
-        <p className="text-sm text-textSub">奖励按宝箱掉落时的角色等级确定，权重为同等级档内的相对值。</p>
+        <p className="text-sm text-textSub">奖励按宝箱掉落时的角色等级确定，概率按同等级档内全部品质的总权重计算。</p>
         <label className="flex items-center gap-2 text-sm font-semibold text-textMain">
           角色等级档
           <select
@@ -240,7 +248,7 @@ function SurpriseBoxesView({ payload }: { payload: ResourceAcquisitionPayload })
                     <tr className="border-b border-border">
                       <th className="px-4 py-2.5 font-semibold">奖励类型</th>
                       <th className="px-4 py-2.5 font-semibold">宝箱内容</th>
-                      <th className="px-4 py-2.5 text-right font-semibold">相对权重</th>
+                      <th className="px-4 py-2.5 text-right font-semibold">出现概率</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60">
@@ -257,7 +265,9 @@ function SurpriseBoxesView({ payload }: { payload: ResourceAcquisitionPayload })
                             ))}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-right font-mono font-semibold text-primary">{box.poolWeight}</td>
+                        <td className="px-4 py-3 text-right font-mono font-semibold text-primary">
+                          {formatProbability(box.poolWeight, totalWeight)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -389,6 +399,7 @@ function BlackMarketView({ payload }: { payload: ResourceAcquisitionPayload }) {
   const activeSlot = activeStage?.slots.find((slot) => slot.slot === selectedSlot)
     ?? activeStage?.slots[0]
     ?? null;
+  const totalWeight = activeSlot?.items.reduce((sum, item) => sum + Math.max(0, item.weight), 0) ?? 0;
 
   if (!market || !activeMode || !activeStage || !activeSlot) return <EmptyState />;
 
@@ -476,7 +487,7 @@ function BlackMarketView({ payload }: { payload: ResourceAcquisitionPayload }) {
                 <th className="px-4 py-3 text-right font-semibold">原价</th>
                 <th className="px-4 py-3 text-right font-semibold">售价</th>
                 <th className="px-4 py-3 text-right font-semibold">折扣</th>
-                <th className="px-4 py-3 text-right font-semibold">相对权重</th>
+                <th className="px-4 py-3 text-right font-semibold">出现概率</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60">
@@ -499,7 +510,9 @@ function BlackMarketView({ payload }: { payload: ResourceAcquisitionPayload }) {
                         </span>
                       ) : '-'}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono font-semibold text-primary">{item.weight}</td>
+                    <td className="px-4 py-3 text-right font-mono font-semibold text-primary">
+                      {formatProbability(item.weight, totalWeight)}
+                    </td>
                   </tr>
                 );
               })}

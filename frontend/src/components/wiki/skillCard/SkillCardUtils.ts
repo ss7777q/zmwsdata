@@ -60,7 +60,8 @@ export function inferGrowthBuffValueLabel(buff: BuffInfo) {
   if (/命中/.test(text)) return '命中值';
   if (/幸运/.test(text)) return '幸运值';
   if (/暴击/.test(text)) return '暴击值';
-  if (/攻击/.test(text)) return /降低|下降|弱化/.test(text) ? '攻击降低' : '攻击值';
+  if (/穿透/.test(text) || /金曦渡芒/.test(buff.name)) return '穿透提升';
+  if (/攻击/.test(text) || /金盘送暖/.test(buff.name)) return /降低|下降|弱化/.test(text) ? '攻击降低' : '攻击提升';
   if (/伤害|灼烧|中毒|毒伤|真伤|固伤/.test(text)) return '伤害值';
   return cleanBuffName(buff.name);
 }
@@ -182,8 +183,8 @@ export function growthBuffGroupKey(buff: BuffInfo) {
   return `${cleanBuffName(buff.name)}::${buff.bindLabel}::${buff.time ?? 'null'}::${shape}`;
 }
 
-export function growthBuffColumnLabel(effectName: string, valueLabel: string, cardName: string) {
-  return effectName === cardName || effectName.startsWith(cardName) ? valueLabel : effectName;
+export function growthBuffColumnLabel(effectName: string, valueLabel: string, _cardName?: string) {
+  return valueLabel || effectName;
 }
 
 export interface GrowthBuffGroup {
