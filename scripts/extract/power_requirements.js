@@ -3,6 +3,13 @@ const u = require('../lib/utils');
 const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : null);
 const firstOrNull = (arr) => (Array.isArray(arr) && Number.isFinite(Number(arr[0])) ? Number(arr[0]) : null);
 
+function formatGodwarName(fight, rewardLv, battlefield) {
+  if (Number(battlefield) === 2 && Number.isInteger(Number(rewardLv)) && Number(rewardLv) > 0) {
+    return `神魔战场${Number(rewardLv)}阶`;
+  }
+  return fight ? fight.name : null;
+}
+
 // ─── 1. 神魔星级 ─────────────────────────────────────
 function extractGodwarStar() {
   const fights = u.loadTable('godWarFight');
@@ -18,7 +25,7 @@ function extractGodwarStar() {
     const row = {
       battlefield: r.battlefield,
       rewardLv: r.rewardLv,
-      name: fight ? fight.name : null,
+      name: formatGodwarName(fight, r.rewardLv, r.battlefield),
       battlefieldLv: fight ? fight.battlefieldLv : null,
       stars: toStars(r.plunderStar),
       rideStars: toStars(r.rideStar),
@@ -241,7 +248,7 @@ function extract() {
     source:
       'godWarReward/sacredTowerRewardLevel/stage/petTower/petChampionTower/petHole/leagueBossCopy/leagueBossReally/starHavocEventReward.*.json',
     note:
-      '汇总全游戏需要战力的模块：神魔星级(godWarReward.plunderStar/rideStar 星级战力门槛,战场名取自 godWarFight)；' +
+      '汇总全游戏需要战力的模块：神魔星级(godWarReward.plunderStar/rideStar 星级战力门槛,战场名取自 godWarFight，神魔战场按 rewardLv 规范化)；' +
       '玲珑宝塔品阶(sacredTowerRewardLevel.lotusMonster 五档品阶战力,sweepPowerOpen[0] 扫荡解锁)；' +
       '副本推荐战力(stage.power 按 type 分组,type55 为无双极境章节玩法)；' +
       '万灵塔(petTower.power 每层每关)；兽王挑战(petChampionTower.power/point,高层按 worldLv 段区分)；' +
