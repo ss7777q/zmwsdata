@@ -1881,7 +1881,7 @@ function normalizeProvider(item, fallbackModels) {
 }
 
 function normalizeBaseUrl(value) {
-  return String(value || '').trim().replace(/\/\.$/, '').replace(/\/$/, '');
+  return String(value || '').trim().replace(/\/\.$/, '').replace(/\/$/, '').replace(/\/v1$/, '');
 }
 
 function parseModels(value) {
