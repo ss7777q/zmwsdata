@@ -13,6 +13,7 @@ const {
 const MAX_SEARCH_TERMS = 64;
 const MAX_SEARCH_RESULTS = 12;
 const MAX_READ_RECORDS = 24;
+const MAX_READ_RESPONSE_BYTES = 128 * 1024;
 const MAX_QUERY_ITEMS = 10_000;
 const MAX_SAMPLE_ROWS = 6;
 
@@ -29,7 +30,10 @@ function outputSignature(outputDir) {
 }
 
 function isSafeFileName(value) {
-  return /^[a-zA-Z0-9_-]+$/.test(String(value || ''));
+  const normalized = String(value || '').normalize('NFKC').split('\\').join('/');
+  if (!normalized || normalized.startsWith('/') || normalized.endsWith('/') || normalized.includes('\0')) return false;
+  const segments = normalized.split('/');
+  return segments.every((segment) => segment && segment !== '.' && segment !== '..' && !/[<>:"|?*\u0000-\u001f]/.test(segment));
 }
 
 function decodePointerPart(value) {
@@ -74,19 +78,36 @@ function readPointer(value, pointer) {
   return current;
 }
 
+// Most data files wrap their payload in a `data` key (e.g. power_requirements
+// lives at $.data, not $). The model often guesses a pointer without the
+// wrapper (e.g. $.byItem[0] instead of $.data.byItem[0]), so when the exact
+// pointer misses, retry one level down under /data before reporting "not found".
+function resolveDataPointer(raw, pointer) {
+  const direct = readPointer(raw, pointer);
+  if (direct !== undefined) return { value: direct, pointer };
+  if (pointer !== '/' && pointer !== '/data') {
+    const dataPointer = `/data${pointer}`;
+    const wrapped = readPointer(raw, dataPointer);
+    if (wrapped !== undefined) return { value: wrapped, pointer: dataPointer };
+  }
+  return { value: direct, pointer };
+}
+
 function compactForResponse(value, depth = 0) {
   if (value == null || typeof value === 'number' || typeof value === 'boolean') return value;
-  if (typeof value === 'string') return value.length > 1_500 ? `${value.slice(0, 1_500)}…` : value;
-  if (depth >= 6) return Array.isArray(value) ? `[${value.length} items]` : '[object]';
+  if (typeof value === 'string') return value.length > 500 ? `${value.slice(0, 500)}…` : value;
+  // Keep one more level so records such as recastUpgrade[].cost[] retain item
+  // names and counts. The read-response byte cap still bounds large payloads.
+  if (depth >= 5) return Array.isArray(value) ? `[${value.length} items]` : '[object]';
   if (Array.isArray(value)) {
-    const items = value.slice(0, 16).map((item) => compactForResponse(item, depth + 1));
-    if (value.length > 16) items.push(`…共 ${value.length} 项`);
+    const items = value.slice(0, 8).map((item) => compactForResponse(item, depth + 1));
+    if (value.length > 8) items.push(`…共 ${value.length} 项`);
     return items;
   }
   const entries = Object.entries(value).filter(([key]) => !['raw', 'source', 'sourceFile', 'icon', 'image', 'metadata', 'otherData'].includes(key));
   const result = {};
-  for (const [key, child] of entries.slice(0, 48)) result[key] = compactForResponse(child, depth + 1);
-  if (entries.length > 48) result._more = `…共 ${entries.length} 个字段`;
+  for (const [key, child] of entries.slice(0, 32)) result[key] = compactForResponse(child, depth + 1);
+  if (entries.length > 32) result._more = `…共 ${entries.length} 个字段`;
   return result;
 }
 
@@ -264,7 +285,7 @@ class QaCatalog {
   loadRawFile(file) {
     const database = this.ensure();
     const fileName = this.getKnownFile(database, file);
-    const filePath = path.resolve(this.outputDir, `${fileName}.json`);
+    const filePath = path.resolve(this.outputDir, ...fileName.split('/')) + '.json';
     const outputRoot = path.resolve(this.outputDir) + path.sep;
     if (!filePath.startsWith(outputRoot)) throw new Error('invalid file path');
     const stat = fs.statSync(filePath);
@@ -303,33 +324,42 @@ class QaCatalog {
     const limit = clampInteger(input.limit, 8, 1, MAX_READ_RECORDS);
     const offset = clampInteger(input.offset, 0, 0, 10_000);
     const records = [];
+    let bytes = 0;
+    const pushRecord = (record) => {
+      if (records.length >= limit) return false;
+      const size = JSON.stringify(record).length;
+      if (bytes + size > MAX_READ_RESPONSE_BYTES && records.length > 0) return false;
+      bytes += size;
+      records.push(record);
+      return true;
+    };
     for (const requested of pointers) {
       if (records.length >= limit) break;
       const raw = this.loadRawFile(requested.file);
       const chunk = parseChunkPointer(requested.pointer);
-      const value = readPointer(raw, chunk.pointer);
+      const { value, pointer: resolvedPointer } = resolveDataPointer(raw, chunk.pointer);
       if (value === undefined) continue;
       if (Array.isArray(value)) {
         const start = chunk.start == null ? offset : chunk.start;
         const end = chunk.end == null ? value.length : Math.min(value.length, chunk.end);
         for (let index = start; index < end && records.length < limit; index += 1) {
-          const pointer = `${chunk.pointer === '/' ? '' : chunk.pointer}/${index}` || '/';
-          records.push({
+          const pointer = `${resolvedPointer === '/' ? '' : resolvedPointer}/${index}` || '/';
+          if (!pushRecord({
             file: requested.file,
             pointer,
             title: requested.title || displayPointer(pointer),
             source: `${requested.file}.json / ${displayPointer(pointer)}`,
             value: compactForResponse(value[index]),
-          });
+          })) break;
         }
-      } else {
-        records.push({
-          file: requested.file,
-          pointer: requested.pointer,
-          title: requested.title || displayPointer(requested.pointer),
-          source: `${requested.file}.json / ${displayPointer(requested.pointer)}`,
-          value: compactForResponse(value),
-        });
+      } else if (!pushRecord({
+        file: requested.file,
+        pointer: requested.pointer,
+        title: requested.title || displayPointer(requested.pointer),
+        source: `${requested.file}.json / ${displayPointer(requested.pointer)}`,
+        value: compactForResponse(value),
+      })) {
+        break;
       }
     }
     return { records };
@@ -338,10 +368,11 @@ class QaCatalog {
   query(input = {}) {
     const database = this.ensure();
     const file = this.getKnownFile(database, input.file);
-    const pointer = dotPathToPointer(input.pointer || input.path || '/data');
+    const requestedPointer = dotPathToPointer(input.pointer || input.path || '/data');
     const raw = this.loadRawFile(file);
-    const collection = readPointer(raw, pointer);
-    if (!Array.isArray(collection)) throw new Error('pointer must resolve to an array');
+    const { value: resolvedValue, pointer } = resolveDataPointer(raw, requestedPointer);
+    const collection = Array.isArray(resolvedValue) ? resolvedValue : null;
+    if (!collection) throw new Error('pointer must resolve to an array');
     const aggregate = ['count', 'sum', 'min', 'max', 'list'].includes(input.aggregate) ? input.aggregate : 'list';
     const filters = Array.isArray(input.filters) ? input.filters : input.filter ? [input.filter] : [];
     const hasValuePath = Boolean(input.value_path || input.valuePath);

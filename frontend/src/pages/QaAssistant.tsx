@@ -2,6 +2,7 @@ import { Copy, LoaderCircle, MessageCircleQuestion, RotateCcw, Send, Sparkles } 
 import { useMemo, useState } from 'react';
 import type { FormEvent, KeyboardEvent } from 'react';
 import { askQuestion, type QaCitation, type QaHistoryMessage } from '../lib/api';
+import Markdown from '../components/ui/Markdown';
 
 type Turn =
   | { role: 'user'; content: string }
@@ -15,7 +16,7 @@ const SUGGESTIONS = [
 ];
 
 function AnswerText({ content }: { content: string }) {
-  return <div className="whitespace-pre-wrap break-words text-sm leading-7 text-textSub">{content}</div>;
+  return <Markdown text={content} className="cold-knowledge-markdown min-w-0 break-words text-sm leading-7" />;
 }
 
 function CitationList({ citations }: { citations: QaCitation[] }) {

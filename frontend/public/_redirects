@@ -1,2 +1,9 @@
-/api/* https://api.zmwsrank.top/api/:splat 307
+# 走服务器 (api.zmwsrank.top) 的 API 路由在此 307 转发；/api/qa 与 /api/battlefield
+# 是 Pages Functions（同源），不能被这个通配兜底捕获，否则 wrangler dev 下函数会被盖掉。
+/api/admin/* https://api.zmwsrank.top/api/admin/:splat 307
+/api/feedback https://api.zmwsrank.top/api/feedback 307
+/api/files https://api.zmwsrank.top/api/files 307
+/api/health https://api.zmwsrank.top/api/health 307
+/api/stream https://api.zmwsrank.top/api/stream 307
+/api/data/* https://api.zmwsrank.top/api/data/:splat 307
 /* /index.html 200

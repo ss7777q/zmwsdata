@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:api": "node ../server/data-api.js",
+    "dev:pages": "wrangler pages dev dist --env-file ../.dev.vars --port 8788",
     "build:cf-data": "node ../scripts/build_cf_static_data.js",
     "build:cf": "npm run build:cf-data && npx cross-env VITE_STATIC_DATA_BASE=/data VITE_SERVER_API_BASE=https://api.zmwsrank.top npm run build",
     "build": "tsc -b && vite build",
@@ -41,6 +42,7 @@
     "tailwindcss": "^4.2.1",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.48.0",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "wrangler": "^4.124.0"
   }
 }

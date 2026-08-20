@@ -1,0 +1,82 @@
+[
+  {
+    "id": "role_alias_exact",
+    "tag": "paraphrase",
+    "question": "小白龙把突刺觉醒成力龙以后，普通霸体目标会不会被带着走？这招合计倍率是多少？",
+    "requiredFiles": ["role/wiki/敖烈/突刺"],
+    "requiredTerms": [["普通霸体"], ["2.952"]],
+    "gradingPoints": ["识别小白龙为敖烈", "命中突刺技能叶子", "回答普通霸体推动机制", "给出2.952总倍率"]
+  },
+  {
+    "id": "xuannv_wrong_id",
+    "tag": "wrong-premise",
+    "question": "玄女的坤云遁是不是技能9001032，而且致盲固定持续3秒？请按底表核对，不要沿用问题里的说法。",
+    "requiredFiles": ["role/wiki/玄女/风翎遁"],
+    "requiredTerms": [["9001036"], ["9001032"], ["玄风遁"], ["未", "没有", "不支持"]],
+    "gradingPoints": ["指出坤云遁为9001036", "指出9001032实际为玄风遁", "拒绝无底表字段的固定3秒说法"]
+  },
+  {
+    "id": "pet_equip_140_exact",
+    "tag": "exact-number",
+    "question": "只查140级灭蒙护盔：打造、0重升1重、4重升5重分别要多少灵魂和神灵晶？",
+    "requiredFiles": ["pet_equip_make"],
+    "requiredTerms": [["79500"], ["369"], ["26600"], ["41"], ["53200"], ["205"]],
+    "gradingPoints": ["打造79500灵魂+369神灵晶", "0到1重26600+41", "4到5重53200+205"]
+  },
+  {
+    "id": "danqi_without_route_words",
+    "tag": "no-route-keyword",
+    "question": "内丹修炼里，把攻击、防御、生命、回血、魔力、回魔、命中、闪避、暴击、韧性、幸运、守护、穿透、减伤按阴阳分组；它们升到20级时共同的灵魂花费是多少？",
+    "requiredFiles": ["role_danqi"],
+    "requiredTerms": [["攻击"], ["减伤"], ["阴"], ["阳"], ["340000"]],
+    "gradingPoints": ["覆盖14类而非只列前三类", "正确划分yin/yang", "Lv20共同花费340000灵魂"]
+  },
+  {
+    "id": "ride_equip_cross_file",
+    "tag": "cross-file",
+    "question": "青骓头具打造和重铸分别用哪种材料、各多少？坐骑装备强化到1级又需要多少经验与灵魂？",
+    "requiredFiles": ["ride_equip_make", "ride_equip_recast", "ride_equip_upgrade"],
+    "requiredTerms": [["青骓玄铁"], ["12"], ["青金宝石"], ["26"], ["100"], ["10"]],
+    "gradingPoints": ["跨打造、重铸、强化三表", "区分玄铁与青金宝石", "给出Lv1强化经验和灵魂"]
+  },
+  {
+    "id": "ride_star_wrong_unlock",
+    "tag": "wrong-premise",
+    "question": "坐骑是不是3星必定解锁护主光环、5星必定解锁践踏？升星底表实际能证明哪些规则？",
+    "requiredFiles": ["ride_star"],
+    "requiredTerms": [["未", "没有", "不支持"], ["舜星草"], ["凶星草"]],
+    "gradingPoints": ["拒绝3/5星技能解锁前提", "说明普通与凶兽的升星材料", "不臆造移速或承伤字段"]
+  },
+  {
+    "id": "feather_quality_costs",
+    "tag": "exact-number",
+    "question": "雪鸟、蓝凫、紫燕、金鹏、彤鹤、赤乌之羽的全洗和数值洗练各耗多少羽枝？属性类型洗练是否都一样？",
+    "requiredFiles": ["role_feather_baptize"],
+    "requiredTerms": [["3"], ["6"], ["12"], ["24"], ["20"], ["40"], ["30"], ["60"], ["42"], ["84"], ["720"]],
+    "gradingPoints": ["六品质全洗/数值成本完整", "类型洗练统一720", "不声称全品质固定20"]
+  },
+  {
+    "id": "callgod_wrong_movement",
+    "tag": "wrong-premise",
+    "question": "魔王疾行真的是直线冲刺、横行霸道真会造成沿途撞击伤害吗？请给出两者实际效果、持续时间和基础冷却。",
+    "requiredFiles": ["call_god_boss_common_skills"],
+    "requiredTerms": [["60%"], ["35%"], ["5秒", "5 秒"], ["30秒", "30 秒"], ["超级霸体"], ["没有", "无直接", "不包含", "并非"]],
+    "gradingPoints": ["纠正冲刺/撞击错误前提", "魔王疾行移速+60%持续5秒CD30秒", "横行霸道移速+35%和超级霸体"]
+  },
+  {
+    "id": "stage_curve_samples",
+    "tag": "cross-file",
+    "question": "对比花果山、天龙岭、噩梦万妖穴三关的经验和灵魂总产出，数字分别是多少？",
+    "requiredFiles": ["stage_reward_exp_soul"],
+    "requiredTerms": [["195"], ["276"], ["7599"], ["8701"], ["128130"], ["110538"]],
+    "gradingPoints": ["花果山195/276", "天龙岭7599/8701", "噩梦万妖穴128130/110538"]
+  },
+  {
+    "id": "kunlun_wrong_model",
+    "tag": "wrong-premise",
+    "question": "昆仑山是不是每10层一个首领、每天能扫荡拿昆仑令？现有底表实际描述了什么结构，解锁用什么道具？",
+    "requiredFiles": ["kunlun_analysis"],
+    "requiredTerms": [["15"], ["塔防", "守护昆仑"], ["昆仑神石"], ["未", "没有", "不支持"]],
+    "gradingPoints": ["拒绝每10层/扫荡/昆仑令前提", "说明15关塔防结构", "解锁道具昆仑神石1025"]
+  }
+]
