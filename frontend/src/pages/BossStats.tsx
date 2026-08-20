@@ -195,12 +195,24 @@ export default function BossStats({ dataSources, searchQuery = '' }: Props) {
       return baseBosses;
     }
 
-    const template = activeGroup.levelTemplates[String(overrideLevel)];
-    if (!template) {
-      return baseBosses;
-    }
+    return baseBosses.map((boss) => {
+      if (Number(activeGroup.type) === 33) {
+        if (!boss.levelFollowsWorldLevel) {
+          return boss;
+        }
+        const levelKey = String(boss.leagueLevelKey || '');
+        const worldLevelOffset = Number(activeGroup.degreeWorldLv?.[levelKey] || 0);
+        const bossLevel = Math.max(1, overrideLevel - worldLevelOffset);
+        const bossTemplate = activeGroup.levelTemplates?.[String(bossLevel)];
+        return bossTemplate ? recalculateBossProps(boss, bossLevel, bossTemplate) : boss;
+      }
 
-    return baseBosses.map((boss) => recalculateBossProps(boss, overrideLevel, template));
+      const template = activeGroup.levelTemplates?.[String(overrideLevel)];
+      if (!template) {
+        return boss;
+      }
+      return recalculateBossProps(boss, overrideLevel, template);
+    });
   }, [activeGroup, currentTypeKey, allBosses, groups, overrideLevel, searchResultBosses, supportsLevelOverride]);
 
   const visibleBosses = typeScopedBosses;

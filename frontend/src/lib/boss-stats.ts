@@ -43,6 +43,9 @@ export interface BossEntry {
   screen?: number | null;
   source?: string;
   sourceField?: string;
+  leagueMode?: 'copy' | 'really';
+  leagueLevelKey?: number | string;
+  levelFollowsWorldLevel?: boolean;
   error?: string;
   calcFormula?: BossFormula;
   phases?: BossPhase[];
@@ -62,6 +65,8 @@ export interface StageReport {
   status?: string;
   description?: string;
   stageDesc?: string;
+  leagueLevelKey?: number | string;
+  levelFollowsWorldLevel?: boolean;
   levelOverride?: {
     supported?: boolean;
     defaultLevel?: number;
@@ -102,6 +107,7 @@ export interface BossTypeGroup {
     min?: number;
     max?: number;
   };
+  degreeWorldLv?: Record<string, number>;
   noteText?: string;
 }
 
@@ -238,6 +244,32 @@ function toSortableNumber(value: number | string | null | undefined) {
   return Number.isFinite(numeric) ? numeric : null;
 }
 
+function compareLeagueBoss(lhs: FlattenedBoss, rhs: FlattenedBoss) {
+  const modeRank = (boss: FlattenedBoss) => boss.leagueMode === 'really' ? 1 : 0;
+  const modeCompare = modeRank(rhs) - modeRank(lhs);
+  if (modeCompare !== 0) {
+    return modeCompare;
+  }
+
+  const difficultyRank = (boss: FlattenedBoss) => {
+    if (boss.leagueLevelKey === 'tiaozhan') return 2;
+    if (boss.leagueLevelKey === 'emeng') return 1;
+    return 0;
+  };
+  const difficultyCompare = difficultyRank(rhs) - difficultyRank(lhs);
+  if (difficultyCompare !== 0) {
+    return difficultyCompare;
+  }
+
+  const leftLevel = toSortableNumber(lhs.stageLv ?? lhs.level);
+  const rightLevel = toSortableNumber(rhs.stageLv ?? rhs.level);
+  if (leftLevel != null && rightLevel != null && leftLevel !== rightLevel) {
+    return rightLevel - leftLevel;
+  }
+
+  return 0;
+}
+
 function compareBossDesc(lhs: FlattenedBoss, rhs: FlattenedBoss) {
   // 关卡小怪虚拟分组(9999)在聚合视图中始终排在最后
   const normalizeType = (value: number | null) => (value === 9999 ? -1 : value);
@@ -245,6 +277,13 @@ function compareBossDesc(lhs: FlattenedBoss, rhs: FlattenedBoss) {
   const rightType = normalizeType(toSortableNumber(rhs.type));
   if (leftType != null && rightType != null && leftType !== rightType) {
     return rightType - leftType;
+  }
+
+  if (leftType === 33 && rightType === 33) {
+    const leagueBossCompare = compareLeagueBoss(lhs, rhs);
+    if (leagueBossCompare !== 0) {
+      return leagueBossCompare;
+    }
   }
 
   const mapCompare = compareNumberArraysDesc(

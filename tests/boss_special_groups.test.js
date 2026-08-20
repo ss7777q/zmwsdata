@@ -2,6 +2,7 @@ const assert = require('assert');
 const path = require('path');
 
 const extractBossStats = require(path.join(__dirname, '..', 'scripts', 'extract-boss-stats.js'));
+const settings = require(path.join(__dirname, '..', 'settings.js'));
 const root = path.resolve(__dirname, '..');
 const mapDir = path.join(root, 'file', 'map-cache', 'resources', 'map');
 
@@ -44,6 +45,31 @@ assert.strictEqual(mouse.calculatedProps.atk, 145, '吱吱鼠攻击计算不符'
 assert.strictEqual(mouse.calculatedProps.hp, 2586, '吱吱鼠生命计算不符');
 for (const stage of ladderGroup.stages) {
   assert(stage.bossData.every((boss) => !boss.error), `天梯 ${stage.stageName} 存在计算错误`);
+}
+
+// ─── 联盟 BOSS（type 33）：固定等级保持不变，噩梦/挑战默认按版本满级 ───
+const leagueBoss = extractBossStats({ types: [33], syncMaps: false, mapDir });
+const leagueBossGroup = leagueBoss.find((group) => Number(group.type) === 33);
+assert(leagueBossGroup, '缺少联盟 BOSS 分组');
+assert.strictEqual(leagueBossGroup.supportsLevelOverride, true);
+assert.strictEqual(leagueBossGroup.levelOverrideMode, 'input');
+assert.strictEqual(leagueBossGroup.defaultLevel, settings.data.maxLevel);
+assert.strictEqual(leagueBossGroup.levelRange.max, settings.data.maxLevel);
+
+const fixedLeagueStage = leagueBossGroup.stages.find((stage) => Number(stage.leagueLevelKey) === 80);
+assert(fixedLeagueStage, '找不到 80 级固定联盟 BOSS');
+assert.strictEqual(fixedLeagueStage.stageLv, 80);
+assert.strictEqual(fixedLeagueStage.levelFollowsWorldLevel, false);
+assert.strictEqual(fixedLeagueStage.bossData[0].level, 80);
+
+for (const levelKey of ['emeng', 'tiaozhan']) {
+  const dynamicStage = leagueBossGroup.stages.find((stage) => stage.leagueLevelKey === levelKey);
+  const expectedBossLevel = settings.data.maxLevel - leagueBossGroup.degreeWorldLv[levelKey];
+  assert(dynamicStage, `找不到 ${levelKey} 联盟 BOSS`);
+  assert.strictEqual(dynamicStage.stageLv, expectedBossLevel);
+  assert.strictEqual(dynamicStage.levelFollowsWorldLevel, true);
+  assert.strictEqual(dynamicStage.bossData[0].level, expectedBossLevel);
+  assert.strictEqual(dynamicStage.bossData[0].levelFollowsWorldLevel, true);
 }
 
 // ─── 关卡小怪（虚拟 type 9999）───

@@ -66,7 +66,7 @@ const SPECIAL_STAGE_TYPE_CONFIG = {
   },
   33: {
     noteText: '联盟BOSS固定等级属性不变,噩梦与挑战属性会随世界等级改变,默认以当前版本满级展示',
-    levelOverrideMode: 'preset',
+    levelOverrideMode: 'input',
   },
   44: {
     noteText: '秘海遗墟副本等级以队长等级为准,输入队长等级查看对应属性',
@@ -1280,7 +1280,9 @@ function resolveLeagueBossStageLevel(levelValue, context) {
   if (numericLevel != null) {
     return numericLevel;
   }
-  return Math.max(1, toNumber(context.fallbackLevel, 1));
+  const levelKey = String(levelValue || '').trim();
+  const worldLevelOffset = toNumber(context.degreeWorldLv?.[levelKey], 0);
+  return Math.max(1, toNumber(context.fallbackLevel, 1) - worldLevelOffset);
 }
 
 function buildLeagueBossStageReports(stages, context) {
@@ -1302,6 +1304,8 @@ function buildLeagueBossStageReports(stages, context) {
       continue;
     }
 
+    const configuredLevel = toNumber(configEntry.level);
+    const levelFollowsWorldLevel = configuredLevel == null;
     const stageLevel = resolveLeagueBossStageLevel(configEntry.level, context);
     const bossId = toNumber(configEntry?.bossId);
     if (bossId == null) {
@@ -1321,6 +1325,7 @@ function buildLeagueBossStageReports(stages, context) {
       stageDesc: stage.remark || '',
       leagueMode: configEntry.leagueMode,
       leagueLevelKey: configEntry.level,
+      levelFollowsWorldLevel,
       unlockWorldLv: toNumber(configEntry.unlockWorldLv),
       power: toNumber(configEntry.power),
       minimum: toNumber(configEntry.minimum),
@@ -1334,6 +1339,7 @@ function buildLeagueBossStageReports(stages, context) {
       calcResult.source = stageReport.source;
       calcResult.leagueMode = configEntry.leagueMode;
       calcResult.leagueLevelKey = configEntry.level;
+      calcResult.levelFollowsWorldLevel = levelFollowsWorldLevel;
       calcResult.unlockWorldLv = toNumber(configEntry.unlockWorldLv);
       calcResult.power = toNumber(configEntry.power);
       calcResult.minimum = toNumber(configEntry.minimum);
@@ -2022,6 +2028,7 @@ function extractBossStats(options = {}) {
   const levelTemplates = buildLevelTemplateMap(attrs);
   const levelValues = Object.keys(levelTemplates).map((value) => Number(value)).filter((value) => Number.isFinite(value));
   const maxConfiguredLevel = levelValues.length > 0 ? Math.max(...levelValues) : 1;
+  const currentMaxLevel = getMaxLevel();
   const leagueBossDeploy = constsByKey.get('leagueBossDeploy') || {};
   const leagueBossDegreeWorldLv = leagueBossDeploy?.degreeWorldLv || {};
   const starHavocLevelTemplates = buildLevelTemplateMap(starHavocAttrs);
@@ -2036,7 +2043,8 @@ function extractBossStats(options = {}) {
       calculator,
       leagueBossCopies,
       leagueBossReallies,
-      fallbackLevel: 1,
+      fallbackLevel: currentMaxLevel,
+      degreeWorldLv: leagueBossDegreeWorldLv,
     }));
   }
 
@@ -2236,11 +2244,14 @@ function extractBossStats(options = {}) {
 
   const leagueBossGroup = groupedData.find((group) => toNumber(group.type) === 33);
   if (leagueBossGroup) {
+    leagueBossGroup.supportsLevelOverride = true;
+    leagueBossGroup.levelOverrideMode = SPECIAL_STAGE_TYPE_CONFIG[33].levelOverrideMode;
+    leagueBossGroup.defaultLevel = currentMaxLevel;
     leagueBossGroup.noteText = SPECIAL_STAGE_TYPE_CONFIG[33].noteText;
     leagueBossGroup.levelTemplates = levelTemplates;
     leagueBossGroup.levelRange = {
       min: levelValues.length > 0 ? Math.min(...levelValues) : 1,
-      max: maxConfiguredLevel,
+      max: currentMaxLevel,
     };
     leagueBossGroup.degreeWorldLv = leagueBossDegreeWorldLv;
   }

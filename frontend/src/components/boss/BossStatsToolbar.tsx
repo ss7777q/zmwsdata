@@ -32,6 +32,8 @@ export default function BossStatsToolbar({
     return null;
   }
 
+  const isLeagueBoss = Number(activeGroup?.type) === 33;
+
   return (
     <div className={clsx(
       'grid gap-4 rounded-2xl border border-border bg-surface/60 p-4',
@@ -45,7 +47,9 @@ export default function BossStatsToolbar({
             <div className="mt-1 text-xs leading-5 text-textSub">
               {levelOverrideMode === 'preset'
                 ? '当前模块只支持固定等级档位，切换后会统一按该档位展示属性。'
-                : '默认按解锁等级展示,输入后会按输入等级统一重算属性。'}
+                : isLeagueBoss
+                  ? '默认按当前版本满级展示，输入世界等级后仅重算噩梦与挑战属性。'
+                  : '默认按解锁等级展示,输入后会按输入等级统一重算属性。'}
             </div>
           </div>
           {supportsLevelOverride && levelOverrideMode === 'preset' ? (
@@ -91,7 +95,9 @@ export default function BossStatsToolbar({
               ? (overrideLevel != null ? `当前按 ${overrideLevel} 级档位展示` : '请选择固定等级档位')
               : (levelInputError || (overrideLevel != null
                 ? (levelInput.trim()
-                  ? `当前按 ${overrideLevel} 级统一重算`
+                  ? (isLeagueBoss
+                    ? `噩梦与挑战当前按 ${overrideLevel} 级重算`
+                    : `当前按 ${overrideLevel} 级统一重算`)
                   : `当前默认按 ${overrideLevel} 级展示`)
                 : '留空时使用默认等级'))}
           </div>
