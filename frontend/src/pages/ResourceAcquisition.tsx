@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { BadgePercent, Gift, PackageOpen, Store } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useDataFiles } from '../hooks/useGameData';
 
 type Reward = {
   itemId: number;
@@ -84,7 +85,8 @@ type BlackMarketSlot = {
 type BlackMarketStage = {
   stage: StageRef;
   nextStage: StageRef | null;
-  slots: BlackMarketSlot[];
+  slots?: BlackMarketSlot[];
+  fileName?: string;
 };
 
 type BlackMarketMode = {
@@ -395,13 +397,20 @@ function BlackMarketView({ payload }: { payload: ResourceAcquisitionPayload }) {
     }
   }, [selectedStage, stages]);
 
-  const activeStage = stages.find((entry) => entry.stage.id === selectedStage) ?? stages.at(-1) ?? null;
-  const activeSlot = activeStage?.slots.find((slot) => slot.slot === selectedSlot)
-    ?? activeStage?.slots[0]
+  const activeStageRef = stages.find((entry) => entry.stage.id === selectedStage) ?? stages.at(-1) ?? null;
+  const detailResult = useDataFiles(activeStageRef?.fileName ? [activeStageRef.fileName] : [], Boolean(activeStageRef?.fileName));
+  const activeStage = activeStageRef?.fileName
+    ? detailResult.dataSources[activeStageRef.fileName]?.data as BlackMarketStage | undefined
+    : undefined;
+  const activeSlots = activeStage?.slots ?? [];
+  const activeSlot = activeSlots.find((slot) => slot.slot === selectedSlot)
+    ?? activeSlots[0]
     ?? null;
   const totalWeight = activeSlot?.items.reduce((sum, item) => sum + Math.max(0, item.weight), 0) ?? 0;
 
-  if (!market || !activeMode || !activeStage || !activeSlot) return <EmptyState />;
+  if (!market || !activeMode || !activeStageRef || detailResult.loading || !activeStage || !activeSlot) {
+    return <EmptyState />;
+  }
 
   return (
     <div className="space-y-4">
@@ -451,7 +460,7 @@ function BlackMarketView({ payload }: { payload: ResourceAcquisitionPayload }) {
       </div>
 
       <div className="flex max-w-full gap-2 overflow-x-auto pb-1 custom-scrollbar" aria-label="黑市商店格子">
-        {activeStage.slots.map((slot) => (
+        {activeSlots.map((slot) => (
           <button
             key={slot.slot}
             type="button"
@@ -534,12 +543,17 @@ function EmptyState() {
 
 export default function ResourceAcquisition({ dataSources }: Props) {
   const location = useLocation();
-  const payload = asPayload(dataSources.resource_acquisition?.data);
   const activeView = location.pathname.endsWith('/black_market')
     ? 'black_market'
     : location.pathname.endsWith('/secret_shop')
       ? 'secret_shop'
       : 'boxes';
+  const sourceName = activeView === 'black_market'
+    ? 'resource/acquisition/black-market/index'
+    : activeView === 'secret_shop'
+      ? 'resource/acquisition/secret-shop'
+      : 'resource/acquisition/boxes';
+  const payload = asPayload(dataSources[sourceName]?.data);
 
   return (
     <div className="space-y-5 pb-16">

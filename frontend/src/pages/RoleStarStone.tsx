@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { clsx } from 'clsx';
+import { useDataFiles } from '../hooks/useGameData';
 
 interface StarStoneTier {
     level: number;
@@ -31,6 +32,21 @@ interface StarStoneEffect {
     warnings?: string[];
 }
 
+interface StarStoneIndexEntry {
+    id: number;
+    group: number;
+    name: string;
+    type: 1 | 2 | null;
+    typeName: string;
+    ownership: StarStoneEffect['ownership'];
+    summary: string;
+    officialDescription?: string;
+    mechanismExplanation?: string;
+    baseEffectName: string;
+    extremeEffectName: string;
+    fileName: string;
+}
+
 interface StarStoneDisplayTier {
     level: number;
     unlockLevel?: number;
@@ -60,9 +76,20 @@ function asStarStoneEffects(value: unknown): StarStoneEffect[] {
     });
 }
 
+function asStarStoneIndex(value: unknown): StarStoneIndexEntry[] {
+    if (!value || typeof value !== 'object') return [];
+    const entries = (value as { entries?: unknown }).entries;
+    if (!Array.isArray(entries)) return [];
+    return entries.filter((entry): entry is StarStoneIndexEntry => {
+        if (!entry || typeof entry !== 'object') return false;
+        const row = entry as Partial<StarStoneIndexEntry>;
+        return typeof row.id === 'number' && typeof row.name === 'string' && typeof row.fileName === 'string';
+    });
+}
+
 export default function RoleStarStone({ dataSources }: { dataSources: Record<string, any> }) {
     const starStones = useMemo(
-        () => asStarStoneEffects(dataSources.role_starstone_effect_all?.data ?? dataSources.role_starstone_effect?.data)
+        () => asStarStoneIndex(dataSources['role/starstone/index']?.data)
             .filter((stone) => stone.ownership?.name !== '未知' && stone.ownership?.kind !== '未知'),
         [dataSources]
     );
@@ -113,9 +140,14 @@ export default function RoleStarStone({ dataSources }: { dataSources: Record<str
     }, [searchQuery, selectedType, selectedPool, starStones]);
 
     // 只从过滤结果中取选中项：过滤为空时右侧详情同步为空，不再残留不匹配的旧数据
-    const activeStone = useMemo(() => {
+    const activeIndexStone = useMemo(() => {
         return filteredStones.find((item) => item.id === selectedId) || filteredStones[0] || null;
     }, [selectedId, filteredStones]);
+    const detailResult = useDataFiles(activeIndexStone?.fileName ? [activeIndexStone.fileName] : [], Boolean(activeIndexStone?.fileName));
+    const activeStone = useMemo(() => {
+        if (!activeIndexStone?.fileName) return null;
+        return asStarStoneEffects([detailResult.dataSources[activeIndexStone.fileName]?.data])[0] || null;
+    }, [activeIndexStone, detailResult.dataSources]);
 
     useEffect(() => {
         if (filteredStones.length === 0) return;
@@ -307,7 +339,7 @@ export default function RoleStarStone({ dataSources }: { dataSources: Record<str
                 <div className="max-h-[320px] xl:max-h-none overflow-y-auto p-3.5 custom-scrollbar xl:flex-1 xl:min-h-0 space-y-2">
                     {filteredStones.length > 0 ? (
                         filteredStones.map((stone) => {
-                            const selected = stone.id === activeStone.id;
+                            const selected = stone.id === activeIndexStone?.id;
                             const attackRow = stone.type === 1;
                             return (
                                 <button

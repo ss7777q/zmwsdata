@@ -98,53 +98,57 @@ test('装备升重保留配置中真实的 0重→1重消耗', () => {
 
 test('宠物技能跳过 Lv.1 学习成本，升级从 Lv.1→Lv.2 开始', () => {
   const levels = readData('pet_skill.json').levels;
+  const max = maxLevel(levels, (row) => row.level);
   const steps = buildUpgradeSteps({
     rows: levels,
     getStoredLevel: (row) => row.level,
     getCosts: (row) => row.upgradeCost,
     storedLevelOffset: -1,
-    maxLevel: maxLevel(levels, (row) => row.level),
+    maxLevel: max,
   });
 
-  assertRange(steps, { fromLevel: 1, toLevel: 47 }, '宠物技能不应显示 0→1');
+  assertRange(steps, { fromLevel: 1, toLevel: max }, '宠物技能不应显示 0→1');
   assert.equal(steps[0].source.level, 2, 'Lv.1→Lv.2 应读取目标等级 Lv.2 的成本行');
 });
 
 test('坐骑技能按当前等级成本升级，不显示 0→1', () => {
   const group = readData('ride_skill.json').byItem[0];
+  const max = maxLevel(group.levels, (row) => row.level);
   const steps = buildUpgradeSteps({
     rows: group.levels,
     getStoredLevel: (row) => row.level,
     getCosts: (row) => [{ itemId: group.itemId, name: group.name, count: row.count }],
-    maxLevel: maxLevel(group.levels, (row) => row.level),
+    maxLevel: max,
   });
 
-  assertRange(steps, { fromLevel: 1, toLevel: 47 }, '坐骑技能不应显示 0→1');
+  assertRange(steps, { fromLevel: 1, toLevel: max }, '坐骑技能不应显示 0→1');
   assert.equal(steps[0].source.level, 1, 'Lv.1→Lv.2 应读取当前等级 Lv.1 的成本行');
 });
 
 test('翅膀解锁即为 Lv.1，升级不显示 0→1', () => {
   const wing = readData('role_wing_upgrade.json')[0];
+  const max = maxLevel(wing.levels, (row) => row.wingLevel);
   const steps = buildUpgradeSteps({
     rows: wing.levels,
     getStoredLevel: (row) => row.wingLevel,
     getCosts: (row) => row.consume ? [row.consume] : [],
-    maxLevel: maxLevel(wing.levels, (row) => row.wingLevel),
+    maxLevel: max,
   });
 
-  assertRange(steps, { fromLevel: 1, toLevel: 23 }, '翅膀不应显示 0→1');
+  assertRange(steps, { fromLevel: 1, toLevel: max }, '翅膀不应显示 0→1');
 });
 
 test('修心默认六项均为 Lv.1，忽略 level=0 成本行', () => {
   const levels = readData('role_heart.json');
+  const max = maxLevel(levels, (row) => row.level);
   const steps = buildUpgradeSteps({
     rows: levels,
     getStoredLevel: (row) => row.level,
     getCosts: (row) => row.soulCost,
-    maxLevel: maxLevel(levels, (row) => row.level),
+    maxLevel: max,
   });
 
-  assertRange(steps, { fromLevel: 1, toLevel: 170 }, '修心不应显示 0→1');
+  assertRange(steps, { fromLevel: 1, toLevel: max }, '修心不应显示 0→1');
 });
 
 test('法宝器魂从 Lv.1→Lv.2 开始', () => {

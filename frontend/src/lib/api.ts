@@ -24,7 +24,8 @@ export function dataManifestUrl() {
 }
 
 export function dataFileUrl(name: string) {
-  return `${STATIC_DATA_BASE}/${encodeURIComponent(name)}.json`;
+  const encodedPath = name.split('/').map((segment) => encodeURIComponent(segment)).join('/');
+  return `${STATIC_DATA_BASE}/${encodedPath}.json`;
 }
 
 export function buildAdminHeaders(token?: string): Record<string, string> {

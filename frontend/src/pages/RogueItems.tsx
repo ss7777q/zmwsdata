@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Search, SlidersHorizontal } from 'lucide-react';
 import { clsx } from 'clsx';
 import CostBadge from '../components/ui/CostBadge';
+import { useDataFiles } from '../hooks/useGameData';
 
 type CostItem = { itemId: number; name: string; count: number };
 type RogueAttribute = { label: string; value: unknown; rawField?: string };
@@ -56,6 +57,7 @@ type RogueItem = {
   warnings: string[];
   stages: RogueStage[];
   searchText: string;
+  fileName: string;
 };
 
 type RogueTypeGroup = {
@@ -243,7 +245,7 @@ function AttributeBlock({ stages }: { stages: RogueStage[] }) {
 }
 
 export default function RogueItems({ dataSources }: Props) {
-  const payload = asPayload(dataSources.rogue_item_analysis?.data);
+  const payload = asPayload(dataSources['rogue-item/index']?.data);
   const items = payload.items || [];
   const typeGroups = payload.typeGroups || [];
   const [query, setQuery] = useState('');
@@ -259,7 +261,11 @@ export default function RogueItems({ dataSources }: Props) {
     });
   }, [items, query, typeFilter]);
 
-  const activeItem = filteredItems.find((item) => item.id === selectedId) || filteredItems[0] || null;
+  const activeIndexItem = filteredItems.find((item) => item.id === selectedId) || filteredItems[0] || null;
+  const detailResult = useDataFiles(activeIndexItem?.fileName ? [activeIndexItem.fileName] : [], Boolean(activeIndexItem?.fileName));
+  const activeItem = activeIndexItem?.fileName
+    ? detailResult.dataSources[activeIndexItem.fileName]?.data as RogueItem | undefined
+    : undefined;
   const activeDamageMechanics = activeItem?.damageMechanics || [];
   const visibleDerivedMechanics = activeItem
     ? activeItem.derivedMechanics.filter((item) => !activeDamageMechanics.includes(item))
@@ -289,7 +295,7 @@ export default function RogueItems({ dataSources }: Props) {
           <div className="mobile-scroll-container">
             <div className="mobile-scroll-list-xl custom-scrollbar">
               {filteredItems.map((item) => {
-                const selected = item.id === activeItem?.id;
+                const selected = item.id === activeIndexItem?.id;
                 return (
                   <button
                     key={item.id}

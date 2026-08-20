@@ -104,7 +104,7 @@ const VALID_PATHS: Record<string, string[]> = {
   pet: ['/pet/skill', '/pet/wiki', '/pet/star', '/pet/equip'],
   beast_stats: ['/pet_champion/detail', '/pet_champion/lineup', '/pet_champion/players'],
   ride: ['/ride/star', '/ride/skill', '/ride/wiki', '/ride/make', '/ride/upgrade'],
-  call_god: ['/call_god/stats', '/call_god/stones', '/call_god/boss', '/call_god/common_skills', '/call_god/talents'],
+  call_god: ['/call_god/stats', '/call_god/limits', '/call_god/stones', '/call_god/boss', '/call_god/common_skills', '/call_god/talents'],
   rogue_item: ['/rogue_item/list'],
   stage_rewards: ['/stage_rewards/list'],
   resource_acquisition: ['/resource_acquisition/boxes', '/resource_acquisition/secret_shop', '/resource_acquisition/black_market'],
@@ -233,7 +233,7 @@ export function getRequiredDataFiles(system: string, pathname: string, rawSearch
     if (normalized === '/user_spiritual/matrix/effect') return ['role_matrix_skill'];
     return ['role_magic_luck', 'role_magic_lev', 'role_magic_soul'];
   }
-  if (system === 'role_starstone') return ['role_starstone_effect_all'];
+  if (system === 'role_starstone') return ['role/starstone/index'];
   if (system === 'role_fashion') return normalized.endsWith('/renew') ? ['role_fashion_renew'] : ['role_fashion_ball'];
   if (system === 'role_honor') return ['role_honor'];
   if (system === 'role_extreme_stats') return ['role_extreme_stats_stage_curves'];
@@ -250,7 +250,7 @@ export function getRequiredDataFiles(system: string, pathname: string, rawSearch
     return ['role_heart'];
   }
   if (system === 'pet') {
-    if (normalized.endsWith('/wiki')) return ['pet_wiki_index', 'pet_skill_baseline'];
+    if (normalized.endsWith('/wiki')) return ['pet/wiki/index'];
     if (normalized.endsWith('/star')) return ['pet_star', 'pet_mating'];
     if (normalized.endsWith('/equip')) return ['pet_equip_make', 'pet_equip_upgrade'];
     return ['pet_skill', 'pet_potential'];
@@ -262,25 +262,30 @@ export function getRequiredDataFiles(system: string, pathname: string, rawSearch
   }
   if (system === 'ride') {
     if (normalized.endsWith('/skill')) return ['ride_skill'];
-    if (normalized.endsWith('/wiki')) return ['ride_wiki_index', 'ride_skill_baseline'];
+    if (normalized.endsWith('/wiki')) return ['ride/wiki/index'];
     if (normalized.endsWith('/make')) return ['ride_equip_make', 'ride_equip_recast'];
     if (normalized.endsWith('/upgrade')) return ['ride_equip_upgrade'];
     return ['ride_star'];
   }
   if (system === 'call_god') {
+    if (normalized.endsWith('/limits')) return ['call_god_stage_limits'];
     if (normalized.endsWith('/stones')) return ['call_god_stone_rewards'];
     if (normalized.endsWith('/boss')) return ['call_god_boss_analysis'];
     if (normalized.endsWith('/common_skills')) return ['call_god_boss_common_skills'];
     if (normalized.endsWith('/talents')) return ['call_god_boss_talents'];
     return [];
   }
-  if (system === 'rogue_item') return ['rogue_item_analysis'];
+  if (system === 'rogue_item') return ['rogue-item/index'];
   if (system === 'kunlun') {
     if (normalized.endsWith('/pvp')) return ['kunlun_pvp_analysis'];
     return ['kunlun_analysis'];
   }
   if (system === STAGE_REWARDS_SYSTEM) return ['stage_reward_exp_soul'];
-  if (system === RESOURCE_ACQUISITION_SYSTEM) return ['resource_acquisition'];
+  if (system === RESOURCE_ACQUISITION_SYSTEM) {
+    if (normalized.endsWith('/black_market')) return ['resource/acquisition/black-market/index'];
+    if (normalized.endsWith('/secret_shop')) return ['resource/acquisition/secret-shop'];
+    return ['resource/acquisition/boxes'];
+  }
   if (system === 'power_requirements') return ['power_requirements'];
   if (system === 'boss') {
     if (normalized.endsWith('/all') || normalized.endsWith('/search')) return [BOSS_INDEX_FILE, ...ALL_BOSS_FILES];
