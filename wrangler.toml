@@ -9,7 +9,7 @@ VITE_SERVER_API_BASE = "https://api.zmwsrank.top"
 # 访问统计默认走同源 Pages Functions。临时切回旧服务器时再填写这个值。
 VITE_VISITOR_API_BASE = ""
 QA_BASE_URL = "https://x666.me/v1"
-QA_MODEL_ORDER = "grok-4.5,grok-4.6,deepseek-v4-flash,gemini-3.5-flash"
+QA_MODEL_ORDER = "grok-4.5,grok-4.6"
 # Generic server-side catalog; the Pages Function only sends compact tool results to the model.
 QA_CATALOG_BASE = "https://api.zmwsrank.top/api/qa/catalog"
 

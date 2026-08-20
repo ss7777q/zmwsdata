@@ -21,9 +21,8 @@ const MAX_CONTEXT_LENGTH = 18_000;
 const MAX_DOCUMENT_CONTEXT_LENGTH = 6_000;
 const MAX_QUERY_CONTEXT_LENGTH = 4_000;
 const MAX_RETRIEVED_DOCUMENTS = 3;
-const MAX_DOCUMENTS_PER_FILE = 80;
-const MAX_TOOL_ROUNDS = 5;
-const MAX_TOOL_CALLS_PER_ROUND = 3;
+const MAX_TOOL_ROUNDS = 3;
+const MAX_TOOL_CALLS_PER_ROUND = 2;
 const MAX_TOOL_QUERY_LENGTH = 400;
 const MAX_TOOL_PLANNING_TOKENS = 800;
 // Reasoning models (deepseek-v4-flash's thinking mode) spend a large share of
@@ -856,7 +855,7 @@ function selectRoutedKnowledgeFiles(question) {
     if (!pattern.test(question)) continue;
     files.push(...routeFiles);
   }
-  return [...new Set(files)].slice(0, 4);
+  return [...new Set(files)].slice(0, 2);
 }
 
 async function prefetchRoutedKnowledge({ env, question }) {
@@ -987,7 +986,10 @@ async function loadKnowledgeDocuments(request, files) {
   return results.flat();
 }
 
+const assetCache = new Map();
+
 async function loadJsonAsset(request, file) {
+  if (assetCache.has(file)) return assetCache.get(file);
   const encodedPath = String(file || '')
     .split('/')
     .filter(Boolean)
@@ -1000,7 +1002,9 @@ async function loadJsonAsset(request, file) {
   if (length > MAX_ASSET_BYTES) throw new Error(`资料文件 ${file}.json 超过限制`);
   const text = await readBoundedText(response, MAX_ASSET_BYTES);
   try {
-    return JSON.parse(text);
+    const parsed = JSON.parse(text);
+    assetCache.set(file, parsed);
+    return parsed;
   } catch {
     throw new Error(`资料文件 ${file}.json 格式错误`);
   }
@@ -1894,6 +1898,8 @@ function parseModels(value) {
 
 async function completeWithFallback({ providers, question, history, request, env }) {
   const attempts = [];
+  const MAX_MODEL_ATTEMPTS = 2;
+  let attemptCount = 0;
   // Comparison questions name 2+ entities. The entity-aware search already
   // returns every side's docs in one shot, so the multi-round tool harness only
   // adds stall time and reasoning_content errors for deepseek. Route them
@@ -1901,6 +1907,8 @@ async function completeWithFallback({ providers, question, history, request, env
   const isComparison = await isEntityComparisonQuestion(request, question);
   for (const provider of providers) {
     for (const model of provider.models) {
+      if (attemptCount >= MAX_MODEL_ATTEMPTS) break;
+      attemptCount += 1;
       try {
         let completion;
         if (isComparison) {
