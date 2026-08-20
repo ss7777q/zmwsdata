@@ -170,6 +170,49 @@ export interface StoneRewardPayload {
   };
 }
 
+export interface StageLimitValue {
+  key: string;
+  label: string;
+  value: number;
+}
+
+export interface StageLimitPayload {
+  sources: {
+    battlefieldTiers: string;
+    specialStages: string;
+    entityOverrides: string;
+    demonKings: string;
+  };
+  battlefieldTiers: Array<{
+    id: number;
+    battlefield: number;
+    rewardLv: number;
+    name: string;
+    battlefieldLevel: number;
+    limits: StageLimitValue[];
+    devilLimits: Array<{
+      groupId: number;
+      name: string;
+      value: number;
+    }>;
+  }>;
+  specialStages: Array<{
+    id: number;
+    name: string;
+    type: number;
+    subType: number;
+    limits: StageLimitValue[];
+  }>;
+  entityOverrides: Array<{
+    id: number;
+    name: string;
+    type: string;
+    subTypes: number[];
+    stageNames: string[];
+    limits: StageLimitValue[];
+  }>;
+}
+
 export interface BossMechanismSource {
   id?: number;
   name?: string;

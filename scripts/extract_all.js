@@ -24,6 +24,7 @@ const MODULES = [
   { key: 'godweapon', file: 'role_godweapon.js', label: '角色 → 神器系统' },
   { key: 'matrix',    file: 'role_matrix.js',    label: '角色 → 阵法系统' },
   { key: 'callgod',   file: 'role_callgod.js',   label: '神魔属性' },
+  { key: 'callgod_limits', file: 'call_god_stage_limits.js', label: '神魔相关 → 关卡等级上限' },
   { key: 'callgod_boss', file: 'call_god_boss_analysis.js', label: '神魔相关 → 魔王解析' },
   { key: 'rogue_item', file: 'rogue_item_analysis.js', label: '局内道具机制' },
   { key: 'exp',       file: 'exp.js',            label: '抗值标准' },

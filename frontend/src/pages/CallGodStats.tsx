@@ -4,14 +4,16 @@ import { clsx } from 'clsx';
 import { apiUrl } from '../lib/api';
 import { AttributeTab } from '../components/callGodStats/CallGodAttributeTab';
 import { BossAnalysisTab, BossCommonSkillsTab, BossTalentsTab } from '../components/callGodStats/CallGodBossTabs';
+import { StageLimitsTab } from '../components/callGodStats/CallGodStageLimitsTab';
 import { StoneRewardsTab } from '../components/callGodStats/CallGodStoneRewardsTab';
-import type { BattlefieldConfig, BattlefieldResult, BossAnalysisEntry, BossCommonSkillAnalysis, BossTalentAnalysis, OutputDataFile, Props, StoneRewardPayload } from '../components/callGodStats/callGodStatsShared';
+import type { BattlefieldConfig, BattlefieldResult, BossAnalysisEntry, BossCommonSkillAnalysis, BossTalentAnalysis, OutputDataFile, Props, StageLimitPayload, StoneRewardPayload } from '../components/callGodStats/callGodStatsShared';
 
 export default function CallGodStats({ dataSources }: Props) {
   const location = useLocation();
   const navigate = useNavigate();
   const tabs = useMemo(() => [
     { key: 'stats', label: '神魔属性', path: '/call_god/stats' },
+    { key: 'limits', label: '关卡等级上限', path: '/call_god/limits' },
     { key: 'stones', label: '神/魔灵石获取详情', path: '/call_god/stones' },
     { key: 'boss', label: '魔王解析', path: '/call_god/boss' },
     { key: 'common_skills', label: '通用魔王技能', path: '/call_god/common_skills' },
@@ -29,6 +31,11 @@ export default function CallGodStats({ dataSources }: Props) {
 
   const stoneRewardPayload = useMemo(() => {
     const source = dataSources.call_god_stone_rewards as OutputDataFile<StoneRewardPayload> | undefined;
+    return source?.data || null;
+  }, [dataSources]);
+
+  const stageLimitPayload = useMemo(() => {
+    const source = dataSources.call_god_stage_limits as OutputDataFile<StageLimitPayload> | undefined;
     return source?.data || null;
   }, [dataSources]);
 
@@ -149,6 +156,8 @@ export default function CallGodStats({ dataSources }: Props) {
           setStarLevel={setStarLevel}
           setBossStage={setBossStage}
         />
+      ) : activeTab === 'limits' ? (
+        <StageLimitsTab payload={stageLimitPayload} />
       ) : activeTab === 'stones' ? (
         <StoneRewardsTab payload={stoneRewardPayload} />
       ) : activeTab === 'talents' ? (
