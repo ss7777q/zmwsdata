@@ -8,7 +8,7 @@ const u = require('../lib/utils');
 // ━━━ 宠物潜能 ━━━ petPotential.*.json ━━━━━━━━━━━━━━
 function extractPotential() {
   const raw = u.loadTable('petPotential');
-  // 24种潜能, 所有种类同级消耗完全相同
+  // 所有潜能种类同级消耗完全相同
   // 分离: 正常等级(1~23) vs 满级附加(level=null)
   const normalRecords = raw.filter(r => r.level !== null);
   const maxRecords = raw.filter(r => r.level === null);
@@ -27,25 +27,74 @@ function extractPotential() {
   }
   const levels = Object.values(byLevel).sort((a, b) => a.level - b.level);
 
-  // 满级附加记录 (level=null, 高属性值, 每种潜能7条)
+  const attributeLabels = {
+    atk: '攻击',
+    hp: '生命',
+    def: '防御',
+    healHp: '回血',
+    hitVal: '命中',
+    dodge: '闪避',
+    crit: '暴击',
+    tenacity: '韧性',
+    lucky: '幸运',
+    guardian: '守护',
+    break: '穿透',
+    protect: '减伤'
+  };
+
+  const potentialMap = new Map();
+  for (const r of normalRecords) {
+    if (!potentialMap.has(r.potentialId)) {
+      potentialMap.set(r.potentialId, {
+        potentialId: r.potentialId,
+        name: r.name,
+        type: r.type,
+        typeLabel: r.type === 1 ? '基础潜能' : '专属潜能',
+        icon: r.icon,
+        description: r.desc,
+        attributeKeys: [...(r.attribute || [])],
+        levels: []
+      });
+    }
+
+    potentialMap.get(r.potentialId).levels.push({
+      level: r.level,
+      levelLimit: r.levelLimit,
+      attributes: (r.attribute || []).map((key, index) => ({
+        key,
+        label: attributeLabels[key] || key,
+        value: r.attributeValue?.[index] ?? null
+      }))
+    });
+  }
+
+  const potentials = [...potentialMap.values()]
+    .map(potential => ({
+      ...potential,
+      levels: potential.levels.sort((a, b) => a.level - b.level)
+    }))
+    .sort((a, b) => a.type - b.type || a.potentialId - b.potentialId);
+
+  // 满级附加记录 (level=null, 配置未给出可展示的等级和等级门槛)
   const maxLevelSample = maxRecords.length > 0 ? {
     count: maxRecords.length,
     costPerRecord: u.parseCost(maxRecords[0].upgradeCost),
-    note: `每种潜能${maxRecords.length / 24}条满级附加记录`
+    note: `${potentialMap.size}种潜能共有${maxRecords.length}条未标注等级的附加记录`
   } : null;
 
   const potentialTypes = [...new Set(raw.map(r => r.potentialId))];
 
   u.saveOutput('pet_potential', {
     sharedCostByLevel: levels,
+    potentials,
     maxLevelBonus: maxLevelSample,
     totalPotentialTypes: potentialTypes.length,
-    note: '所有潜能种类同级消耗完全相同, 仅需展示1~23级消耗序列'
+    note: '所有潜能种类同级消耗完全相同；属性按潜能种类和等级分别展示'
   }, {
     system: '宠物 → 技能 → 潜能升级',
     source: 'petPotential.*.json',
     costType: '潜能残页·宠 upgradeCost:[[11302, count]]',
-    dedup: `24种潜能共享同一消耗序列, ${levels.length}个正常等级 + ${maxRecords.length}条满级附加`
+    dedup: `${potentialTypes.length}种潜能共享同一消耗序列, ${levels.length}个正常等级 + ${maxRecords.length}条未标注等级附加`
   });
 }
 

@@ -24,6 +24,7 @@ interface RideWikiVariant {
 interface RideWikiPayload {
   rideGroup: { key: string; name: string; note?: string };
   variants: RideWikiVariant[];
+  skillBaselines?: RideSkillBaselineEntry[];
 }
 
 interface RideSkillBaselineEntry extends SkillBaselineData {
@@ -31,10 +32,6 @@ interface RideSkillBaselineEntry extends SkillBaselineData {
   rideId: number | null;
   slot: string | null;
   skillId: number;
-}
-
-interface RideSkillBaselinePayload {
-  skills?: RideSkillBaselineEntry[];
 }
 
 interface RideMenuEntry {
@@ -88,18 +85,9 @@ function collectCardLevels(card: SkillCardData | undefined, levelSet: Set<number
 }
 
 export default function RideSkillWiki({ dataSources }: Props) {
-  const indexPayload = dataSources.ride_wiki_index?.data as RideWikiIndexPayload | undefined;
+  const indexPayload = dataSources['ride/wiki/index']?.data as RideWikiIndexPayload | undefined;
   const indexGroups = useMemo(() => Array.isArray(indexPayload?.groups) ? indexPayload.groups : [], [indexPayload]);
   const firstGroupKey = indexGroups[0]?.fileName ?? '';
-  const baselineBySkill = useMemo(() => {
-    const payload = dataSources.ride_skill_baseline?.data as RideSkillBaselinePayload | undefined;
-    const map = new Map<string, RideSkillBaselineEntry>();
-    for (const skill of payload?.skills || []) {
-      if (!skill.file || skill.rideId == null || !skill.slot || typeof skill.skillId !== 'number') continue;
-      map.set(`${skill.file}|${skill.rideId}|${skill.slot}|${skill.skillId}`, skill);
-    }
-    return map;
-  }, [dataSources]);
   const rideEntries = useMemo<RideMenuEntry[]>(() => {
     const entries: RideMenuEntry[] = [];
     for (const group of indexGroups) {
@@ -142,6 +130,15 @@ export default function RideSkillWiki({ dataSources }: Props) {
     return payload.variants.find((v) => v.ride.id === activeRideId) || payload.variants[0];
   }, [activeRideId, payload]);
 
+  const baselineBySkill = useMemo(() => {
+    const map = new Map<string, RideSkillBaselineEntry>();
+    for (const skill of payload?.skillBaselines || []) {
+      if (skill.rideId == null || !skill.slot || typeof skill.skillId !== 'number') continue;
+      map.set(`${skill.rideId}|${skill.slot}|${skill.skillId}`, skill);
+    }
+    return map;
+  }, [payload]);
+
   const availableLevels = useMemo(() => {
     const levelSet = new Set<number>();
     for (const slot of activeVariant?.slots || []) collectCardLevels(slot.base, levelSet);
@@ -159,9 +156,8 @@ export default function RideSkillWiki({ dataSources }: Props) {
 
   const cards = useMemo(() => {
     if (!activeVariant?.slots) return [];
-    const sourceFile = `${activeGroupKey}.json`;
     return activeVariant.slots.map((slot) => {
-      const baselineKey = `${sourceFile}|${activeVariant.ride.id}|${slot.slot}|${slot.base.skillId}`;
+      const baselineKey = `${activeVariant.ride.id}|${slot.slot}|${slot.base.skillId}`;
       const baseline = baselineBySkill.get(baselineKey) ?? null;
       return {
         card: { ...slot.base, skillBaseline: baseline },
@@ -169,7 +165,7 @@ export default function RideSkillWiki({ dataSources }: Props) {
         badge: slot.slotKind === 'sp' ? '无双' : slot.slotKind === 'passive' ? '被动' : slot.slotKind === 'attack' ? '普攻' : undefined,
       };
     });
-  }, [activeGroupKey, activeVariant, baselineBySkill]);
+  }, [activeVariant, baselineBySkill]);
 
   const switchRideEntry = (entry: RideMenuEntry) => {
     setActiveGroupKey(entry.groupKey);

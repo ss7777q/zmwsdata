@@ -24,6 +24,7 @@ interface PetWikiVariant {
 interface PetWikiPayload {
   petGroup: { key: string; name: string; note?: string };
   variants: PetWikiVariant[];
+  skillBaselines?: PetSkillBaselineEntry[];
 }
 
 interface PetSkillBaselineEntry extends SkillBaselineData {
@@ -31,10 +32,6 @@ interface PetSkillBaselineEntry extends SkillBaselineData {
   petId: number | null;
   slot: string | null;
   skillId: number;
-}
-
-interface PetSkillBaselinePayload {
-  skills?: PetSkillBaselineEntry[];
 }
 
 type PetGroupType = '神兽' | '灵兽' | '仙兽' | '圣兽';
@@ -102,18 +99,9 @@ function collectCardLevels(card: SkillCardData | undefined, levelSet: Set<number
 }
 
 export default function PetSkillWiki({ dataSources }: Props) {
-  const indexPayload = dataSources.pet_wiki_index?.data as PetWikiIndexPayload | undefined;
+  const indexPayload = dataSources['pet/wiki/index']?.data as PetWikiIndexPayload | undefined;
   const indexGroups = useMemo(() => Array.isArray(indexPayload?.groups) ? indexPayload.groups : [], [indexPayload]);
   const firstGroupKey = indexGroups[0]?.fileName ?? '';
-  const baselineBySkill = useMemo(() => {
-    const payload = dataSources.pet_skill_baseline?.data as PetSkillBaselinePayload | undefined;
-    const map = new Map<string, PetSkillBaselineEntry>();
-    for (const skill of payload?.skills || []) {
-      if (!skill.file || skill.petId == null || !skill.slot || typeof skill.skillId !== 'number') continue;
-      map.set(`${skill.file}|${skill.petId}|${skill.slot}|${skill.skillId}`, skill);
-    }
-    return map;
-  }, [dataSources]);
   const petEntriesByType = useMemo<Record<PetGroupType, PetMenuEntry[]>>(() => {
     const buckets: Record<PetGroupType, PetMenuEntry[]> = { 神兽: [], 灵兽: [], 仙兽: [], 圣兽: [] };
     for (const group of indexGroups) {
@@ -175,6 +163,15 @@ export default function PetSkillWiki({ dataSources }: Props) {
     return payload.variants.find((v) => v.pet.id === activePetId) || payload.variants[0];
   }, [activePetId, payload]);
 
+  const baselineBySkill = useMemo(() => {
+    const map = new Map<string, PetSkillBaselineEntry>();
+    for (const skill of payload?.skillBaselines || []) {
+      if (skill.petId == null || !skill.slot || typeof skill.skillId !== 'number') continue;
+      map.set(`${skill.petId}|${skill.slot}|${skill.skillId}`, skill);
+    }
+    return map;
+  }, [payload]);
+
   const availableLevels = useMemo(() => {
     const levelSet = new Set<number>();
     for (const slot of activeVariant?.slots || []) collectCardLevels(slot.base, levelSet);
@@ -192,9 +189,8 @@ export default function PetSkillWiki({ dataSources }: Props) {
 
   const cards = useMemo(() => {
     if (!activeVariant?.slots) return [];
-    const sourceFile = `${activeGroupKey}.json`;
     return activeVariant.slots.map((slot) => {
-      const baselineKey = `${sourceFile}|${activeVariant.pet.id}|${slot.slot}|${slot.base.skillId}`;
+      const baselineKey = `${activeVariant.pet.id}|${slot.slot}|${slot.base.skillId}`;
       const baseline = baselineBySkill.get(baselineKey) ?? null;
       return {
         card: { ...slot.base, skillBaseline: baseline },
@@ -202,7 +198,7 @@ export default function PetSkillWiki({ dataSources }: Props) {
         badge: slot.slotKind === 'sp' ? '无双' : slot.slotKind === 'passive' ? '被动' : slot.slotKind === 'attack' ? '普攻' : undefined,
       };
     });
-  }, [activeGroupKey, activeVariant, baselineBySkill]);
+  }, [activeVariant, baselineBySkill]);
 
   const switchType = (type: PetGroupType) => {
     setActiveType(type);
