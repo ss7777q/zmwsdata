@@ -11,6 +11,7 @@ frontend/public/data/
 !.dev.vars.example
 测试用baseurl与key.txt
 .wrangler/
+.playwright-mcp/
 
 *.log
 npm-debug.log*
@@ -26,6 +27,16 @@ file/battle-config/
 file/map-cache/
 temp/
 deploy/packages/
+
+# generated system-oriented data (rebuilt from tracked output/*.json)
+output/pet/
+output/ride/
+output/role/
+output/resource/
+output/rogue-item/
+output/boss/
+output/stage/
+output/system_data_manifest.json
 
 # data pipeline artifacts (synced from upstream client)
 dataApi/

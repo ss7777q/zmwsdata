@@ -11,6 +11,7 @@ const CALL_GOD_BATTLEFIELD_SOURCE_SCRIPT = path.join(ROOT, 'scripts', 'extract',
 const CALL_GOD_BATTLEFIELD_OUTPUT = path.join(OUTPUT_DIR, 'call_god_battlefield_source.json');
 const EXCLUDED_STATIC_DATA_FILES = new Set(['chat_qa.json']);
 const { DEFAULT_SETTINGS, loadAppSettings } = require('../server/app-config');
+const { buildSystemData, MANIFEST_NAME: SYSTEM_DATA_MANIFEST_NAME } = require('./build_system_data');
 
 function getConfiguredMaxLevel() {
   const settings = loadAppSettings();
@@ -153,21 +154,34 @@ if (!fs.existsSync(OUTPUT_DIR)) {
 }
 
 generateCallGodBattlefieldSource();
+buildSystemData();
 
 ensureDir(PUBLIC_DATA_DIR);
-for (const fileName of fs.readdirSync(PUBLIC_DATA_DIR).filter((name) => name.endsWith('.json'))) {
-  fs.rmSync(path.join(PUBLIC_DATA_DIR, fileName), { force: true });
+for (const entry of fs.readdirSync(PUBLIC_DATA_DIR)) {
+  fs.rmSync(path.join(PUBLIC_DATA_DIR, entry), { recursive: true, force: true });
 }
 
 const configuredMaxLevel = getConfiguredMaxLevel();
 
-const files = fs.readdirSync(OUTPUT_DIR)
-  .filter((name) => name.endsWith('.json') && !EXCLUDED_STATIC_DATA_FILES.has(name))
-  .sort((left, right) => left.localeCompare(right))
-  .map((fileName) => {
-    const sourcePath = path.join(OUTPUT_DIR, fileName);
-    const targetPath = path.join(PUBLIC_DATA_DIR, fileName);
-    const name = fileName.slice(0, -5);
+const systemManifest = readSystemDataManifest();
+const rootNames = fs.readdirSync(OUTPUT_DIR, { withFileTypes: true })
+  .filter((entry) => entry.isFile() && entry.name.endsWith('.json'))
+  .map((entry) => entry.name.slice(0, -5))
+  .filter((name) => name !== SYSTEM_DATA_MANIFEST_NAME && !EXCLUDED_STATIC_DATA_FILES.has(`${name}.json`));
+const sourceNames = [...new Set([...rootNames, ...(systemManifest.frontendFiles || [])])]
+  .sort((left, right) => left.localeCompare(right));
+
+function readSystemDataManifest() {
+  const filePath = path.join(OUTPUT_DIR, `${SYSTEM_DATA_MANIFEST_NAME}.json`);
+  if (!fs.existsSync(filePath)) return { frontendFiles: [] };
+  return JSON.parse(fs.readFileSync(filePath, 'utf8')).data || { frontendFiles: [] };
+}
+
+const files = sourceNames
+  .map((name) => {
+    const sourcePath = path.join(OUTPUT_DIR, ...name.split('/')) + '.json';
+    const targetPath = path.join(PUBLIC_DATA_DIR, ...name.split('/')) + '.json';
+    ensureDir(path.dirname(targetPath));
     const source = JSON.parse(fs.readFileSync(sourcePath, 'utf8'));
     const filtered = withAppliedFilter(name, source, configuredMaxLevel);
     fs.writeFileSync(targetPath, `${JSON.stringify(filtered)}\n`, 'utf8');

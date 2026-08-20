@@ -170,6 +170,9 @@ async function main() {
   console.log('[pipeline] extract resource summaries into output');
   const beforeExport = takeSnapshot(EXPORT_JSON_STAGE.watchedPaths, EXPORT_JSON_STAGE.fileExtensions);
   await runScript('scripts/extract_all.js');
+
+  console.log('[pipeline] build system-oriented small JSON files');
+  await runScript('scripts/build_system_data.js');
   const exportChanges = compareSnapshots(
     beforeExport,
     takeSnapshot(EXPORT_JSON_STAGE.watchedPaths, EXPORT_JSON_STAGE.fileExtensions),

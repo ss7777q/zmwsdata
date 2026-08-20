@@ -717,11 +717,12 @@ function parsePlayerHistoryQuery(searchParams) {
 }
 
 function normalizeName(rawName) {
-  const decoded = decodeURIComponent(rawName || '').split('\\').join('/');
-  const normalized = path.basename(decoded).replace(/.json$/i, '');
+  const decoded = decodeURIComponent(rawName || '').normalize('NFKC').split('\\').join('/');
+  const normalized = decoded.replace(/^\/+|\/+$/g, '').replace(/\.json$/i, '');
   if (!normalized) return null;
-  if (!/^[A-Za-z0-9_.-]+$/.test(normalized)) return null;
-  return normalized;
+  const segments = normalized.split('/');
+  if (segments.some((segment) => !segment || segment === '.' || segment === '..' || /[<>:"|?*\u0000-\u001f]/.test(segment))) return null;
+  return segments.join('/');
 }
 
 function resolveOutputPath(name) {
@@ -1109,14 +1110,18 @@ function applySystemSpecificFilter(name, content, maxLevel) {
   };
 }
 
-async function listOutputFiles() {
-  ensureDirSync(OUTPUT_DIR);
-  const entries = await fsp.readdir(OUTPUT_DIR, { withFileTypes: true });
+async function listOutputFiles(directory = OUTPUT_DIR, relativeParts = []) {
+  ensureDirSync(directory);
+  const entries = await fsp.readdir(directory, { withFileTypes: true });
   const files = [];
   for (const entry of entries) {
+    const fullPath = path.join(directory, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...await listOutputFiles(fullPath, [...relativeParts, entry.name]));
+      continue;
+    }
     if (!entry.isFile() || !entry.name.endsWith('.json')) continue;
-    const name = entry.name.slice(0, -5);
-    const fullPath = path.join(OUTPUT_DIR, entry.name);
+    const name = [...relativeParts, entry.name.slice(0, -5)].join('/');
     const stat = await fsp.stat(fullPath);
     files.push({ name, size: stat.size, mtimeMs: stat.mtimeMs });
   }
@@ -1163,7 +1168,7 @@ async function loadOutputFile(name) {
 }
 
 function shouldSkipMaxLevelFilter(name) {
-  return name === 'role_honor' || name === 'boss_stage_stats' || name.startsWith('boss_type_');
+  return name === 'role_honor' || name === 'boss_stage_stats' || name.startsWith('boss_type_') || name.startsWith('boss/');
 }
 
 function withAppliedFilter(name, content, maxLevel) {
@@ -1239,10 +1244,11 @@ async function tryServeFrontend(pathname, res) {
 }
 
 async function emitFileChange(fileName, eventType) {
-  if (!fileName || !fileName.endsWith('.json')) return;
+  const portableName = String(fileName || '').split('\\').join('/');
+  if (!portableName || !portableName.endsWith('.json')) return;
   qaCatalog.invalidate();
-  const name = fileName.slice(0, -5);
-  const fp = path.join(OUTPUT_DIR, fileName);
+  const name = portableName.slice(0, -5);
+  const fp = path.join(OUTPUT_DIR, ...portableName.split('/'));
   try {
     const stat = await fsp.stat(fp);
     broadcast('file-changed', { type: eventType, name, size: stat.size, mtimeMs: stat.mtimeMs });
@@ -1258,7 +1264,7 @@ async function emitFileChange(fileName, eventType) {
 function startOutputWatcher() {
   if (outputWatcher) return;
   ensureDirSync(OUTPUT_DIR);
-  outputWatcher = fs.watch(OUTPUT_DIR, { persistent: true }, (eventType, fileName) => {
+  outputWatcher = fs.watch(OUTPUT_DIR, { persistent: true, recursive: true }, (eventType, fileName) => {
     emitFileChange(fileName, eventType).catch((err) => {
       console.error('[data-api] failed to emit file change:', err.message);
     });
