@@ -135,16 +135,14 @@ assert.strictEqual(guLing.header.segments[0].per, 0.01, '仙山古灵表头段�
 assert.strictEqual(guLing.header.segments[0].maxHit, 1, '仙山古灵强攻应为1段');
 assert.strictEqual(guLingCommand.identicalToBase, false, '仙山古灵·令御增伤机制不同，应独立展示');
 assert.strictEqual(guLingRide.identicalToBase, false, '仙山古灵·乘御技能组和增伤机制不同，应独立展示');
-assert.deepStrictEqual(stoneSpirit.header.segments.map((segment) => segment.maxHit), [9, 1, 1, 1], '山岩之灵应按滚动9段+爪击3段展示');
-assert.strictEqual(stoneSpirit.header.segCount, 12, '山岩之灵段数应为12段');
-assert.strictEqual(stoneSpirit.header.totalPer, 5.601, '山岩之灵总系数应为滚动4.5+爪击1.101');
-assert.strictEqual(findLevel(stoneSpirit, 12).totalVal, 19155, '山岩之灵 Lv.12 总固伤应按滚动9段+爪击3段计算');
-assert.strictEqual(findLevel(stoneSpiritGangshi, 12).totalVal, 19155, '山岩之灵·刚石 Lv.12 总固伤应按滚动9段+爪击3段计算');
-assert.strictEqual(findLevel(stoneSpiritYunyan, 12).totalVal, 28733, '山岩之灵·云岩 Lv.12 总固伤应额外加入岩弹1段');
-assert.ok(mechanicValue(stoneSpirit, '耗蓝机制').includes('实际改按滚动蓝耗结算'), '山岩之灵说明应解释场上已有石灵时的召回蓝耗');
-assert.ok(mechanicValue(stoneSpirit, '驻场攻击方式').includes('普攻版不耗蓝、无固伤'), '山岩之灵说明应解释石灵驻场普攻版');
-assert.ok(mechanicValue(stoneSpiritGangshi, '刚石变化').includes('嘲讽'), '山岩之灵·刚石说明应解释嘲讽');
-assert.ok(mechanicValue(stoneSpiritYunyan, '云岩攻击方式').includes('巨石岩弹'), '山岩之灵·云岩说明应解释岩弹');
+assert.deepStrictEqual(stoneSpirit.header.segments.map((segment) => segment.maxHit), [9], '山岩之灵应按滚动9段展示');
+assert.strictEqual(stoneSpirit.header.segCount, 9, '山岩之灵段数应为9段');
+assert.strictEqual(stoneSpirit.header.totalPer, 4.5, '山岩之灵总系数应为滚动4.5');
+assert.strictEqual(findLevel(stoneSpirit, 12).totalVal, 8514, '山岩之灵 Lv.12 总固伤应按滚动9段计算');
+assert.strictEqual(findLevel(stoneSpiritGangshi, 12).totalVal, 8514, '山岩之灵·刚石 Lv.12 总固伤应按滚动9段计算');
+assert.strictEqual(findLevel(stoneSpiritYunyan, 12).totalVal, 8514, '山岩之灵·云岩 Lv.12 总固伤应按滚动9段计算');
+assert.ok(mechanicValue(stoneSpirit, '耗蓝机制').includes('改为召回滚动'), '山岩之灵说明应解释场上已有石灵时的召回蓝耗');
+assert.ok(mechanicValue(stoneSpirit, '总固伤口径').includes('本体伤害只统计召唤或召回时必定触发的滚动'), '山岩之灵说明应解释石灵伤害口径');
 
 for (const level of CHECK_LEVELS) {
   const commandRow = findLevel(commandShield, level);

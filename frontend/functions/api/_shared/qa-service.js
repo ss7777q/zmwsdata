@@ -90,8 +90,16 @@ const SPLIT_ROLE_ENTITY_ALIASES = [
 const PET_FILES = [
   ['白虎', 'pet_wiki_baihu'],
   ['猴王', 'pet_wiki_hou'],
+  ['天阳花仙', 'pet_wiki_huadiehubing'],
+  ['神霄花仙', 'pet_wiki_huadiehubing'],
+  ['正阳花', 'pet_wiki_huadiehubing'],
+  ['灵霄花', 'pet_wiki_huadiehubing'],
   ['花仙', 'pet_wiki_huadiehubing'],
+  ['玄蝶仙子', 'pet_wiki_huadiehubing'],
+  ['玄灵蝶', 'pet_wiki_huadiehubing'],
   ['玄蝶', 'pet_wiki_huadiehubing'],
+  ['圣冰天狐', 'pet_wiki_huadiehubing'],
+  ['千年冰狐', 'pet_wiki_huadiehubing'],
   ['冰狐', 'pet_wiki_huadiehubing'],
   ['光花', 'pet_wiki_huadiehubing'],
   ['老鼠', 'pet_wiki_laoshu'],
@@ -474,7 +482,7 @@ export async function handleQaRequest({ request, env }) {
 }
 
 async function parseRequest(request) {
-  const contentLength = Number(request.headers.get('Content-Length') || 0);
+  const contentLength = Number(request.headers?.get?.('Content-Length') || 0);
   if (contentLength > REQUEST_BODY_MAX_BYTES) {
     throw new QaError(413, 'EQA_REQUEST_TOO_LARGE', '问题请求过大');
   }
@@ -1293,6 +1301,38 @@ function isHealSkill(slot, base) {
   return /回血|治疗|恢复生命|回复生命/.test(haystack);
 }
 
+function buildPetSkillSlotDocument(file, petName, slot) {
+  const base = slot?.base;
+  if (!base?.name) return null;
+  const levels = Array.isArray(base.levels) ? base.levels : [];
+  const compactLevels = levels.map((level) => ({
+    level: level.level,
+    roleLevel: level.roleLevel,
+    segmentVals: level.segmentVals,
+    totalPer: level.totalPer,
+    totalVal: level.totalVal,
+    growthBuffs: level.growthBuffs,
+    metrics: level.metrics,
+  }));
+  const compact = {
+    pet: petName,
+    slot: slot.slot,
+    slotLabel: slot.slotLabel,
+    slotKind: slot.slotKind,
+    name: base.name,
+    desIntro: base.desIntro,
+    maxLevel: base.maxLevel,
+    header: base.header,
+    levels: compactLevels,
+  };
+  return {
+    id: `${file}:${petName}:${slot.slot}:${base.name}`,
+    title: `${petName} · ${base.name}（${slot.slotLabel || slot.slot}）`.trim(),
+    source: `${file}.json / ${petName}/${slot.slot || base.name}`,
+    text: JSON.stringify(compactValue(compact), null, 2),
+  };
+}
+
 function buildPetWikiDocuments(file, data) {
   const variants = Array.isArray(data?.variants) ? data.variants : [];
   const documents = [];
@@ -1311,6 +1351,9 @@ function buildPetWikiDocuments(file, data) {
       const tagText = tags.length > 0 ? `（${tags.join('·')}）` : '';
       const maxLine = petSkillMaxValueLine(base);
       skillLines.push(`- ${slot.slotLabel} ${skillName}${tagText}：冷却 ${cd ?? '未提供'} 秒${maxLine ? `；${maxLine}` : ''}`);
+
+      const slotDoc = buildPetSkillSlotDocument(file, petName, slot);
+      if (slotDoc) documents.push(slotDoc);
     }
     if (skillLines.length === 0) continue;
     const aliases = PET_SKILL_ALIASES[petName] || [];

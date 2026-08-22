@@ -30,7 +30,7 @@ assert.equal(starstoneIndex.entries.length, 66);
 assert.ok(starstoneIndex.entries.every((entry) => fs.existsSync(path.join(outputDir, `${entry.fileName}.json`))));
 
 const rogueIndex = require(path.join(outputDir, 'rogue-item', 'index.json')).data;
-assert.equal(rogueIndex.items.length, 203);
+assert.equal(rogueIndex.items.length, 204);
 assert.ok(fs.statSync(path.join(outputDir, 'rogue-item', 'index.json')).size < 250 * 1024);
 
 const marketIndex = require(path.join(outputDir, 'resource', 'acquisition', 'black-market', 'index.json')).data;
