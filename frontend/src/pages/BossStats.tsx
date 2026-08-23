@@ -87,7 +87,7 @@ export default function BossStats({ dataSources, searchQuery = '' }: Props) {
   const typeTabs = useMemo(() => {
     const indexTypes = Array.isArray(bossIndex?.types) ? bossIndex.types : [];
     const totalStageCount = bossIndex?.summary?.stageCount ?? sortedGroups.reduce((sum, group) => sum + group.stageCount, 0);
-    const totalBossCount = bossIndex?.summary?.bossCount ?? allBosses.length;
+    const totalBossCount = allBosses.length;
     const displayedBossCounts = new Map<string, number>();
     for (const boss of allBosses) {
       const group = groups.find((item) => String(item.type) === String(boss.type));

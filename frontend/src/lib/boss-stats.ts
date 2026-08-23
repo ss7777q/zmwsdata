@@ -222,6 +222,28 @@ function getPrimaryMapName(mapName?: string | string[]) {
   return mapName || '';
 }
 
+function getMainlineStageKey(mapName?: string | string[]) {
+  return getPrimaryMapName(mapName).split(/-Lv/i)[0];
+}
+
+// 主线地图的 -Lv 后缀表示同一关卡的等级变体；其他类型保留各自的关卡身份。
+function getMainlineBossKey(boss: FlattenedBoss) {
+  if (Number(boss.type) !== 1) {
+    return null;
+  }
+  const bossId = boss.bossId ?? boss.id;
+  const stageKey = getMainlineStageKey(boss.mapName);
+  if (bossId == null || bossId === '' || !stageKey) {
+    return null;
+  }
+  return [
+    String(boss.type),
+    stageKey,
+    String(bossId),
+    String(boss.displayPhase ?? ''),
+  ].join('|');
+}
+
 function extractNumericTokens(value: string) {
   const matches = value.match(/\d+/g);
   return matches ? matches.map((item) => Number(item)) : [];
@@ -447,5 +469,19 @@ export function flattenBossGroups(groups: BossTypeGroup[]) {
       }
     }
   }
-  return flatList.sort(compareBossDesc);
+
+  const seenMainlineBosses = new Set<string>();
+  const dedupedList = flatList.filter((boss) => {
+    const key = getMainlineBossKey(boss);
+    if (!key) {
+      return true;
+    }
+    if (seenMainlineBosses.has(key)) {
+      return false;
+    }
+    seenMainlineBosses.add(key);
+    return true;
+  });
+
+  return dedupedList.sort(compareBossDesc);
 }
