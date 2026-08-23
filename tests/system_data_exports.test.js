@@ -31,7 +31,9 @@ assert.ok(starstoneIndex.entries.every((entry) => fs.existsSync(path.join(output
 
 const rogueIndex = require(path.join(outputDir, 'rogue-item', 'index.json')).data;
 assert.equal(rogueIndex.items.length, 204);
-assert.ok(fs.statSync(path.join(outputDir, 'rogue-item', 'index.json')).size < 250 * 1024);
+assert.ok(rogueIndex.items.every((item) => Number.isInteger(item.stageCount) && item.stageCount >= 0));
+assert.ok(rogueIndex.items.every((item) => fs.existsSync(path.join(outputDir, `${item.fileName}.json`))));
+assert.ok(fs.statSync(path.join(outputDir, 'rogue-item', 'index.json')).size < 260 * 1024);
 
 const marketIndex = require(path.join(outputDir, 'resource', 'acquisition', 'black-market', 'index.json')).data;
 const marketStages = marketIndex.blackMarket.modes.flatMap((mode) => mode.stages);

@@ -307,6 +307,7 @@ function buildRogueItems(writer, replacedSources) {
       hasExplanation: item.hasExplanation,
       explanationLevel: item.explanationLevel,
       summary: item.summary,
+      stageCount: Array.isArray(item.stages) ? item.stages.length : 0,
       searchText: [item.displayName, item.name, item.typeLabel, item.summary, String(item.searchText || '').slice(0, 320)]
         .filter(Boolean)
         .join(' '),

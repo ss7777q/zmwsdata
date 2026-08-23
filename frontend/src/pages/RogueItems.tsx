@@ -60,6 +60,10 @@ type RogueItem = {
   fileName: string;
 };
 
+type RogueItemIndex = Pick<RogueItem, 'id' | 'groupId' | 'name' | 'displayName' | 'type' | 'typeLabel' | 'priority' | 'hasManualExplanation' | 'hasDerivedExplanation' | 'hasExplanation' | 'explanationLevel' | 'summary' | 'searchText' | 'fileName'> & {
+  stageCount: number;
+};
+
 type RogueTypeGroup = {
   type: string;
   label: string;
@@ -82,7 +86,7 @@ type RoguePayload = {
     note: string;
   };
   typeGroups?: RogueTypeGroup[];
-  items?: RogueItem[];
+  items?: RogueItemIndex[];
 };
 
 interface Props {
@@ -90,13 +94,74 @@ interface Props {
 }
 
 const ALL_TYPES = '全部类型';
+
+function asString(value: unknown, fallback = '') {
+  return typeof value === 'string' ? value : fallback;
+}
+
+function asStringArray(value: unknown) {
+  return Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === 'string') : [];
+}
+
+function asIndexItem(value: unknown): RogueItemIndex | null {
+  if (!value || typeof value !== 'object') return null;
+  const item = value as Partial<RogueItemIndex> & { stages?: unknown };
+  return {
+    id: asString(item.id),
+    groupId: asString(item.groupId),
+    name: asString(item.name),
+    displayName: asString(item.displayName),
+    type: typeof item.type === 'string' ? item.type : null,
+    typeLabel: asString(item.typeLabel),
+    priority: typeof item.priority === 'number' ? item.priority : 0,
+    hasManualExplanation: Boolean(item.hasManualExplanation),
+    hasDerivedExplanation: Boolean(item.hasDerivedExplanation),
+    hasExplanation: Boolean(item.hasExplanation),
+    explanationLevel: item.explanationLevel || 'unknown',
+    summary: asString(item.summary),
+    searchText: asString(item.searchText),
+    fileName: asString(item.fileName),
+    stageCount: typeof item.stageCount === 'number' && Number.isInteger(item.stageCount) && item.stageCount >= 0
+      ? item.stageCount
+      : Array.isArray(item.stages) ? item.stages.length : 0,
+  };
+}
+
+function asRogueItem(value: unknown): RogueItem | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+  const item = value as Partial<RogueItem>;
+  const stages = Array.isArray(item.stages)
+    ? item.stages.map((stage) => {
+      if (!stage || typeof stage !== 'object') return null;
+      const normalized = stage as Partial<RogueStage>;
+      return {
+        ...normalized,
+        attributes: Array.isArray(normalized.attributes) ? normalized.attributes : [],
+        guideMechanics: asStringArray(normalized.guideMechanics),
+        cooldownMechanics: asStringArray(normalized.cooldownMechanics),
+        damageMechanics: asStringArray(normalized.damageMechanics),
+        damageWarnings: asStringArray(normalized.damageWarnings),
+        configMechanics: asStringArray(normalized.configMechanics),
+      } as RogueStage;
+    }).filter((stage): stage is RogueStage => Boolean(stage))
+    : [];
+  return {
+    ...item,
+    mechanics: asStringArray(item.mechanics),
+    damageMechanics: asStringArray(item.damageMechanics),
+    derivedMechanics: asStringArray(item.derivedMechanics),
+    warnings: asStringArray(item.warnings),
+    stages,
+  } as RogueItem;
+}
+
 function asPayload(value: unknown): RoguePayload {
   if (!value || typeof value !== 'object') return {};
   const payload = value as RoguePayload;
   return {
     summary: payload.summary,
     typeGroups: Array.isArray(payload.typeGroups) ? payload.typeGroups : [],
-    items: Array.isArray(payload.items) ? payload.items : [],
+    items: Array.isArray(payload.items) ? payload.items.map(asIndexItem).filter((item): item is RogueItemIndex => Boolean(item)) : [],
   };
 }
 
@@ -264,7 +329,7 @@ export default function RogueItems({ dataSources }: Props) {
   const activeIndexItem = filteredItems.find((item) => item.id === selectedId) || filteredItems[0] || null;
   const detailResult = useDataFiles(activeIndexItem?.fileName ? [activeIndexItem.fileName] : [], Boolean(activeIndexItem?.fileName));
   const activeItem = activeIndexItem?.fileName
-    ? detailResult.dataSources[activeIndexItem.fileName]?.data as RogueItem | undefined
+    ? asRogueItem(detailResult.dataSources[activeIndexItem.fileName]?.data)
     : undefined;
   const activeDamageMechanics = activeItem?.damageMechanics || [];
   const visibleDerivedMechanics = activeItem
@@ -308,13 +373,13 @@ export default function RogueItems({ dataSources }: Props) {
                   >
                     <div className="flex items-center justify-between gap-3 text-xs text-textSub">
                       <span>{item.typeLabel}</span>
-                      <span>{item.stages.length} 阶段</span>
+                      <span>{item.stageCount} 阶段</span>
                     </div>
                     <div className="mt-2 flex items-center gap-2">
                       {item.hasExplanation ? <CheckCircle2 className={clsx('h-4 w-4 shrink-0', item.hasManualExplanation ? 'text-emerald-500' : 'text-primary')} /> : <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />}
                       <span className="text-sm font-semibold leading-6 text-textMain">{item.displayName || item.name}</span>
                     </div>
-                    <div className="mt-2 line-clamp-2 text-xs leading-5 text-textSub">{item.summary || item.derivedSummary || item.warnings[0] || '阶段已聚合，机制说明待补充。'}</div>
+                    <div className="mt-2 line-clamp-2 text-xs leading-5 text-textSub">{item.summary || '阶段已聚合，机制说明待补充。'}</div>
                   </button>
                 );
               })}
