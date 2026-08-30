@@ -104,14 +104,44 @@ function parseCost(cost) {
 /** 写出提取结果到 output/<name>.json */
 function saveOutput(name, data, meta = {}) {
   if (!fs.existsSync(OUTPUT_DIR)) fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+  const fp = path.join(OUTPUT_DIR, name + '.json');
+  const extractedAt = new Date().toISOString();
   const out = {
-    _meta: { name, extractedAt: new Date().toISOString(), ...meta },
+    _meta: { name, extractedAt, ...meta },
     data
   };
-  const fp = path.join(OUTPUT_DIR, name + '.json');
-  fs.writeFileSync(fp, JSON.stringify(out), 'utf-8');
+
+  if (!writeJsonIfChanged(fp, out)) {
+    const cnt = Array.isArray(data) ? data.length + '条' : Object.keys(data).length + '组';
+    console.log(`  ⏭️ ${name}.json unchanged → ${cnt}`);
+    return;
+  }
   const cnt = Array.isArray(data) ? data.length + '条' : Object.keys(data).length + '组';
   console.log(`  ✅ ${name}.json → ${cnt}`);
+}
+
+function writeJsonIfChanged(filePath, value) {
+  const comparable = node => {
+    if (!node || typeof node !== 'object') return node;
+    if (Array.isArray(node)) return node.map(comparable);
+    return Object.fromEntries(
+      Object.entries(node)
+        .filter(([key]) => key !== 'extractedAt' && key !== 'generatedAt')
+        .map(([key, entry]) => [key, comparable(entry)])
+    );
+  };
+
+  if (fs.existsSync(filePath)) {
+    try {
+      const existing = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      if (JSON.stringify(comparable(existing)) === JSON.stringify(comparable(value))) return false;
+    } catch {
+      // Rewrite malformed or unreadable output below.
+    }
+  }
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, JSON.stringify(value), 'utf8');
+  return true;
 }
 
 // ─── 去重辅助 ────────────────────────────────────────
@@ -145,5 +175,5 @@ module.exports = {
   ROOT, DATA_DIR, OUTPUT_DIR,
   findTableFile, loadTable, isInactiveDataApiRow,
   getItems, itemName, itemInfo,
-  parseCost, saveOutput, dedupByLevelTier
+  parseCost, saveOutput, writeJsonIfChanged, dedupByLevelTier
 };
