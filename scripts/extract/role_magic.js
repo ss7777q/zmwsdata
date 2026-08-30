@@ -803,22 +803,13 @@ function extractSoul() {
 function extractLuck() {
   const raw = u.loadTable('magicWeapon');
   const soulRows = u.loadTable('magicWeaponSoulLv');
-  const soulGroupIdByName = new Map();
-
-  for (const row of soulRows) {
-    if (!row.name) continue;
-    if (!soulGroupIdByName.has(row.name)) {
-      soulGroupIdByName.set(row.name, row.groupId);
-    } else if (soulGroupIdByName.get(row.name) !== row.groupId) {
-      throw new Error(`Duplicate magic soul groupId for ${row.name}`);
-    }
-  }
+  const soulGroupIds = new Set(soulRows.map(row => row.groupId));
 
   const magic = raw.map(r => ({
     id: r.id,
     name: r.name,
     phases: r.phases, // 几阶法宝
-    soulGroupId: soulGroupIdByName.get(r.name) || null,
+    soulGroupId: r.phases !== 2 && !r.closeSoul && soulGroupIds.has(r.groupId) ? r.groupId : null,
     baptizeLuck: u.parseCost(r.baptizeLuck),           // 普通强运洗练消耗
     blessingCostLuck: u.parseCost(r.blessingCostLuck), // 祝福洗练消耗(必出紫以上等)
     baptizeGrowLuck: u.parseCost(r.baptizeGrowLuck)    // 强运培养消耗

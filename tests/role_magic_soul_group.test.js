@@ -1,4 +1,4 @@
-﻿const assert = require('assert');
+const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 
@@ -10,10 +10,13 @@ function readOutput(fileName) {
 const magicLuck = readOutput('role_magic_luck.json');
 
 const expectations = [
+  { name: '救世圣莲', soulGroupId: 1 },
+  { name: '仙鞘虫玉', soulGroupId: 14 },
   { name: '罗悲净瓶', soulGroupId: 19 },
   { name: '浮行如意', soulGroupId: 20 },
   { name: '多智石莲', soulGroupId: 21 },
   { name: '风廉羽扇', soulGroupId: 22 },
+  { name: '震雷天锤', soulGroupId: null },
 ];
 
 for (const expected of expectations) {
