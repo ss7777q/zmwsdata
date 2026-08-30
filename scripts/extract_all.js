@@ -75,6 +75,7 @@ const MODULES = [
   { key: 'pet_skill_baseline', file: 'pet_skill_baseline.js', label: '宠物技能 Wiki → 基准值 X' },
   { key: 'kunlun',    file: 'kunlun.js',         label: '昆仑解析' },
   { key: 'beast',     file: 'beast_stats.js',    label: '万兽统计' },
+  { key: 'pet_champion', file: 'pet_champion_stage_stats.js', label: '宠物冠军赛 → 赛程阶段统计' },
   { key: 'cold_knowledge', file: 'cold_knowledge.js', label: '冷知识机制文章' },
 ];
 

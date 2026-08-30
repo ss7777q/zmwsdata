@@ -288,6 +288,54 @@ export interface BeastAnomaliesResponse {
   rows: BeastDetailRow[];
 }
 
+export interface PetStageData {
+  stageKey: string;
+  stageName: string;
+  totalTeams: number;
+  appearances: number;
+  pickRate: number;
+  wins: number;
+  winRate: number;
+}
+
+export interface PetStageTrendPoint {
+  stageKey: string;
+  stageName: string;
+  pickRate: number;
+  winRate: number;
+  appearances: number;
+  wins: number;
+}
+
+export interface PetStageStatsItem {
+  petId: number;
+  petName: string;
+  totalMatches: number;
+  totalWins: number;
+  overallWinRate: number;
+  championCount: number;
+  championConversionRate: number;
+  stages: Record<string, PetStageData>;
+  trend: PetStageTrendPoint[];
+}
+
+export interface SeasonStageStats {
+  seasonId: number | 'all';
+  seasonName: string;
+  serverCount: number;
+  serverList?: number[];
+  totalTeamsByStage: Record<string, number>;
+  petCatalog: PetStageStatsItem[];
+  topPetsDefault: number[];
+}
+
+export interface PetChampionStageStatsResponse {
+  seasons: Record<string, SeasonStageStats>;
+  seasonList: number[];
+  stageList: Array<{ key: string; name: string }>;
+  extractedTime: string;
+}
+
 export async function searchPlayerNames(params: PlayerNameSearchParams, signal?: AbortSignal) {
   const searchParams = new URLSearchParams({
     keyword: params.keyword,

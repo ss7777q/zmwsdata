@@ -51,7 +51,7 @@ export function matchesSystemFilter(name: string, systemFilter?: string) {
   if (systemFilter === 'resist') return name === 'exp';
   if (systemFilter === 'ride') return name.startsWith('ride');
   if (systemFilter === 'pet') return name.startsWith('pet_');
-  if (systemFilter === 'beast_stats') return name.startsWith('beast_');
+  if (systemFilter === 'beast_stats') return name.startsWith('beast_') || name.startsWith('pet_champion');
   if (systemFilter === 'role_cultivate') {
     return ['role_heart', 'role_meridians', 'role_danqi', 'role_danyuan', 'role_danyuan_effect', 'role_danyuan_effect_index', 'role_xianpo'].includes(name) || name.startsWith('role_danyuan_effect_family_');
   }

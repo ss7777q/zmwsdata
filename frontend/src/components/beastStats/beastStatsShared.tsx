@@ -1,6 +1,6 @@
-import type { BeastDetailResponse, BeastLineupAnalysisResponse, BeastLineupCatalogItem, BeastLineupDataset, BeastPlayerAnalysisResponse } from '../../lib/api';
+import type { BeastDetailResponse, BeastLineupAnalysisResponse, BeastLineupCatalogItem, BeastLineupDataset, BeastPlayerAnalysisResponse, PetChampionStageStatsResponse } from '../../lib/api';
 
-export type BeastTab = 'detail' | 'lineup' | 'players';
+export type BeastTab = 'stages' | 'detail' | 'lineup' | 'players';
 export type DetailNameMode = 'species_then_winner' | 'nickname_then_current';
 export type DetailAnomalyFilter = 'all' | 'normal' | 'anomaly';
 export type DatasetMode = 'cleaned' | 'raw';
@@ -13,6 +13,7 @@ export const CHART_WIDTH_PER_SEASON = 44;
 export const FIXED_CHART_HEIGHT = 360;
 
 export interface BeastStatsProps {
+  stageSource?: PetChampionStageStatsResponse;
   detailSource?: BeastDetailResponse;
   lineupSource?: BeastLineupAnalysisResponse;
   playerSource?: BeastPlayerAnalysisResponse;
