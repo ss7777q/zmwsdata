@@ -372,6 +372,8 @@ function extract() {
   const rides = [...ctx.rideById.values()]
     .filter(hasSkills)
     .filter((ride) => !coveredIdGroups.has(ride.idGroup ?? ride.id))
+    .filter((ride) => !(Array.isArray(ride.megaEvolutionId) && ride.megaEvolutionId.length > 0))
+    .filter((ride) => !ride.name?.includes("(废弃)"))
     .sort((a, b) => (a.idGroup ?? a.id) - (b.idGroup ?? b.id) || a.id - b.id);
 
   const variants = rides.map((ride) => {

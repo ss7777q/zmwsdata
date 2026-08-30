@@ -16,7 +16,7 @@ const FORCE = process.argv.includes("--force");
 const BATTLE_FRAMES_PER_SECOND = 30;
 const GUIDE_PATH = "D:/zmws/保存网页资源/4399_Threads_Download/【结弦】造梦无双坐骑数值汇总_64056651/content.md";
 
-const RIDE_IDS = [201601, 201602];
+const RIDE_IDS = [201602];
 const JINMAOHOU_SKILL = {
   FIRE_BURST: 20628010101,
   BURN_RING: 20628010201,

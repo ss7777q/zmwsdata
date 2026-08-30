@@ -17,7 +17,7 @@ const FORCE = process.argv.includes("--force");
 
 const GUIDE_PATH = "D:/zmws/保存网页资源/4399_Threads_Download/【结弦】青鬃狮王详解：数值+机制+养成玩法分析_64295072/content.md";
 
-const RIDE_IDS = [201801, 201802];
+const RIDE_IDS = [201802];
 const QINGSHI_SKILL = {
   ROAR: 20632010101,
   POUNCE: 20632010201,

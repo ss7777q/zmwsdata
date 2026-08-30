@@ -17,7 +17,7 @@ const BATTLE_FRAMES_PER_SECOND = 30;
 const GUIDE_PATH = "D:/zmws/保存网页资源/4399_Threads_Download/【结弦】造梦无双坐骑数值汇总_64056651/content.md";
 const GUIDE_IMAGE = "D:/zmws/保存网页资源/4399_Threads_Download/【结弦】造梦无双坐骑数值汇总_64056651/images/11.png";
 
-const RIDE_IDS = [201031, 201034, 201041, 201044];
+const RIDE_IDS = [201034, 201044];
 
 const RIDE_SKILL = {
   FIRE_ATTACK_1: 20606010101,

@@ -17,7 +17,7 @@ const FORCE = process.argv.includes("--force");
 const BATTLE_FRAMES_PER_SECOND = 30;
 const GUIDE_PATH = "D:/zmws/保存网页资源/4399_Threads_Download/【结弦】造梦无双坐骑数值汇总_64056651/content.md";
 
-const RIDE_IDS = [201201, 201202, 201211, 201212];
+const RIDE_IDS = [201202, 201212];
 const FENGHUANG_SKILL = {
   FIRE_FEATHERS: 20613010101,
   FIRE_CONE: 20613010201,

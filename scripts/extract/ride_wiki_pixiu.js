@@ -16,7 +16,7 @@ const FORCE = process.argv.includes("--force");
 
 const GUIDE_PATH = "D:/zmws/保存网页资源/4399_Threads_Download/【结弦】谛听与貔貅~蟠桃坐骑数值侧百科_64120240/content.md";
 
-const RIDE_IDS = [201701, 201702, 201703, 201704];
+const RIDE_IDS = [201702, 201704];
 const SLOT_DEFS = [
   { key: "skillActive", labelPrefix: "技能", kind: "active" },
   { key: "skillSp", labelPrefix: "无双", kind: "sp" },

@@ -18,7 +18,7 @@ const FORCE = process.argv.includes("--force");
 const BATTLE_FRAMES_PER_SECOND = 30;
 const GUIDE_PATH = "D:/zmws/保存网页资源/4399_Threads_Download/【结弦】造梦无双坐骑数值汇总_64056651/content.md";
 
-const RIDE_IDS = [201071, 201072, 201076];
+const RIDE_IDS = [201072, 201076];
 const NIANSHOU_SKILL = {
   ANCIENT_FREEZE: 20610010101,
   ANCIENT_HORN: 20610010201,
