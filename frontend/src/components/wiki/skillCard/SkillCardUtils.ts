@@ -48,33 +48,53 @@ export function buffValueText(v: BuffValue | null) {
 }
 
 export function inferGrowthBuffValueLabel(buff: BuffInfo) {
-  const text = buff.displayText || cleanBuffName(buff.name);
+  const name = cleanBuffName(buff.name || '');
+  if (/固伤/.test(name)) return '固伤';
+  if (/护盾|抵挡/.test(name)) return '护盾值';
+  if (/恢复.*生命|回血|回复.*生命/.test(name)) return /每秒/.test(name) ? '每秒回血' : '回血值';
+  if (/减伤/.test(name)) return /降低|扣减|弱化/.test(name) ? '减伤降低' : '减伤值';
+  if (/穿透/.test(name) || /金曦渡芒/.test(name)) return '穿透提升';
+  if (/攻击/.test(name) || /金盘送暖/.test(name)) return /降低|下降|弱化/.test(name) ? '攻击降低' : '攻击提升';
+  if (/韧性/.test(name)) return /降低|扣减|弱化/.test(name) ? '韧性降低' : '韧性值';
+  if (/防御/.test(name)) return /降低|扣减|弱化/.test(name) ? '防御降低' : '防御值';
+  if (/守护/.test(name)) return /降低|扣减|弱化/.test(name) ? '守护降低' : '守护值';
+  if (/闪避/.test(name)) return /降低|扣减|弱化/.test(name) ? '闪避降低' : '闪避值';
+  if (/命中/.test(name)) return /降低|扣减|弱化/.test(name) ? '命中降低' : '命中值';
+  if (/幸运/.test(name)) return /降低|扣减|弱化/.test(name) ? '幸运降低' : '幸运值';
+  if (/暴击/.test(name)) return /降低|扣减|弱化/.test(name) ? '暴击降低' : '暴击值';
+  if (/失明|致盲/.test(name)) return '命中值';
+  if (/伤害|灼烧|中毒|毒伤|真伤/.test(name)) return '伤害值';
+
+  const text = (buff.displayText || '').split(/[；。]/)[0].replace(/^(?:命中附加|命中后|受击触发|受击后|释放附加|释放后|造成伤害时|攻击时|普攻时)/, '');
   if (/固伤/.test(text)) return '固伤';
   if (/护盾|抵挡/.test(text)) return '护盾值';
   if (/恢复.*生命|回血|回复.*生命/.test(text)) return /每秒/.test(text) ? '每秒回血' : '回血值';
-  if (/减伤/.test(text)) return /降低|扣减/.test(text) ? '减伤降低' : '减伤值';
-  if (/防御/.test(text)) return /降低|扣减/.test(text) ? '防御降低' : '防御值';
-  if (/守护/.test(text)) return '守护值';
-  if (/韧性/.test(text)) return '韧性值';
-  if (/闪避/.test(text)) return '闪避值';
-  if (/命中/.test(text)) return '命中值';
-  if (/幸运/.test(text)) return '幸运值';
-  if (/暴击/.test(text)) return '暴击值';
-  if (/穿透/.test(text) || /金曦渡芒/.test(buff.name)) return '穿透提升';
-  if (/攻击/.test(text) || /金盘送暖/.test(buff.name)) return /降低|下降|弱化/.test(text) ? '攻击降低' : '攻击提升';
-  if (/伤害|灼烧|中毒|毒伤|真伤|固伤/.test(text)) return '伤害值';
-  return cleanBuffName(buff.name);
+  if (/减伤/.test(text)) return /降低|扣减|弱化/.test(text) ? '减伤降低' : '减伤值';
+  if (/穿透/.test(text)) return '穿透提升';
+  if (/攻击/.test(text)) return /降低|下降|弱化/.test(text) ? '攻击降低' : '攻击提升';
+  if (/韧性/.test(text)) return /降低|扣减|弱化/.test(text) ? '韧性降低' : '韧性值';
+  if (/防御/.test(text)) return /降低|扣减|弱化/.test(text) ? '防御降低' : '防御值';
+  if (/守护/.test(text)) return /降低|扣减|弱化/.test(text) ? '守护降低' : '守护值';
+  if (/闪避/.test(text)) return /降低|扣减|弱化/.test(text) ? '闪避降低' : '闪避值';
+  if (/命中/.test(text)) return /降低|扣减|弱化/.test(text) ? '命中降低' : '命中值';
+  if (/幸运/.test(text)) return /降低|扣减|弱化/.test(text) ? '幸运降低' : '幸运值';
+  if (/暴击/.test(text)) return /降低|扣减|弱化/.test(text) ? '暴击降低' : '暴击值';
+  if (/失明|致盲/.test(text)) return '命中值';
+  if (/伤害|灼烧|中毒|毒伤|真伤/.test(text)) return '伤害值';
+
+  return cleanBuffName(buff.name) || '数值';
 }
 
 function growthBuffStatText(group: Pick<GrowthBuffGroup, 'effectName' | 'valueLabel' | 'template' | 'sample'>) {
-  return [group.effectName, group.valueLabel, group.template, group.sample.displayText, group.sample.name]
+  const sampleCleanText = (group.sample.displayText || '').split(/[；。]/)[0].replace(/^(?:命中附加|命中后|受击触发|受击后|释放附加|释放后|造成伤害时|攻击时|普攻时)/, '');
+  return [group.effectName, group.valueLabel, sampleCleanText, cleanBuffName(group.sample.name)]
     .filter((part): part is string => Boolean(part))
     .join(' ');
 }
 
 export function growthBuffMetricLabelCandidates(group: Pick<GrowthBuffGroup, 'effectName' | 'valueLabel' | 'template' | 'sample'>) {
   const text = growthBuffStatText(group);
-  const baseName = group.effectName.replace(/(强化|弱化|等级\d+.*|状态)/g, '');
+  const baseName = group.effectName.replace(/(强化|弱化|降低|提升|增加|减少|等级\d+.*|状态)/g, '');
   const candidates = [baseName + '率', group.valueLabel.replace(/值(?:\(.+\))?$/, '率'), group.effectName + '率'];
   if (/闪避/.test(text)) candidates.push('闪避率');
   if (/命中/.test(text)) candidates.push('命中率');
@@ -86,6 +106,7 @@ export function growthBuffMetricLabelCandidates(group: Pick<GrowthBuffGroup, 'ef
 }
 
 export function growthBuffMetricMeaningLabel(group: Pick<GrowthBuffGroup, 'effectName' | 'valueLabel' | 'template' | 'sample'>, metricLabel?: string | null) {
+  if (metricLabel) return metricLabel;
   const text = growthBuffStatText(group);
   if (/闪避/.test(text)) return '闪避率';
   if (/命中/.test(text)) return '命中率';
@@ -93,7 +114,7 @@ export function growthBuffMetricMeaningLabel(group: Pick<GrowthBuffGroup, 'effec
   if (/守护/.test(text)) return '暴击免伤率';
   if (/暴击/.test(text)) return '暴击率';
   if (/韧性/.test(text)) return '负暴击率';
-  return metricLabel || null;
+  return null;
 }
 
 export function fmtPercent(n: number | null | undefined) {
