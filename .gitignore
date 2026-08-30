@@ -45,3 +45,4 @@ dataApi.backup/
 dataApi*.zip
 data/runtime/
 data/pet-arena-history-raw/*
+data/pet-champion-rank3/
