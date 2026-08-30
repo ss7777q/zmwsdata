@@ -5,6 +5,7 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const OUTPUT_DIR = path.join(ROOT, 'output');
+const { writeJsonIfChanged } = require('./lib/utils');
 const MANIFEST_NAME = 'system_data_manifest';
 const GENERATED_DIRS = ['pet', 'ride', 'role', 'resource', 'rogue-item', 'boss', 'stage'];
 
@@ -23,10 +24,24 @@ function assertManagedPath(target) {
   return resolved;
 }
 
-function resetGeneratedDirectories() {
+function cleanupGeneratedDirectories(expectedFiles) {
+  const expected = new Set(expectedFiles);
   for (const name of GENERATED_DIRS) {
     const directory = assertManagedPath(path.join(OUTPUT_DIR, name));
-    fs.rmSync(directory, { recursive: true, force: true });
+    if (!fs.existsSync(directory)) continue;
+    const walk = current => {
+      for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+        const fullPath = path.join(current, entry.name);
+        if (entry.isDirectory()) {
+          walk(fullPath);
+          if (fs.readdirSync(fullPath).length === 0) fs.rmdirSync(fullPath);
+        } else if (entry.isFile() && entry.name.endsWith('.json')) {
+          const relative = path.relative(OUTPUT_DIR, fullPath).split(path.sep).join('/');
+          if (!expected.has(relative)) fs.rmSync(fullPath);
+        }
+      }
+    };
+    walk(directory);
   }
 }
 
@@ -79,7 +94,7 @@ function createWriter(generatedAt) {
         },
         data,
       };
-      fs.writeFileSync(filePath, JSON.stringify(payload), 'utf8');
+      writeJsonIfChanged(filePath, payload);
       const stat = fs.statSync(filePath);
       files.push({
         name: normalizedName,
@@ -475,7 +490,6 @@ function buildSystemData({ outputDir = OUTPUT_DIR } = {}) {
     throw new Error('Custom outputDir is not supported by the system-data builder');
   }
   if (!fs.existsSync(OUTPUT_DIR)) throw new Error(`Missing output directory: ${OUTPUT_DIR}`);
-  resetGeneratedDirectories();
   const generatedAt = new Date().toISOString();
   const writer = createWriter(generatedAt);
   const replacedSources = new Set();
@@ -491,6 +505,8 @@ function buildSystemData({ outputDir = OUTPUT_DIR } = {}) {
   buildBosses(writer, replacedSources);
   buildStageDrops(writer, replacedSources);
 
+  cleanupGeneratedDirectories(writer.files.map(file => file.path));
+
   writer.files.sort((left, right) => left.name.localeCompare(right.name));
   const manifest = {
     version: 1,
@@ -503,10 +519,10 @@ function buildSystemData({ outputDir = OUTPUT_DIR } = {}) {
     files: writer.files,
   };
   const manifestPath = path.join(OUTPUT_DIR, `${MANIFEST_NAME}.json`);
-  fs.writeFileSync(manifestPath, JSON.stringify({
+  writeJsonIfChanged(manifestPath, {
     _meta: { name: MANIFEST_NAME, extractedAt: generatedAt, system: 'system-data' },
     data: manifest,
-  }), 'utf8');
+  });
   return { manifestPath, fileCount: writer.files.length, replacedSourceCount: replacedSources.size };
 }
 

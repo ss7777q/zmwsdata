@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const fs = require('fs');
 const path = require('path');
+const { writeJsonIfChanged } = require('../lib/utils');
 const { createBattlefieldService } = require('../../server/battlefield-service');
 
 const ROOT = path.resolve(__dirname, '../..');
@@ -60,5 +61,11 @@ const payload = {
 };
 
 fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true });
-fs.writeFileSync(OUTPUT_PATH, `${JSON.stringify(payload)}\n`, 'utf8');
+writeJsonIfChanged(OUTPUT_PATH, payload);
 console.log(`[call-god-battlefield-source] wrote ${OUTPUT_PATH}`);
+
+const CF_SOURCE_PATH = path.join(ROOT, 'frontend', 'functions', 'api', '_shared', 'call-god-battlefield-source.js');
+if (fs.existsSync(path.dirname(CF_SOURCE_PATH))) {
+  fs.writeFileSync(CF_SOURCE_PATH, `export default ${JSON.stringify(payload)};\n`, 'utf8');
+  console.log(`[call-god-battlefield-source] synced ${CF_SOURCE_PATH}`);
+}
