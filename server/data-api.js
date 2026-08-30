@@ -10,6 +10,7 @@ const { DatabaseSync } = require('node:sqlite');
 const { DEFAULT_SETTINGS, loadAppSettings, persistAppSettings } = require('./app-config');
 const { createBattlefieldService } = require('./battlefield-service');
 const { createQaCatalog } = require('./qa-catalog');
+const { createBossSearchService } = require('./boss-search-service');
 
 const ROOT = path.resolve(__dirname, '..');
 const OUTPUT_DIR = path.join(ROOT, 'output');
@@ -68,6 +69,7 @@ const feedbackRateWindowByIp = new Map();
 const visitorRegisterRateWindowByIp = new Map();
 let visitorStatsDb = null;
 const qaCatalog = createQaCatalog({ outputDir: OUTPUT_DIR, dbPath: QA_CATALOG_DB_PATH });
+const bossSearchService = createBossSearchService({ outputDir: OUTPUT_DIR });
 
 function createInitialSettings() {
   return JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
@@ -80,6 +82,10 @@ function getServerHost() {
 }
 
 function getServerPort() {
+  if (process.env.PORT) {
+    const envPort = Number(process.env.PORT);
+    if (Number.isInteger(envPort) && envPort > 0) return envPort;
+  }
   const value = Number(appSettings.server?.port);
   return Number.isInteger(value) && value > 0 ? value : DEFAULT_SETTINGS.server.port;
 }
@@ -1247,6 +1253,9 @@ async function emitFileChange(fileName, eventType) {
   const portableName = String(fileName || '').split('\\').join('/');
   if (!portableName || !portableName.endsWith('.json')) return;
   qaCatalog.invalidate();
+  if (portableName.startsWith('boss_')) {
+    bossSearchService.reload();
+  }
   const name = portableName.slice(0, -5);
   const fp = path.join(OUTPUT_DIR, ...portableName.split('/'));
   try {
@@ -1678,6 +1687,62 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       json(res, 500, { error: '保存反馈失败: ' + (err.message || String(err)) });
+    }
+    return;
+  }
+
+  if ((req.method === 'GET' || req.method === 'POST') && (pathname === '/api/boss/search' || pathname === '/api/getMonster')) {
+    try {
+      let keywords = '';
+      let limit = 50;
+      let stageType = null;
+      let includeMobs = true;
+
+      if (req.method === 'GET') {
+        keywords = parsedUrl.searchParams.get('keywords') || parsedUrl.searchParams.get('keyword') || parsedUrl.searchParams.get('q') || '';
+        if (parsedUrl.searchParams.has('limit')) {
+          limit = Number(parsedUrl.searchParams.get('limit')) || 50;
+        }
+        if (parsedUrl.searchParams.has('type') || parsedUrl.searchParams.has('stageType')) {
+          stageType = parsedUrl.searchParams.get('type') || parsedUrl.searchParams.get('stageType');
+        }
+        if (parsedUrl.searchParams.has('includeMobs')) {
+          includeMobs = parsedUrl.searchParams.get('includeMobs') !== 'false' && parsedUrl.searchParams.get('includeMobs') !== '0';
+        }
+      } else {
+        const body = await readRequestBody(req);
+        keywords = body.keywords || body.keyword || body.q || '';
+        if (body.limit !== undefined) {
+          limit = Number(body.limit) || 50;
+        }
+        if (body.type !== undefined || body.stageType !== undefined) {
+          stageType = body.type !== undefined ? body.type : body.stageType;
+        }
+        if (body.includeMobs !== undefined) {
+          includeMobs = Boolean(body.includeMobs);
+        }
+      }
+
+      const results = bossSearchService.searchBosses(keywords, {
+        limit,
+        type: stageType,
+        includeMobs,
+      });
+
+      json(res, 200, {
+        code: 200,
+        msg: '获取成功',
+        data: {
+          count: results.length,
+          data: results,
+        },
+      });
+    } catch (err) {
+      json(res, 500, {
+        code: 500,
+        msg: '搜索BOSS失败: ' + (err.message || String(err)),
+        data: { count: 0, data: [] },
+      });
     }
     return;
   }
