@@ -5,6 +5,7 @@ import PetSkill from '../components/pet/PetSkill';
 import PetStar from '../components/pet/PetStar';
 import PetEquip from '../components/pet/PetEquip';
 import PetSkillWiki from '../components/pet/PetSkillWiki';
+import PetGodWeapon from '../components/pet/PetGodWeapon';
 
 interface PetProps {
     dataSources: Record<string, any>;
@@ -19,6 +20,7 @@ export default function RolePet({ dataSources }: PetProps) {
         { id: 'wiki', label: '技能 Wiki', path: '/pet/wiki' },
         { id: 'star', label: '升星与进阶', path: '/pet/star' },
         { id: 'equip', label: '宠物装备', path: '/pet/equip' },
+        { id: 'godweapon', label: '宠物神器', path: '/pet/godweapon' },
     ] as const, []);
     const subTab = tabs.find((tab) => tab.path === location.pathname)?.id ?? 'skill';
 
@@ -48,6 +50,7 @@ export default function RolePet({ dataSources }: PetProps) {
                 {subTab === 'wiki' && <PetSkillWiki dataSources={dataSources} />}
                 {subTab === 'star' && <PetStar dataSources={dataSources} />}
                 {subTab === 'equip' && <PetEquip dataSources={dataSources} />}
+                {subTab === 'godweapon' && <PetGodWeapon dataSources={dataSources} />}
             </div>
         </div>
     );

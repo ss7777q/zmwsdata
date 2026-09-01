@@ -101,7 +101,7 @@ const VALID_PATHS: Record<string, string[]> = {
     '/user_cultivate/inner/danyuan_effect',
     '/user_cultivate/body',
   ],
-  pet: ['/pet/skill', '/pet/wiki', '/pet/star', '/pet/equip'],
+  pet: ['/pet/skill', '/pet/wiki', '/pet/star', '/pet/equip', '/pet/godweapon'],
   beast_stats: ['/pet_champion/stages', '/pet_champion/detail', '/pet_champion/lineup', '/pet_champion/players'],
   ride: ['/ride/star', '/ride/skill', '/ride/wiki', '/ride/make', '/ride/upgrade'],
   call_god: ['/call_god/stats', '/call_god/limits', '/call_god/stones', '/call_god/boss', '/call_god/common_skills', '/call_god/talents'],
@@ -250,6 +250,7 @@ export function getRequiredDataFiles(system: string, pathname: string, rawSearch
     return ['role_heart'];
   }
   if (system === 'pet') {
+    if (normalized.endsWith('/godweapon')) return ['pet_god_weapon'];
     if (normalized.endsWith('/wiki')) return ['pet/wiki/index'];
     if (normalized.endsWith('/star')) return ['pet_star', 'pet_mating'];
     if (normalized.endsWith('/equip')) return ['pet_equip_make', 'pet_equip_upgrade'];

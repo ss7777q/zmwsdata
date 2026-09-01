@@ -39,6 +39,7 @@ const MODULES = [
   { key: 'resource_acquisition', file: 'resource_acquisition.js', label: '资源获取' },
   { key: 'power_requirements', file: 'power_requirements.js', label: '战力需求' },
   { key: 'pet',       file: 'pet.js',            label: '宠物系统' },
+  { key: 'pet_god_weapon', file: 'pet_god_weapon.js', label: '宠物 → 宠物神器' },
   { key: 'ride',      file: 'ride.js',           label: '坐骑系统' },
   { key: 'role_wiki_wukong',   file: 'role_wiki_wukong.js',   label: '角色技能 Wiki → 孙悟空' },
   { key: 'role_wiki_yangjian', file: 'role_wiki_yangjian.js', label: '角色技能 Wiki → 杨戬' },

@@ -16,8 +16,11 @@ const ROGUE_ITEM_FILENAME_RE = /^rogueItem\./;
 const ROGUE_ITEM_OFFICIAL_DESCRIPTION_COLUMN_INDEX = 4;
 const RUNTIME_EMBEDDED_TABLES = ['breathing', 'breathingAcupoint'];
 
-async function fetchText(url) {
-  const res = await fetch(url);
+async function fetchText(url, isEntry = false) {
+  const finalUrl = isEntry ? (url.includes('?') ? `${url}&_t=${Date.now()}` : `${url}?_t=${Date.now()}`) : url;
+  const res = await fetch(finalUrl, {
+    headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
+  });
   if (!res.ok) {
     throw new Error(`请求失败 ${res.status} ${res.statusText}: ${url}`);
   }
@@ -226,12 +229,12 @@ async function syncRuntimeEmbeddedTables(settingsUrl, settings) {
 async function main() {
   console.log(`网页入口: ${CLIENT_URL}`);
 
-  const html = await fetchText(CLIENT_URL);
+  const html = await fetchText(CLIENT_URL, true);
   const settingsPath = parseSettingsScriptPath(html);
   const settingsUrl = resolveUrl(CLIENT_URL, settingsPath);
   console.log(`settings: ${settingsUrl}`);
 
-  const settingsCode = await fetchText(settingsUrl);
+  const settingsCode = await fetchText(settingsUrl, true);
   const settings = loadCcSettings(settingsCode);
   const downloads = pickDownloadEntries(settings.jsList).map((entry) => ({
     entry,

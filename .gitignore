@@ -43,6 +43,8 @@ dataApi/
 dataApi.staging/
 dataApi.backup/
 dataApi*.zip
+dataApi_backup_*/
+data/
 data/runtime/
 data/pet-arena-history-raw/*
 data/pet-champion-rank3/

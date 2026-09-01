@@ -42,7 +42,17 @@ export default function SkillCard({ card, levels, slotLabel, badge }: Props) {
   const metricCols = useMemo(() => {
     const seen = new Map<string, string>();
     for (const lv of card.levels || []) {
-      for (const m of lv.metrics || []) if (!seen.has(m.key)) seen.set(m.key, m.label);
+      const metrics = Array.isArray(lv.metrics)
+        ? lv.metrics
+        : lv.metrics && typeof lv.metrics === 'object'
+          ? Object.entries(lv.metrics).map(([key, value]) => ({
+              key,
+              label: key,
+              value: typeof value === 'number' ? value : null,
+              display: value as string | number | null,
+            }))
+          : [];
+      for (const m of metrics) if (!seen.has(m.key)) seen.set(m.key, m.label);
     }
     return [...seen].map(([key, label]) => ({ key, label }));
   }, [card]);

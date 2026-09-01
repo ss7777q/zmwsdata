@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 宠物系统
  * 提取叶子: 潜能升级, 技能升级, 装备强化, 装备重铸, 升星
  * 注: 天赋(petCharacter)和主动技能无直接消耗字段
@@ -557,6 +557,11 @@ function extract() {
   extractPetStar();
   extractPetMating();
   extractPetBaptism();
+  try {
+    require('./pet_god_weapon')();
+  } catch (e) {
+    console.error('  ❌ 宠物神器提取失败:', e.message);
+  }
 }
 
 if (require.main === module) extract();

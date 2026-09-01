@@ -128,9 +128,35 @@ function enforceVisitorRegisterRateLimit(request, now = Date.now()) {
   return ip;
 }
 
+let statsMemoryCache = null;
+let statsMemoryExpiresAt = 0;
+const STATS_CACHE_TTL_MS = 30 * 1000;
+
+let historyMemoryCache = new Map();
+const HISTORY_CACHE_TTL_MS = 5 * 60 * 1000;
+
 async function getVisitorMeta(database, key) {
   const row = await database.prepare('SELECT value FROM visitor_meta WHERE key = ?').bind(key).first();
   return typeof row?.value === 'string' ? row.value : null;
+}
+
+const KNOWN_VISITORS_BASELINE = 29600;
+
+async function getTotalVisitors(database) {
+  const metaVal = await getVisitorMeta(database, 'total_visitors');
+  if (metaVal != null) {
+    return requireNonNegativeInteger(metaVal, 'visitor_meta.total_visitors');
+  }
+  // 彻底不扫描 visitors 全表，直接以历史基准初始化，避免冷启动读取数万行
+  const baselineRaw = await getVisitorMeta(database, 'total_visitors_baseline');
+  const baseline = baselineRaw != null ? requireNonNegativeInteger(baselineRaw, 'baseline') : 0;
+  const initialTotal = baseline > 0 ? baseline : KNOWN_VISITORS_BASELINE;
+  try {
+    await database.prepare("INSERT OR IGNORE INTO visitor_meta(key, value) VALUES('total_visitors', ?)").bind(String(initialTotal)).run();
+  } catch {
+    // ignore
+  }
+  return initialTotal;
 }
 
 async function pruneDailyVisitors(database, now = Date.now()) {
@@ -139,66 +165,72 @@ async function pruneDailyVisitors(database, now = Date.now()) {
 }
 
 async function collectVisitorStatsFromDatabase(database, now = Date.now()) {
-  await pruneDailyVisitors(database, now);
+  if (Math.random() < 0.002) {
+    try {
+      await pruneDailyVisitors(database, now);
+    } catch {
+      // ignore
+    }
+  }
   const todayKey = getTodayKey(now);
   const onlineSince = new Date(now - VISITOR_ONLINE_WINDOW_MS).toISOString();
-  const onlineRow = await database.prepare('SELECT COUNT(*) AS count FROM visitors WHERE last_seen_at > ?').bind(onlineSince).first();
-  const todayExactRow = await database.prepare('SELECT COUNT(*) AS count FROM daily_visitors WHERE date = ?').bind(todayKey).first();
-  const todayTotalRow = await database.prepare('SELECT visitors FROM daily_visitor_totals WHERE date = ?').bind(todayKey).first();
-  const totalVisitorsRow = await database.prepare('SELECT COUNT(*) AS count FROM visitors').first();
-  const totalVisitsRaw = await getVisitorMeta(database, 'total_visits');
-  const totalVisitorsBaselineRaw = await getVisitorMeta(database, 'total_visitors_baseline');
+
+  const [onlineRow, todayTotalRow, totalVisitsRaw, totalVisitors] = await Promise.all([
+    database.prepare('SELECT COUNT(*) AS count FROM visitors WHERE last_seen_at > ?').bind(onlineSince).first(),
+    database.prepare('SELECT visitors FROM daily_visitor_totals WHERE date = ?').bind(todayKey).first(),
+    getVisitorMeta(database, 'total_visits'),
+    getTotalVisitors(database),
+  ]);
+
   if (totalVisitsRaw == null) {
     throw new RequestError(500, 'EMISSING_TOTAL_VISITS_META', 'visitor_meta.total_visits 缺失，请先执行 D1 schema');
   }
-  if (totalVisitorsBaselineRaw == null) {
-    throw new RequestError(500, 'EMISSING_TOTAL_VISITORS_BASELINE_META', 'visitor_meta.total_visitors_baseline 缺失，请先执行 D1 schema');
-  }
   const totalVisits = requireNonNegativeInteger(totalVisitsRaw, 'visitor_meta.total_visits');
-  const totalVisitorsBaseline = requireNonNegativeInteger(totalVisitorsBaselineRaw, 'visitor_meta.total_visitors_baseline');
-  const totalVisitorsSinceMigration = requireNonNegativeInteger(totalVisitorsRow?.count || 0, 'visitors.total_count');
+  const todayVisitors = requireNonNegativeInteger(todayTotalRow?.visitors || 0, 'daily_visitor_totals.visitors');
+  const onlineVisitors = requireNonNegativeInteger(onlineRow?.count || 0, 'visitors.online_count');
 
-  const todayCount = Math.max(
-    requireNonNegativeInteger(todayExactRow?.count || 0, 'daily_visitors.count'),
-    requireNonNegativeInteger(todayTotalRow?.visitors || 0, 'daily_visitor_totals.visitors')
-  );
-  return {
-    onlineVisitors: requireNonNegativeInteger(onlineRow?.count || 0, 'visitors.online_count'),
-    todayVisitors: todayCount,
-    totalVisitors: totalVisitorsBaseline + totalVisitorsSinceMigration,
+  const stats = {
+    onlineVisitors,
+    todayVisitors,
+    totalVisitors,
     totalVisits,
     updatedAt: new Date(now).toISOString(),
   };
+
+  statsMemoryCache = stats;
+  statsMemoryExpiresAt = now + STATS_CACHE_TTL_MS;
+  return stats;
 }
 
 export async function collectVisitorStats(env, now = Date.now()) {
+  if (statsMemoryCache && now < statsMemoryExpiresAt) {
+    return statsMemoryCache;
+  }
   const database = requireVisitorStatsDb(env);
   return collectVisitorStatsFromDatabase(database, now);
 }
 
 export async function collectVisitorHistory(env, daysInput, now = Date.now()) {
-  const database = requireVisitorStatsDb(env);
   const days = Number.isInteger(daysInput) && daysInput > 0
     ? Math.min(daysInput, VISITOR_STORE_MAX_DAYS)
     : DEFAULT_VISITOR_HISTORY_DAYS;
-  await pruneDailyVisitors(database, now);
+
+  const todayKey = getTodayKey(now);
+  const cacheKey = `${days}_${todayKey}`;
+  const cached = historyMemoryCache.get(cacheKey);
+  if (cached && now < cached.expiresAt) {
+    return cached.data;
+  }
+
+  const database = requireVisitorStatsDb(env);
 
   const rows = await database.prepare(`
-    WITH exact_daily AS (
-      SELECT date, COUNT(*) AS visitors
-      FROM daily_visitors
-      GROUP BY date
-    ), merged_daily AS (
-      SELECT date, visitors FROM exact_daily
-      UNION ALL
-      SELECT date, visitors FROM daily_visitor_totals
-    )
-    SELECT date, MAX(visitors) AS visitors
-    FROM merged_daily
-    GROUP BY date
+    SELECT date, visitors
+    FROM daily_visitor_totals
     ORDER BY date DESC
     LIMIT ?
   `).bind(days).all();
+
   const visitorsByDate = new Map((rows.results || []).map((item) => [
     item.date,
     requireNonNegativeInteger(item.visitors || 0, `visitors.${item.date}`),
@@ -208,13 +240,16 @@ export async function collectVisitorHistory(env, daysInput, now = Date.now()) {
     visitors: visitorsByDate.get(date) || 0,
   }));
 
-  return {
+  const data = {
     days,
     items,
     totalVisitors: items.reduce((sum, item) => sum + item.visitors, 0),
     maxVisitors: items.reduce((max, item) => Math.max(max, item.visitors), 0),
     updatedAt: new Date(now).toISOString(),
   };
+
+  historyMemoryCache.set(cacheKey, { data, expiresAt: now + HISTORY_CACHE_TTL_MS });
+  return data;
 }
 
 export async function registerVisitor(env, request, now = Date.now()) {
@@ -227,19 +262,32 @@ export async function registerVisitor(env, request, now = Date.now()) {
   const ip = enforceVisitorRegisterRateLimit(request, now);
   const nowIso = new Date(now).toISOString();
   const todayKey = getTodayKey(now);
-  const existing = await database.prepare('SELECT visitor_id, last_visit_counted_at FROM visitors WHERE visitor_id = ?').bind(visitorId).first();
-  const existingDailyVisitor = await database.prepare('SELECT visitor_id FROM daily_visitors WHERE date = ? AND visitor_id = ?').bind(todayKey, visitorId).first();
-  const todayTotalRow = await database.prepare('SELECT visitors FROM daily_visitor_totals WHERE date = ?').bind(todayKey).first();
+
+  const [existing, existingDailyVisitor] = await Promise.all([
+    database.prepare('SELECT visitor_id, last_visit_counted_at FROM visitors WHERE visitor_id = ?').bind(visitorId).first(),
+    database.prepare('SELECT visitor_id FROM daily_visitors WHERE date = ? AND visitor_id = ?').bind(todayKey, visitorId).first(),
+  ]);
+
   const lastVisitCountedAt = existing?.last_visit_counted_at ? Date.parse(existing.last_visit_counted_at) : NaN;
   const shouldCountVisit = !Number.isFinite(lastVisitCountedAt) || now - lastVisitCountedAt >= VISITOR_VISIT_SESSION_WINDOW_MS;
   const shouldCountDailyVisitor = !existingDailyVisitor;
+  const isNewVisitor = !existing;
 
   const statements = [];
   if (shouldCountVisit) {
     statements.push(database.prepare("UPDATE visitor_meta SET value = CAST(CAST(value AS INTEGER) + 1 AS TEXT) WHERE key = 'total_visits'"));
   }
-  if (todayTotalRow && shouldCountDailyVisitor) {
-    statements.push(database.prepare('UPDATE daily_visitor_totals SET visitors = visitors + 1 WHERE date = ?').bind(todayKey));
+  if (isNewVisitor) {
+    statements.push(database.prepare(`
+      INSERT INTO visitor_meta(key, value) VALUES('total_visitors', '1')
+      ON CONFLICT(key) DO UPDATE SET value = CAST(CAST(value AS INTEGER) + 1 AS TEXT)
+    `));
+  }
+  if (shouldCountDailyVisitor) {
+    statements.push(database.prepare(`
+      INSERT INTO daily_visitor_totals(date, visitors) VALUES(?, 1)
+      ON CONFLICT(date) DO UPDATE SET visitors = visitors + 1
+    `).bind(todayKey));
   }
   if (existing) {
     statements.push(database.prepare(`
@@ -258,6 +306,14 @@ export async function registerVisitor(env, request, now = Date.now()) {
   }
   statements.push(database.prepare('INSERT OR IGNORE INTO daily_visitors(date, visitor_id) VALUES(?, ?)').bind(todayKey, visitorId));
   await database.batch(statements);
+
+  if (statsMemoryCache && now < statsMemoryExpiresAt) {
+    if (shouldCountVisit) statsMemoryCache.totalVisits += 1;
+    if (shouldCountDailyVisitor) statsMemoryCache.todayVisitors += 1;
+    if (isNewVisitor) statsMemoryCache.totalVisitors += 1;
+    statsMemoryCache.updatedAt = new Date(now).toISOString();
+    return statsMemoryCache;
+  }
 
   return collectVisitorStatsFromDatabase(database, now);
 }

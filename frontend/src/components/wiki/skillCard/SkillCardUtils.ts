@@ -280,7 +280,8 @@ export function buildGrowthBuffGroups(levels: SkillLevel[]) {
 
 /** 取某级某指标的展示值 */
 export function metricText(lv: SkillLevel | undefined, key: string) {
-  const m = lv?.metrics?.find((x) => x.key === key);
+  const metrics = Array.isArray(lv?.metrics) ? lv.metrics : [];
+  const m = metrics.find((x) => x.key === key);
   if (!m || m.display == null) return '—';
   return String(m.display);
 }

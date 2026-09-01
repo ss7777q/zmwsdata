@@ -21,6 +21,7 @@ const MAX_CONTEXT_LENGTH = 18_000;
 const MAX_DOCUMENT_CONTEXT_LENGTH = 6_000;
 const MAX_QUERY_CONTEXT_LENGTH = 4_000;
 const MAX_RETRIEVED_DOCUMENTS = 3;
+const MAX_DOCUMENTS_PER_FILE = 80;
 const MAX_TOOL_ROUNDS = 3;
 const MAX_TOOL_CALLS_PER_ROUND = 2;
 const MAX_TOOL_QUERY_LENGTH = 400;
@@ -52,26 +53,28 @@ const MECHANIC_KEYWORDS = [
 ];
 
 const DEFAULT_MODEL_ORDER = [
-  'deepseek-v4-flash',
-  'deepseek-v4-pro',
-  'DeepSeek-V3.2',
-  'gemini-3.5-flash',
-  'gemini-3.5-flash-low',
-  'gemini-3.5-flash-extra-low',
-  'gemini-3-flash',
+  'gemini-3.7-flash',
+  'grok-4.5',
+  'grok-4.6',
 ];
 
 const ROLE_FILES = [
   ['悟空', 'role_wiki_wukong'],
   ['孙悟空', 'role_wiki_wukong'],
   ['唐僧', 'role_wiki_tangseng'],
+  ['唐三藏', 'role_wiki_tangseng'],
   ['沙僧', 'role_wiki_shaseng'],
+  ['沙悟净', 'role_wiki_shaseng'],
   ['八戒', 'role_wiki_bajie'],
   ['猪八戒', 'role_wiki_bajie'],
   ['敖雪', 'role_wiki_aoxue'],
+  ['白小雪', 'role_wiki_aoxue'],
   ['敖烈', 'role_wiki_aolie'],
+  ['小白龙', 'role_wiki_aolie'],
   ['小焰', 'role_wiki_xiaoyan'],
+  ['萧嫣', 'role_wiki_xiaoyan'],
   ['玄女', 'role_wiki_xuannv'],
+  ['九天玄女', 'role_wiki_xuannv'],
   ['杨戬', 'role_wiki_yangjian'],
 ];
 
@@ -197,6 +200,7 @@ const QUESTION_FILE_ROUTES = [
   [/坐骑装备|马鞍|缰绳|蹄铁|法铃/, ['ride_equip_make', 'ride_equip_recast', 'ride_equip_upgrade']],
   [/翅膀.*(?:升阶|羽毛碎片|滑翔|飞行)/, ['role_wing_upgrade', 'role_wing_skill']],
   [/翎羽|羽枝|羽丝|羽魂/, ['role_feather_baptize', 'role_feather_advance']],
+  [/神魔.*(?:灵石|祝福|奖励|采矿|击杀|表现)|神灵石|魔灵石/, ['call_god_stone_rewards']],
   [/魔王疾行|天魔之跃|横行霸道/, ['call_god_boss_common_skills']],
   [/坐骑猎手|复生诅咒|魔棘尖刺|魔王天赋/, ['call_god_boss_talents']],
   [/经验.*灵魂.*产出|主线普通关卡.*噩梦|\bexp\b.*\bsoul\b/i, ['stage_reward_exp_soul', 'resource_acquisition']],
@@ -427,7 +431,30 @@ export function optionsResponse() {
   return new Response(null, { status: 204, headers: JSON_HEADERS });
 }
 
-export async function handleQaRequest({ request, env }) {
+export async function recordQaLog(env, { question, answer, model, citations, latencyMs }) {
+  const db = env?.VISITOR_STATS_DB;
+  if (!db || typeof db.prepare !== 'function') return;
+  try {
+    const createdAt = new Date().toISOString();
+    const citationsJson = Array.isArray(citations) && citations.length > 0 ? JSON.stringify(citations) : null;
+    await db.prepare(`
+      INSERT INTO qa_logs (created_at, question, answer, model, citations, latency_ms)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).bind(
+      createdAt,
+      String(question || '').slice(0, 2000),
+      String(answer || ''),
+      String(model || ''),
+      citationsJson,
+      typeof latencyMs === 'number' ? Math.round(latencyMs) : null
+    ).run();
+  } catch (error) {
+    console.error('[qa-log] failed to record qa log:', error?.message || String(error));
+  }
+}
+
+export async function handleQaRequest({ request, env, waitUntil }) {
+  const startedAt = Date.now();
   try {
     const input = await parseRequest(request);
 
@@ -462,6 +489,20 @@ export async function handleQaRequest({ request, env }) {
       request,
       env,
     });
+
+    const latencyMs = Date.now() - startedAt;
+    const logPromise = recordQaLog(env, {
+      question: input.question,
+      answer: completion.answer,
+      model: completion.model,
+      citations: completion.citations,
+      latencyMs,
+    });
+    if (typeof waitUntil === 'function') {
+      waitUntil(logPromise);
+    } else {
+      await logPromise;
+    }
 
     return jsonResponse({
       answer: completion.answer,
@@ -555,6 +596,11 @@ function selectKnowledgeFiles(question) {
   if (question.includes('丹元')) files.add('role_danyuan_effect_index');
   if (question.includes('时装') || question.includes('续费')) files.add('role_fashion_renew');
   if (question.includes('阵法') || question.includes('红水')) files.add('role_matrix_skill');
+  if (question.includes('神魔') || question.includes('神灵石') || question.includes('魔灵石')) files.add('call_god_stone_rewards');
+
+  for (const file of selectRoutedKnowledgeFiles(question)) {
+    files.add(file);
+  }
 
   return [...files].slice(0, 6);
 }
@@ -1102,6 +1148,10 @@ function buildDocuments(file, payload) {
     return buildPowerRequirementsDocuments(file, data).concat(generic).slice(0, MAX_DOCUMENTS_PER_FILE);
   }
 
+  if (file === 'call_god_stone_rewards' && data?.tiers) {
+    return buildCallGodStoneRewardsDocuments(file, data);
+  }
+
   const documents = [];
   collectGenericDocuments(data, file, '$', documents, 0);
   return documents.slice(0, MAX_DOCUMENTS_PER_FILE);
@@ -1493,6 +1543,56 @@ function buildRoleSkillDocument(file, roleName, slot) {
   };
 }
 
+function buildCallGodStoneRewardsDocuments(file, data) {
+  const tiers = data?.tiers || [];
+  const documents = [];
+
+  const summaryLines = tiers.map((t) => {
+    const godMax = Math.max(...(t.rewards?.reward_plunder_blessing || []).map((r) => r.stoneCount), 0);
+    const devilBlessMax = Math.max(...(t.rewards?.reward_devil_blessing || []).map((r) => r.stoneCount), 0);
+    const devilKillMax = Math.max(...(t.rewards?.devil_Kill_blessing || []).map((r) => r.stoneCount), 0);
+    return `- ${t.stageName}（${t.battlefieldLv}级/第${t.rewardLv}阶）：神将祝福(神灵石)最多${godMax}颗；魔王祝福(魔灵石)表现${devilBlessMax}颗 + 击杀${devilKillMax}颗，单场最多${devilBlessMax + devilKillMax}颗。`;
+  });
+
+  documents.push({
+    id: `${file}:summary`,
+    title: '神魔战场各阶神灵石与魔灵石祝福获取上限总览',
+    source: `${file}.json / 神魔战场灵石奖励总览`,
+    text: joinUniqueText([
+      '系统：神魔战场 神灵石与魔灵石祝福获取详情',
+      '规则机制：',
+      '1. 神将阵营：通过【神将祝福结算】（按全队采矿%档位）获取神灵石，100%采矿达最高上限。',
+      '2. 魔王阵营：通过【魔王祝福结算】（按魔王表现/剩余矿量档位，剩余0%达上限）和【魔王击败神将数】（击杀数0~10人）获取魔灵石，二者相加即为魔王单场魔灵石总上限。',
+      `各阶战场单场最大获取上限一览（1阶至${tiers.at(-1)?.rewardLv || tiers.length}阶）：`,
+      summaryLines.join('\n'),
+    ]),
+  });
+
+  for (const t of tiers) {
+    const godMax = Math.max(...(t.rewards?.reward_plunder_blessing || []).map((r) => r.stoneCount), 0);
+    const devilBlessMax = Math.max(...(t.rewards?.reward_devil_blessing || []).map((r) => r.stoneCount), 0);
+    const devilKillMax = Math.max(...(t.rewards?.devil_Kill_blessing || []).map((r) => r.stoneCount), 0);
+    const godDetails = (t.rewards?.reward_plunder_blessing || []).map((r) => `采矿${r.threshold}%: ${r.stoneCount}神灵石`).join('、');
+    const devilBlessDetails = (t.rewards?.reward_devil_blessing || []).map((r) => `剩余矿量${r.threshold}%: ${r.stoneCount}魔灵石`).join('、');
+    const devilKillDetails = (t.rewards?.devil_Kill_blessing || []).map((r) => `击杀${r.threshold}人: ${r.stoneCount}魔灵石`).join('、');
+
+    documents.push({
+      id: `${file}:${t.rewardLv}`,
+      title: `${t.stageName}（${t.battlefieldLv}级）神灵石与魔灵石奖励明细`,
+      source: `${file}.json / ${t.stageName}`,
+      text: joinUniqueText([
+        `战场：${t.stageName}（${t.battlefieldLv}级，第${t.rewardLv}阶）`,
+        `- 神将祝福（神灵石）：单场最多获取 ${godMax} 颗（100%采矿）。各档位：${godDetails}`,
+        `- 魔王表现祝福（魔灵石）：单场最多获取 ${devilBlessMax} 颗（剩余矿量0%）。各档位：${devilBlessDetails}`,
+        `- 魔王击杀祝福（魔灵石）：单场最多获取 ${devilKillMax} 颗（击杀10神将）。各档位：${devilKillDetails}`,
+        `- 魔王单场最高合计魔灵石：${devilBlessMax} + ${devilKillMax} = ${devilBlessMax + devilKillMax} 颗。`,
+      ]),
+    });
+  }
+
+  return documents;
+}
+
 function collectGenericDocuments(value, file, path, documents, depth) {
   if (documents.length >= MAX_DOCUMENTS_PER_FILE || value == null || depth > 6) return;
   if (Array.isArray(value)) {
@@ -1511,6 +1611,10 @@ function collectGenericDocuments(value, file, path, documents, depth) {
       source: `${file}.json / ${path}`,
       text,
     });
+  }
+
+  if (depth >= 1 && text.length >= 80) {
+    return;
   }
 
   for (const [key, child] of Object.entries(value)) {
@@ -1869,13 +1973,21 @@ async function executeToolCall({ request, env, toolCall, question, state }) {
   }
   if (name === 'read_records') {
     if (!getCatalogBase(env)) return '当前未连接通用资料目录，无法按指针读取；请继续使用 search_knowledge。';
-    const result = await readCatalogRecords({ env, args: parseRawToolArguments(toolCall) });
-    return formatCatalogReadToolResult({ result, state });
+    try {
+      const result = await readCatalogRecords({ env, args: parseRawToolArguments(toolCall) });
+      return formatCatalogReadToolResult({ result, state });
+    } catch (error) {
+      return `读取底表记录失败（${error?.message || String(error)}）；请直接根据已有资料作答。`;
+    }
   }
   if (name === 'query_records') {
     if (!getCatalogBase(env)) return '当前未连接通用资料目录，无法执行结构化聚合；请继续使用 search_knowledge。';
-    const result = await queryCatalogRecords({ env, args: parseRawToolArguments(toolCall) });
-    return formatCatalogQueryToolResult({ result, state });
+    try {
+      const result = await queryCatalogRecords({ env, args: parseRawToolArguments(toolCall) });
+      return formatCatalogQueryToolResult({ result, state });
+    } catch (error) {
+      return `聚合查询记录失败（${error?.message || String(error)}）；请直接根据已有资料作答。`;
+    }
   }
   return `工具 ${name || 'unknown'} 不可用；请先使用 search_knowledge。`;
 }

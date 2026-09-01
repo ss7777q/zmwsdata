@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { fetchVisitorStats, registerVisitorStats, type VisitorStatsResponse } from '../lib/api';
 
 const VISITOR_ID_STORAGE_KEY = 'deployable-app-visitor-id';
-const HEARTBEAT_INTERVAL_MS = 60 * 1000;
+const HEARTBEAT_INTERVAL_MS = 180 * 1000;
 
 function createVisitorId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -48,13 +48,24 @@ export function useVisitorStats() {
 
     void syncStats();
     const timer = window.setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        return;
+      }
       void syncStats();
     }, HEARTBEAT_INTERVAL_MS);
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void syncStats();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
     return () => {
       disposed = true;
       controller.abort();
       window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, []);
 
