@@ -8,11 +8,15 @@ interface Props {
 
 export default function PetGodWeapon({ dataSources }: Props) {
   const godWeaponData = (dataSources['pet_god_weapon'] as any)?.data;
-  const [subSection, setSubSection] = useState<'forge' | 'upgrade' | 'star' | 'enchant' | 'synthesis'>('forge');
+  const [subSection, setSubSection] = useState<'forge' | 'upgrade' | 'star' | 'enchant' | 'synthesis' | 'blessing'>('forge');
 
   // 词条搜索与品质过滤
   const [enchantSearch, setEnchantSearch] = useState<string>('');
   const [enchantQualityFilter, setEnchantQualityFilter] = useState<number | 'all'>('all');
+
+  // 祝福搜索与分类过滤
+  const [blessingSearch, setBlessingSearch] = useState<string>('');
+  const [blessingCategory, setBlessingCategory] = useState<string>('all');
 
   if (!godWeaponData) {
     return (
@@ -29,7 +33,8 @@ export default function PetGodWeapon({ dataSources }: Props) {
     enchants = [],
     enchantRules,
     synthesisRules,
-    qingqiuInfo
+    qingqiuInfo,
+    blessings = []
   } = godWeaponData;
 
   // 仅展示已开放的打造池
@@ -45,6 +50,18 @@ export default function PetGodWeapon({ dataSources }: Props) {
       return matchSearch && matchQuality;
     });
   }, [enchants, enchantSearch, enchantQualityFilter]);
+
+  // 战后祝福过滤
+  const filteredBlessings = useMemo(() => {
+    return blessings.filter((b: any) => {
+      const matchCat = blessingCategory === 'all' || b.category === blessingCategory;
+      const matchSearch = !blessingSearch || 
+        b.name.includes(blessingSearch) || 
+        b.desIntro?.includes(blessingSearch) || 
+        b.levels?.some((lv: any) => lv.quantifiedValue?.includes(blessingSearch) || lv.warning?.includes(blessingSearch));
+      return matchCat && matchSearch;
+    });
+  }, [blessings, blessingCategory, blessingSearch]);
 
   // 计算等级强化的本段消耗与累计需求
   const computedLevelTiers = useMemo(() => {
@@ -96,6 +113,7 @@ export default function PetGodWeapon({ dataSources }: Props) {
           { id: 'star', label: '升星进阶' },
           { id: 'enchant', label: '附魔词条' },
           { id: 'synthesis', label: '灵炼与青丘奇旅' },
+          { id: 'blessing', label: '奇旅战后祝福' },
         ].map(tab => (
           <button
             key={tab.id}
@@ -479,6 +497,167 @@ export default function PetGodWeapon({ dataSources }: Props) {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ━━━━━━━━ 7. 奇旅战后祝福全景量化 ━━━━━━━━ */}
+      {subSection === 'blessing' && (
+        <div className="space-y-6">
+          {/* 规则与抽取机制说明 */}
+          <div className="bg-surface border border-border rounded-xl shadow-sm p-5 space-y-4">
+            <h3 className="font-bold text-base text-textMain flex items-center gap-2 border-b border-border pb-3">
+              <span className="w-1.5 h-4 rounded-full bg-cta shrink-0"></span>
+              青丘奇旅战后祝福三选一机制说明
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="bg-textMain/5 border border-border/60 rounded-lg p-3 space-y-1">
+                <div className="text-xs font-bold text-textMain flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                  三选一抽取与升级
+                </div>
+                <div className="text-xs text-textSub leading-relaxed">
+                  挑战守关邪灵宠物成功后触发 3 选 1 祝福。初始 26 种祝福均为精良品质（Lv.1 权重均为 100 等概率）。若已拥有某祝福，再次刷出时会自动升级为下一级（最高 3 级），选择后替换旧等级。
+                </div>
+              </div>
+
+              <div className="bg-textMain/5 border border-border/60 rounded-lg p-3 space-y-1">
+                <div className="text-xs font-bold text-textMain flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cta"></span>
+                  层级隔离与重置
+                </div>
+                <div className="text-xs text-textSub leading-relaxed">
+                  每层共 10 个守关宠物。进入新挑战层后，上一层的祝福将全部清空重置；也可手动点击重置挑战，退回到本层第 1 关重新挑战并重新获取祝福。
+                </div>
+              </div>
+
+              <div className="bg-textMain/5 border border-border/60 rounded-lg p-3 space-y-1">
+                <div className="text-xs font-bold text-textMain flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  队伍生效与目标判定
+                </div>
+                <div className="text-xs text-textSub leading-relaxed">
+                  队伍最多出战 3 只宠物。祝福仅对对应存活目标生效（如前排绑定 1 号位、中排绑定 2 号位、后排绑定 3 号位；放毒仅对敌方生效；死者苏生全队团灭时直接判负）。
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 筛选与搜索工具条 */}
+          <div className="bg-surface border border-border rounded-xl shadow-sm p-4 flex flex-wrap justify-between items-center gap-3">
+            <div className="flex gap-1.5 flex-wrap">
+              {[
+                { key: 'all', label: '全部祝福', count: blessings.length },
+                { key: 'resists', label: '属性抗性', count: blessings.filter((b: any) => b.category === 'resists').length },
+                { key: 'position', label: '站位增减伤', count: blessings.filter((b: any) => b.category === 'position').length },
+                { key: 'control_shield', label: '控制与护盾', count: blessings.filter((b: any) => b.category === 'control_shield').length },
+                { key: 'growth', label: '战斗成长与延迟', count: blessings.filter((b: any) => b.category === 'growth').length },
+                { key: 'special', label: '机制与特殊效果', count: blessings.filter((b: any) => b.category === 'special').length },
+              ].map(cat => (
+                <button
+                  key={cat.key}
+                  onClick={() => setBlessingCategory(cat.key)}
+                  className={clsx(
+                    "px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 flex items-center gap-1.5 cursor-pointer",
+                    blessingCategory === cat.key
+                      ? "bg-primary text-white shadow-sm"
+                      : "bg-textMain/5 text-textSub hover:text-textMain hover:bg-textMain/10"
+                  )}
+                >
+                  <span>{cat.label}</span>
+                  <span className={clsx("text-[10px] px-1.5 py-0.2 rounded-full", blessingCategory === cat.key ? "bg-white/20 text-white" : "bg-textMain/10 text-textSub")}>
+                    {cat.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div className="w-full sm:w-64">
+              <input
+                type="text"
+                placeholder="搜索祝福名称、数值或机制..."
+                value={blessingSearch}
+                onChange={(e) => setBlessingSearch(e.target.value)}
+                className="bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-textMain w-full"
+              />
+            </div>
+          </div>
+
+          {/* 祝福列表卡片 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {filteredBlessings.map((b: any) => (
+              <div key={b.group} className="bg-surface border border-border rounded-xl shadow-sm overflow-hidden flex flex-col justify-between">
+                <div>
+                  {/* 卡片头部 */}
+                  <div className="p-4 border-b border-border bg-textMain/5 flex flex-wrap justify-between items-center gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary font-bold">
+                        #{b.group}
+                      </span>
+                      <h4 className="font-bold text-sm text-textMain">
+                        {b.name}
+                      </h4>
+                      <span className="px-2 py-0.5 rounded border text-[11px] font-semibold text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-950/30">
+                        {b.qualityLabel}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] text-textSub bg-textMain/5 px-2 py-0.5 rounded border border-border/50">
+                        {b.categoryName}
+                      </span>
+                      <span className="text-[11px] font-medium text-cta bg-cta/10 px-2 py-0.5 rounded border border-cta/20">
+                        {b.scopeLabel}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 官方描述 */}
+                  <div className="px-4 py-2.5 bg-textMain/5 border-b border-border/50 text-xs text-textSub flex items-center gap-2">
+                    <span className="text-[10px] text-textSub/70 shrink-0 font-mono">官方描述</span>
+                    <span className="italic">“{b.desIntro}”</span>
+                  </div>
+
+                  {/* 3 级量化表 */}
+                  <div className="p-4 space-y-2.5">
+                    <div className="space-y-2">
+                      {b.levels?.map((lv: any) => (
+                        <div key={lv.level} className="bg-background border border-border/60 rounded-lg p-3 space-y-1.5">
+                          <div className="flex flex-wrap justify-between items-center gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-bold text-xs px-2 py-0.5 rounded bg-primary/10 text-primary">
+                                Lv.{lv.level}
+                              </span>
+                              <span className="font-mono text-xs font-bold text-textMain">
+                                {lv.quantifiedValue}
+                              </span>
+                            </div>
+                            <div className="text-[10px] font-mono text-textSub">
+                              {lv.weight ? `初始权重: ${lv.weight}` : '升级替换获得'}
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-textSub">
+                            <div><span className="text-textSub/70">生效时机：</span>{lv.triggerDesc}</div>
+                            <div><span className="text-textSub/70">持续时间：</span>{lv.durationDesc}</div>
+                            {lv.stackDesc && <div><span className="text-textSub/70">叠加规则：</span>{lv.stackDesc}</div>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 机制提示与陷阱预警 */}
+                {b.levels?.some((lv: any) => lv.warning) && (
+                  <div className="px-4 pb-4 pt-1">
+                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-2.5 text-[11px] text-amber-700 dark:text-amber-300 leading-relaxed">
+                      {b.levels.find((lv: any) => lv.warning)?.warning}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}

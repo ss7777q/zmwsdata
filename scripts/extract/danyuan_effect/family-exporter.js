@@ -11,6 +11,7 @@ const {
 } = require('./mechanics');
 
 const DANYUAN_SKILL_COLOR_QUALITY = {
+  '绿': 2,
   '蓝': 3,
   '紫': 4,
   '橙': 5,

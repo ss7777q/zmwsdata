@@ -6,6 +6,7 @@ const ENTITY_CTG_DIR = path.join(u.ROOT, 'file', 'battle-config', 'entityCtg');
 const BULLETS_PATH = path.join(u.ROOT, 'file', 'battle-config', 'bullets.json');
 
 const DANYUAN_QUALITY_NAMES = {
+  2: '优秀',
   3: '精良',
   4: '史诗',
   5: '传说',

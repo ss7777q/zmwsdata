@@ -87,10 +87,13 @@ function extract() {
   const rawForges = extractEmbeddedTable(runtimeCode, 'petGodWeaponForge') || [];
   const rawEnchants = extractEmbeddedTable(runtimeCode, 'petGodWeaponEnchant') || [];
   const rawFights = extractEmbeddedTable(runtimeCode, 'PetQingQiuFight') || [];
+  const rawBlessings = extractEmbeddedTable(runtimeCode, 'petTravelBlessing') || [];
 
   // 2. 加载普通 dataApi 表
   const beskillTable = u.loadTable('beskill');
   const beskillMap = new Map(beskillTable.map(r => [r.id, r]));
+  const buffTable = u.loadTable('buff');
+  const buffMap = new Map(buffTable.map(r => [r.id, r]));
   const constsTable = u.loadTable('consts');
   const petTable = u.loadTable('pet');
   const vipTable = u.loadTable('vip');
@@ -345,6 +348,175 @@ function extract() {
     note: `青丘奇旅最高累积 24 小时挂机收益，每 5 分钟结算一次收益；关卡受 maxLevel=${maxLevel} 限制，当前开放 ${qingqiuStages.length} 个关卡。`
   };
 
+  // ━━━━━━━━ 9. 青丘奇旅战后祝福全景量化（petTravelBlessing 26组） ━━━━━━━━
+  const scopeLabels = {
+    1: '全场存活宠物',
+    2: '我方全体存活宠物',
+    3: '敌方全体存活目标',
+    4: '我方前排（1号位）',
+    5: '我方中排（2号位）',
+    6: '我方后排（3号位）',
+    7: '敌方前排（1号位）',
+    8: '敌方中排（2号位）'
+  };
+
+  const categoryMap = {
+    1: 'resists', 2: 'resists', 3: 'resists', 4: 'resists', 5: 'resists', 6: 'resists', 7: 'resists', 8: 'resists',
+    9: 'position', 10: 'position', 11: 'position', 12: 'position', 13: 'position', 14: 'position',
+    15: 'control_shield', 16: 'control_shield', 17: 'control_shield',
+    18: 'growth', 19: 'growth', 20: 'growth', 21: 'growth',
+    22: 'special', 23: 'special', 24: 'special', 25: 'special', 26: 'special'
+  };
+
+  const categoryNames = {
+    resists: '属性抗性',
+    position: '站位增减伤',
+    control_shield: '控制与护盾',
+    growth: '战斗成长与延迟',
+    special: '机制与特殊效果'
+  };
+
+  const blessingGroups = new Map();
+  for (const b of rawBlessings) {
+    if (!blessingGroups.has(b.group)) blessingGroups.set(b.group, []);
+    blessingGroups.get(b.group).push(b);
+  }
+
+  const blessings = [];
+  for (const [group, list] of blessingGroups) {
+    list.sort((a, b) => a.level - b.level);
+    const first = list[0];
+    const catKey = categoryMap[group] || 'special';
+
+    const levels = list.map(item => {
+      let quantifiedValue = '';
+      let triggerDesc = '';
+      let durationDesc = '常驻整场';
+      let stackDesc = '不可叠加';
+      let warning = null;
+
+      if (group >= 1 && group <= 8) {
+        const bs = item.beskill && item.beskill[0] ? beskillMap.get(item.beskill[0]) : null;
+        const val = bs && bs.attribute ? bs.attribute[1] : item.level * 10;
+        quantifiedValue = `对应属性抗性 +${val}`;
+        triggerDesc = '进场常驻面板抗性';
+      } else if (group === 9 || group === 11 || group === 13) {
+        const bf = item.buff && item.buff[0] ? buffMap.get(item.buff[0]) : null;
+        const val = bf && bf.value ? Math.abs(bf.value[0] * 100).toFixed(0) : (item.level === 1 ? '20' : item.level === 2 ? '40' : '50');
+        quantifiedValue = `受到伤害减免 ${val}%`;
+        triggerDesc = '进场常驻减伤';
+      } else if (group === 10 || group === 12 || group === 14) {
+        const bf = item.buff && item.buff[0] ? buffMap.get(item.buff[0]) : null;
+        const val = bf && bf.value ? (bf.value[0] * 100).toFixed(0) : (item.level === 1 ? '20' : item.level === 2 ? '40' : '50');
+        quantifiedValue = `造成伤害提升 ${val}%`;
+        triggerDesc = '进场常驻增伤';
+      } else if (group === 15) {
+        const bs = item.beskill && item.beskill[0] ? beskillMap.get(item.beskill[0]) : null;
+        const per = bs && bs.attribute ? Math.abs(bs.attribute.per * 100).toFixed(2) : '';
+        quantifiedValue = `受控持续时间缩短 ${per}%`;
+        triggerDesc = '受到控制状态时被动生效';
+      } else if (group === 16) {
+        const bs = item.beskill && item.beskill[0] ? beskillMap.get(item.beskill[0]) : null;
+        const per = bs && bs.attribute ? (bs.attribute.per * 100).toFixed(2) : '';
+        quantifiedValue = `造成控制持续时间提升 ${per}%`;
+        triggerDesc = '对目标施加控制状态时被动生效';
+      } else if (group === 17) {
+        const bf = item.buff && item.buff[0] ? buffMap.get(item.buff[0]) : null;
+        const per = bf && bf.value ? (bf.value[3] * 100).toFixed(0) : '';
+        quantifiedValue = `开局获得自身最大生命 ${per}% 的护盾`;
+        triggerDesc = '进场立即赋予';
+        durationDesc = '持续 5 秒 (150帧) 或被击破';
+        warning = '护盾存续期间自带霸体状态，但持续时间仅有 5 秒。';
+      } else if (group === 18) {
+        const waitSec = item.level === 1 ? 15 : item.level === 2 ? 12 : 8;
+        const critVal = item.level === 1 ? '20%' : item.level === 2 ? '50%' : '100%';
+        quantifiedValue = `开局等待 ${waitSec} 秒后，暴击率提升 ${critVal}`;
+        triggerDesc = `入场计时 ${waitSec} 秒触发`;
+        durationDesc = '触发后整场永久持续';
+        if (item.level > 1) {
+          warning = `官方描述写死为“15秒”，实机升级后等待时间提前至 ${waitSec} 秒。`;
+        }
+      } else if (group === 19) {
+        const intervalSec = item.level === 1 ? 15 : item.level === 2 ? 12 : 8;
+        const per = item.level === 1 ? '6.67%' : item.level === 2 ? '13.33%' : '20.00%';
+        const maxPer = item.level === 1 ? '20.00%' : item.level === 2 ? '40.00%' : '60.00%';
+        quantifiedValue = `每 ${intervalSec} 秒叠 1 层攻击 +${per}（最高叠 3 层，满层 +${maxPer} 攻击）`;
+        triggerDesc = `开战 1 秒后首发，之后每 ${intervalSec} 秒周期触发`;
+        durationDesc = '整场持续';
+        stackDesc = '最高叠加 3 层 (maxPiles: 3)';
+        warning = '严格上限为 3 层，第 3 层叠满后不再随时间继续增加攻击力。';
+      } else if (group === 20) {
+        const per = item.level === 1 ? '33.3%' : item.level === 2 ? '75.0%' : '128.6%';
+        const maxPer = item.level === 1 ? '66.6%' : item.level === 2 ? '150.0%' : '257.2%';
+        quantifiedValue = `每阵亡 1 名队友，自身防御力 +${per}（死 2 名队友累计 +${maxPer} 防御）`;
+        triggerDesc = '存活期间队友阵亡时被动触发';
+        durationDesc = '整场持续';
+        stackDesc = '最高叠加 2 层 (maxPiles: 2)';
+        warning = '青丘奇旅队伍最多出战 3 只宠物，除自身外最多阵亡 2 个队友，因此上限为 2 层。';
+      } else if (group === 21) {
+        const waitSec = item.level === 1 ? 15 : item.level === 2 ? 12 : 8;
+        const durSec = item.level === 1 ? 10 : item.level === 2 ? 12 : 15;
+        quantifiedValue = `开局等待 ${waitSec} 秒后，获得持续 ${durSec} 秒的免疫减益状态`;
+        triggerDesc = `入场计时 ${waitSec} 秒触发`;
+        durationDesc = `生效后持续 ${durSec} 秒`;
+        warning = `并非开局前 ${waitSec} 秒内免控，而是开局等待 ${waitSec} 秒后才获得 ${durSec} 秒免控。`;
+      } else if (group === 22) {
+        const intervalSec = item.level === 1 ? 15 : item.level === 2 ? 12 : 8;
+        const dmgPer = item.level === 1 ? '1%' : item.level === 2 ? '2%' : '3%';
+        quantifiedValue = `每 ${intervalSec} 秒给敌方全体叠 1 层中毒，每层每秒扣除 ${dmgPer} 最大生命`;
+        triggerDesc = `开战 1 秒后首发，之后每 ${intervalSec} 秒周期触发`;
+        durationDesc = '中毒效果整场永久持续';
+        stackDesc = '最高叠加 99 层 (maxPiles: 99)';
+      } else if (group === 23) {
+        const val = item.level === 1 ? '20%' : item.level === 2 ? '30%' : '50%';
+        quantifiedValue = `普通攻击伤害提升 ${val}`;
+        triggerDesc = '进场常驻被动';
+      } else if (group === 24) {
+        const rate = item.level === 1 ? '10%' : item.level === 2 ? '20%' : '30%';
+        quantifiedValue = `技能释放完成后，有 ${rate} 概率立即无消耗重放 1 次该技能`;
+        triggerDesc = '主动技能释放结束时被动判定';
+      } else if (group === 25) {
+        const rate = item.level === 1 ? '3%' : item.level === 2 ? '6%' : '10%';
+        const delaySec = item.level === 1 ? 10 : item.level === 2 ? 8 : 5;
+        quantifiedValue = `宠物死亡时仅有 ${rate} 概率触发复活，等待 ${delaySec} 秒后满血满魔复活`;
+        triggerDesc = `宠物阵亡瞬间以 ${rate} 概率判定触发`;
+        durationDesc = '单局限触发 1 次 (CD: 86400秒)';
+        warning = `【重大文字陷阱】官方文案未提及概率！实机并非 100% 必定复活，而是仅有 ${rate} 概率触发复活倒计时；且若全队 3 只均阵亡会导致战斗立即判负，倒计时中的复活不会生效。`;
+      } else if (group === 26) {
+        const val = item.level === 1 ? '20%' : item.level === 2 ? '40%' : '60%';
+        quantifiedValue = `全体移动速度提升 ${val}`;
+        triggerDesc = '进场常驻被动';
+      }
+
+      return {
+        level: item.level,
+        id: item.id,
+        weight: item.weight || null,
+        quantifiedValue,
+        triggerDesc,
+        durationDesc,
+        stackDesc,
+        warning,
+        rawBeskillIds: item.beskill || [],
+        rawBuffIds: item.buff || []
+      };
+    });
+
+    blessings.push({
+      group,
+      name: first.name,
+      category: catKey,
+      categoryName: categoryNames[catKey],
+      quality: first.quality,
+      qualityLabel: '精良',
+      scope: first.scope,
+      scopeLabel: scopeLabels[first.scope] || `目标类型${first.scope}`,
+      desIntro: first.desIntro,
+      icon: first.icon,
+      levels
+    });
+  }
+
   // ━━━━━━━━ 整合输出 ━━━━━━━━
   const payload = {
     weapons,
@@ -355,14 +527,15 @@ function extract() {
     enchants: validEnchants,
     enchantRules,
     synthesisRules,
-    qingqiuInfo
+    qingqiuInfo,
+    blessings
   };
 
   u.saveOutput('pet_god_weapon', payload, {
     system: '宠物 → 宠物神器',
     source: 'data/runtime/main-index.js + dataApi',
     costType: '原石, 青丘灵玉, 青丘灵晶, 青丘金水',
-    dedup: `打造池${forgePools.length}个, 等级强化受close=1与maxLevel=${maxLevel}限制保留${levelSummary.actualEffectiveMaxLevel}级, 附魔有效词条${validEnchants.length}条, 灵炼遗传与青丘奇旅开放${qingqiuStages.length}关`
+    dedup: `打造池${forgePools.length}个, 等级强化受close=1与maxLevel=${maxLevel}限制保留${levelSummary.actualEffectiveMaxLevel}级, 附魔有效词条${validEnchants.length}条, 战后祝福${blessings.length}组, 灵炼遗传与青丘奇旅开放${qingqiuStages.length}关`
   });
 }
 
