@@ -61,6 +61,9 @@ try {
   const petEquip = await ask('只查140级灭蒙护盔：打造、0重升1重、4重升5重分别要多少灵魂和神灵晶？');
   assert.ok(petEquip.files.includes('pet_equip_make'));
 
+  const petHelmet = await ask('灭蒙护盔怎么打造');
+  assert.ok(petHelmet.files.includes('pet_equip_make'));
+
   const roleAlias = await ask('小白龙把突刺觉醒成力龙以后，普通霸体目标会不会被带着走？这招合计倍率是多少？');
   assert.ok(roleAlias.files.includes('role_wiki_aolie'));
 

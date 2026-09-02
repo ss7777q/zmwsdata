@@ -240,7 +240,7 @@ export function PetChampionStageStatsTab({ source }: StageStatsTabProps) {
               onChange={(e) => setSelectedSeason(e.target.value)}
               className="input w-full"
             >
-              <option value="all">全部赛季 (合并统计)</option>
+              <option value="all">全部赛季</option>
               {seasonList.map((s) => (
                 <option key={s} value={String(s)}>
                   第 {s} 赛季
@@ -279,7 +279,7 @@ export function PetChampionStageStatsTab({ source }: StageStatsTabProps) {
                     : 'text-textSub hover:text-textMain'
                 )}
               >
-                出场率 (Pick Rate)
+                出场率
               </button>
               <button
                 type="button"
@@ -291,7 +291,7 @@ export function PetChampionStageStatsTab({ source }: StageStatsTabProps) {
                     : 'text-textSub hover:text-textMain'
                 )}
               >
-                晋级胜率 (Win Rate)
+                晋级胜率
               </button>
             </div>
           </label>

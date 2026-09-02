@@ -179,7 +179,7 @@ const ROLE_SKILL_FILE_HINTS = [
 ];
 
 const QUESTION_FILE_ROUTES = [
-  [/(?:主角)?装备.*(?:打造|升重)|锻造书|玄铁/, ['role_equip_make']],
+  [/(?:主角)?装备.*(?:打造|升重)|锻造书|玄铁|(?:武器|头盔|战甲|饰品|手镯|戒指|项链|释厄|戮仙|诛仙|太极|破军|天煞|七星).*(?:打造|升重)/, ['role_equip_make']],
   [/装备.*强化|强化升级/, ['role_equip_upgrade']],
   [/装备.*熔炼|熔炼系统|神化.*装备/, ['role_equip_smelt']],
   [/装备.*宝石|精练宝石|3合1/, ['role_equip_stone']],
@@ -195,7 +195,7 @@ const QUESTION_FILE_ROUTES = [
   [/宠物.*(?:品类|灵兽|仙兽|神兽|圣兽|专属技能)/, ['pet_wiki_index', 'pet_skill']],
   [/配对|繁育|公冶香包/, ['pet_mating']],
   [/宠物.*潜能|潜能残页/, ['pet_potential']],
-  [/宠物装备.*(?:打造|升重)|神灵晶/, ['pet_equip_make']],
+  [/宠物装备.*(?:打造|升重)?|神灵晶|(?:灭蒙|飞天|天马|腾雾|灵鹤|玄武|白虎|朱雀|青龙|哮天|仙兽|神兽)?(?:护盔|项圈|宝甲|爪刃)/, ['pet_equip_make']],
   [/坐骑.*(?:升星|星级|主动|被动)/, ['ride_star', 'ride_skill']],
   [/坐骑装备|马鞍|缰绳|蹄铁|法铃/, ['ride_equip_make', 'ride_equip_recast', 'ride_equip_upgrade']],
   [/翅膀.*(?:升阶|羽毛碎片|滑翔|飞行)/, ['role_wing_upgrade', 'role_wing_skill']],
