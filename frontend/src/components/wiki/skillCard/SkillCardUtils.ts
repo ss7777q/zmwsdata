@@ -47,41 +47,123 @@ export function buffValueText(v: BuffValue | null) {
   return parts.length ? parts.join(' + ') : null;
 }
 
+export function labelByBuffType(buff: BuffInfo): string | null {
+  const type = buff.type;
+  if (typeof type !== 'number') return null;
+
+  const val = buff.value?.val;
+  const per = buff.value?.per;
+  const isNeg = (typeof val === 'number' && val < 0) || (typeof per === 'number' && per < 0);
+  const text = buff.displayText || '';
+
+  switch (type) {
+    // 攻击类
+    case 5:   // BUFF_ATK
+    case 133: // BUFF_ATK_VSKILL
+    case 134: // BUFF_ATK_BESKILL
+    case 656: // BUFF_ADD_ATK_DAMAGE
+      return isNeg ? '攻击降低' : '攻击提升';
+
+    // 防御类
+    case 6:   // BUFF_DEF
+    case 202: // BUFF_DEF_2
+    case 300: // BUFF_DEF_P
+      return isNeg ? '防御降低' : '防御提升';
+    case 301: // BUFF_DEFSUBTRACT_P
+    case 501: // BUFF_RUODIAN_DEF
+      return '防御降低';
+
+    // 命中类
+    case 7:   // BUFF_HITVAL
+    case 271: // BUFF_HITVAL_2
+    case 302: // BUFF_HITVAL_P
+      return isNeg ? '命中降低' : '命中提升';
+
+    // 闪避类
+    case 8:   // BUFF_DODGE
+    case 272: // BUFF_DODGE_2
+    case 303: // BUFF_DODGE_P
+      return isNeg ? '闪避降低' : '闪避提升';
+
+    // 暴击类
+    case 9:   // BUFF_CRIT
+    case 307: // BUFF_CRIT_P
+    case 500: // BUFF_RUODIAN_CRIT
+      return isNeg ? '暴击降低' : '暴击提升';
+
+    // 韧性类
+    case 10:  // BUFF_TENACITY
+    case 245: // BUFF_TENACITY_2
+    case 304: // BUFF_TENACITY_P
+      return isNeg ? '韧性降低' : '韧性提升';
+
+    // 幸运类
+    case 11:  // BUFF_LUCKY
+    case 305: // BUFF_LUCKY_P
+      return isNeg ? '幸运降低' : '幸运提升';
+
+    // 守护类
+    case 12:  // BUFF_GUARDIAN
+    case 306: // BUFF_GUARDIAN_P
+      return isNeg ? '守护降低' : '守护提升';
+
+    // 护盾类
+    case 13:  // BUFF_SHIELD_BLOOD
+    case 187: // BUFF_SHIELD_DORSUM
+    case 290: // BUFF_SHIELD_ADD
+      return '护盾值';
+
+    // 生命与回血类
+    case 1:   // BUFF_CHANGE_HP
+    case 165: // BUFF_CHANGE_HP_OTHER_PROP
+      if (isNeg) return '生命扣减';
+      return /每秒/.test(text) ? '每秒回血' : '回血值';
+
+    case 29:  // BUFF_HEALHP
+    case 257: // BUFF_HEALHP_2
+    case 297: // BUFF_HEALHP_MAXHP
+      return isNeg ? '回血降低' : '回血提升';
+
+    case 19:  // BUFF_MAX_HP
+      return isNeg ? '生命上限降低' : '生命上限提升';
+
+    case 36:  // BUFF_CURE_PER
+      return isNeg ? '治疗降低' : '治疗提升';
+    case 37:  // BUFF_SHOW_CURE_PER
+      return '治疗无效化';
+    case 148: // BUFF_CURE
+      return isNeg ? '治疗降低' : '治疗提升';
+
+    case 32:  // BUFF_SUCK_HP
+    case 195: // BUFF_SUCK_HP_MAX
+      return '生命偷取';
+
+    // 移速类
+    case 4:   // BUFF_SPEED
+    case 154: // BUFF_SPD_2
+    case 265: // BUFF_FLY_SPD
+      return isNeg ? '移速降低' : '移速提升';
+
+    // 法力与回魔
+    case 16:  // BUFF_CHANGE_MP
+      return isNeg ? '法力扣减' : '法力回复';
+    case 30:  // BUFF_HEALMP
+    case 279: // BUFF_HEALMP_MAXMP
+      return isNeg ? '回魔降低' : '回魔提升';
+
+    // 无双
+    case 22:  // BUFF_CHANGE_SP
+    case 504: // BUFF_ADD_COUNT_SP
+      return '无双回复';
+
+    default:
+      return null;
+  }
+}
+
 export function inferGrowthBuffValueLabel(buff: BuffInfo) {
-  const name = cleanBuffName(buff.name || '');
-  if (/固伤/.test(name)) return '固伤';
-  if (/护盾|抵挡/.test(name)) return '护盾值';
-  if (/恢复.*生命|回血|回复.*生命/.test(name)) return /每秒/.test(name) ? '每秒回血' : '回血值';
-  if (/减伤/.test(name)) return /降低|扣减|弱化/.test(name) ? '减伤降低' : '减伤值';
-  if (/穿透/.test(name) || /金曦渡芒/.test(name)) return '穿透提升';
-  if (/攻击/.test(name) || /金盘送暖/.test(name)) return /降低|下降|弱化/.test(name) ? '攻击降低' : '攻击提升';
-  if (/韧性/.test(name)) return /降低|扣减|弱化/.test(name) ? '韧性降低' : '韧性值';
-  if (/防御/.test(name)) return /降低|扣减|弱化/.test(name) ? '防御降低' : '防御值';
-  if (/守护/.test(name)) return /降低|扣减|弱化/.test(name) ? '守护降低' : '守护值';
-  if (/闪避/.test(name)) return /降低|扣减|弱化/.test(name) ? '闪避降低' : '闪避值';
-  if (/命中/.test(name)) return /降低|扣减|弱化/.test(name) ? '命中降低' : '命中值';
-  if (/幸运/.test(name)) return /降低|扣减|弱化/.test(name) ? '幸运降低' : '幸运值';
-  if (/暴击/.test(name)) return /降低|扣减|弱化/.test(name) ? '暴击降低' : '暴击值';
-  if (/失明|致盲/.test(name)) return '命中值';
-  if (/伤害|灼烧|中毒|毒伤|真伤/.test(name)) return '伤害值';
-
-  const text = (buff.displayText || '').split(/[；。]/)[0].replace(/^(?:命中附加|命中后|受击触发|受击后|释放附加|释放后|造成伤害时|攻击时|普攻时)/, '');
-  if (/固伤/.test(text)) return '固伤';
-  if (/护盾|抵挡/.test(text)) return '护盾值';
-  if (/恢复.*生命|回血|回复.*生命/.test(text)) return /每秒/.test(text) ? '每秒回血' : '回血值';
-  if (/减伤/.test(text)) return /降低|扣减|弱化/.test(text) ? '减伤降低' : '减伤值';
-  if (/穿透/.test(text)) return '穿透提升';
-  if (/攻击/.test(text)) return /降低|下降|弱化/.test(text) ? '攻击降低' : '攻击提升';
-  if (/韧性/.test(text)) return /降低|扣减|弱化/.test(text) ? '韧性降低' : '韧性值';
-  if (/防御/.test(text)) return /降低|扣减|弱化/.test(text) ? '防御降低' : '防御值';
-  if (/守护/.test(text)) return /降低|扣减|弱化/.test(text) ? '守护降低' : '守护值';
-  if (/闪避/.test(text)) return /降低|扣减|弱化/.test(text) ? '闪避降低' : '闪避值';
-  if (/命中/.test(text)) return /降低|扣减|弱化/.test(text) ? '命中降低' : '命中值';
-  if (/幸运/.test(text)) return /降低|扣减|弱化/.test(text) ? '幸运降低' : '幸运值';
-  if (/暴击/.test(text)) return /降低|扣减|弱化/.test(text) ? '暴击降低' : '暴击值';
-  if (/失明|致盲/.test(text)) return '命中值';
-  if (/伤害|灼烧|中毒|毒伤|真伤/.test(text)) return '伤害值';
-
+  const typeLabel = labelByBuffType(buff);
+  if (typeLabel) return typeLabel;
   return cleanBuffName(buff.name) || '数值';
 }
 

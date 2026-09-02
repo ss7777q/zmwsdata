@@ -4,6 +4,8 @@ export interface BuffValue {
   val: number | null;
 }
 export interface BuffInfo {
+  buffId?: number;
+  type?: number;
   name: string;
   bindLabel: string;
   time: number | string | null;

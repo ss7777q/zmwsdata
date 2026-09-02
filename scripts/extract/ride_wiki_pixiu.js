@@ -197,6 +197,7 @@ function collectBeskillEffects(displaySkillId, ctx, warnings) {
         const rawBuff1 = resolveRawBuff(g1.buff, ctx.buffById);
         const base = {
           baseBuffId: buffId,
+          type: rawBuff1.type ?? null,
           name: rawBuff1.name || `buff${buffId}`,
           text: rawBuff1.text || null,
           time: rawBuff1.time ?? null,
@@ -264,6 +265,7 @@ function collectBuffs(displaySkillId, concreteIds, ride, slotKind, ctx, warnings
       const rawBuff1 = resolveRawBuff(g1.buff, ctx.buffById);
       const base = {
         baseBuffId: ref.baseBuffId,
+        type: rawBuff1.type ?? null,
         name: rawBuff1.name || `buff${ref.baseBuffId}`,
         text: rawBuff1.text || null,
         time: rawBuff1.time ?? null,
@@ -471,7 +473,14 @@ function buildSkillCard(displaySkillId, ride, slotLabel, slotKind, ctx) {
     l.growthBuffs = growthBuffRefs.map((ref) => {
       const g = eng.resolveBuffGrowth(ref.baseBuffId, lv, ctx.buffById, warnings);
       const rawBuffG = resolveRawBuff(g.buff, ctx.buffById);
-      const engBuff = { name: ref.name, bindLabel: ref.bindLabel, time: ref.time, value: buffValueSummary(rawBuffG) };
+      const engBuff = {
+        buffId: ref.baseBuffId,
+        type: rawBuffG?.type ?? ref.type ?? null,
+        name: ref.name,
+        bindLabel: ref.bindLabel,
+        time: ref.time,
+        value: buffValueSummary(rawBuffG),
+      };
       if (ref.override && rawBuffG) {
         const { merged, warnings: w } = ov.mergeBuff(engBuff, ref.override, rawBuffG, ref.label);
         if (lv === 1) warnings.push(...w);
