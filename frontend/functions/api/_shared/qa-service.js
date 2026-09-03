@@ -1,3 +1,5 @@
+import { searchBosses } from './boss-search-service.js';
+
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
   'Cache-Control': 'no-store',
@@ -147,6 +149,11 @@ const QUERY_ALIASES = [
 const ENTITY_NICKNAMES = [
   ['花花', '花仙'],
   ['光花', '天阳花仙'],
+  ['天机噩梦', '十绝阵·噩梦'],
+  ['天机领域', '十绝阵'],
+  ['天机', '十绝阵'],
+  ['爪刃', '爪套'],
+  ['年书', '年兽'],
 ];
 
 function expandEntityAliases(question) {
@@ -159,17 +166,24 @@ function expandEntityAliases(question) {
 }
 
 const SCOPE_DEFAULT_FILES = {
-  mechanics: ['cold_knowledge'],
+  mechanics: ['cold_knowledge', 'exp'],
   roles: ['role_wiki_skill_extra'],
   danyuan: ['role_danyuan_effect_index'],
   fashion: ['role_fashion_renew', 'role_fashion_ball'],
   matrices: ['role_matrix_skill', 'role_matrix_fq', 'role_matrix_zh'],
-  pets: ['pet_wiki_index', 'pet_skill'],
-  rides: ['ride_wiki_index', 'ride_skill'],
+  pets: ['pet_wiki_index', 'pet_skill', 'pet_star', 'pet_god_weapon', 'pet_equip_upgrade'],
+  rides: ['ride_wiki_index', 'ride_skill', 'ride_star'],
   bosses: ['boss_index'],
-  progression: ['power_requirements'],
+  progression: ['power_requirements', 'exp'],
   resources: ['resource_acquisition'],
   rankings: ['beast_lineup_analysis', 'beast_player_analysis', 'call_god_battlefield_source'],
+  starstone: ['role_starstone', 'role_starcore', 'role_starstone_effect'],
+  godweapons: ['role_godweapon_effect', 'role_godweapon_lev', 'role_godweapon_unlock'],
+  rogue: ['rogue_item_analysis'],
+  cultivate: ['role_meridians', 'role_heart', 'role_danqi', 'role_waidan', 'role_xianpo', 'role_lianti'],
+  spiritual: ['role_magic_lev', 'role_magic_soul', 'role_magic_luck', 'role_magic_effect', 'role_godweapon_effect', 'role_matrix_skill'],
+  call_god: ['call_god_attribute', 'call_god_ratio', 'call_god_stone_rewards', 'call_god_stage_limits', 'call_god_boss_common_skills', 'call_god_boss_talents'],
+  stage_rewards: ['stage_reward_exp_soul', 'stage_expected_drops'],
 };
 
 const DANQI_QUESTION_PATTERN = /丹气|内丹.*(?:阴阳|阴.*阳|攻击.*防御|精炼|灵魂)/;
@@ -183,32 +197,58 @@ const QUESTION_FILE_ROUTES = [
   [/装备.*强化|强化升级/, ['role_equip_upgrade']],
   [/装备.*熔炼|熔炼系统|神化.*装备/, ['role_equip_smelt']],
   [/装备.*宝石|精练宝石|3合1/, ['role_equip_stone']],
-  [/法宝.*升级|救世圣莲|地煞葫芦/, ['role_magic_lev']],
+  [/法宝.*(?:升级|附灵|气运|品质|技能|效果)|救世圣莲|地煞葫芦|附灵|洗气运/, ['role_magic_lev', 'role_magic_soul', 'role_magic_luck', 'role_magic_effect']],
   [/阵法.*法器|金光法镜|金光镜|红砂法印/, ['role_matrix_fq']],
   [/十绝阵|天绝阵|化血阵|红砂阵/, ['role_matrix_skill']],
+  [/神器|伏羲琴|轩辕剑|盘古斧|炼妖壶|昊天塔|神农鼎|崆峒印|昆仑镜|女娲石|东皇钟/, ['role_godweapon_effect', 'role_godweapon_lev', 'role_godweapon_unlock']],
+  [/星石|星核|极效|词条|天冲|灵慧|气魄|力魄|中枢|精魄|英魄|天枢|天璇|天玑|天权|玉衡|开阳|摇光/, ['role_starstone', 'role_starstone_effect', 'role_starcore']],
+  [/局内道具|幻境道具|肉鸽|秘宝/, ['rogue_item_analysis']],
   [/时装.*(?:续费|传承)|织虹灵线/, ['role_fashion_renew']],
   [/称号|至尊战神|齐天大圣/, ['role_honor']],
   [/经脉|穴位/, ['role_meridians']],
+  [/修心|心境|心魔/, ['role_heart']],
+  [/外丹/, ['role_waidan']],
   [DANQI_QUESTION_PATTERN, ['role_danqi']],
   [/丹元/, ['role_danyuan_effect_index', 'role_danyuan_effect']],
   [/仙魄|炼体/, ['role_xianpo', 'role_lianti']],
+  [/宠物.*(?:升星|星级)/, ['pet_star']],
+  [/宠物.*神兵|宠兵|宠灵石/, ['pet_god_weapon']],
+  [/宠物装备.*强化/, ['pet_equip_upgrade']],
   [/宠物.*(?:品类|灵兽|仙兽|神兽|圣兽|专属技能)/, ['pet_wiki_index', 'pet_skill']],
   [/配对|繁育|公冶香包/, ['pet_mating']],
   [/宠物.*潜能|潜能残页/, ['pet_potential']],
-  [/宠物装备.*(?:打造|升重)?|神灵晶|(?:灭蒙|飞天|天马|腾雾|灵鹤|玄武|白虎|朱雀|青龙|哮天|仙兽|神兽)?(?:护盔|项圈|宝甲|爪刃)/, ['pet_equip_make']],
+  [/宠物装备.*(?:打造|升重)?|神灵晶|(?:灭蒙|飞天|天马|腾雾|灵鹤|玄武|白虎|朱雀|青龙|哮天|仙兽|神兽)?(?:护盔|项圈|宝甲|爪刃|爪套)/, ['pet_equip_make']],
   [/坐骑.*(?:升星|星级|主动|被动)/, ['ride_star', 'ride_skill']],
   [/坐骑装备|马鞍|缰绳|蹄铁|法铃/, ['ride_equip_make', 'ride_equip_recast', 'ride_equip_upgrade']],
   [/翅膀.*(?:升阶|羽毛碎片|滑翔|飞行)/, ['role_wing_upgrade', 'role_wing_skill']],
+  [/翎羽.*气运|羽毛.*气运/, ['role_feather_luck']],
   [/翎羽|羽枝|羽丝|羽魂/, ['role_feather_baptize', 'role_feather_advance']],
+  [/神魔.*(?:属性|倍率|继承|模板|上限)|神魔关卡/, ['call_god_attribute', 'call_god_ratio', 'call_god_stage_limits']],
   [/神魔.*(?:灵石|祝福|奖励|采矿|击杀|表现)|神灵石|魔灵石/, ['call_god_stone_rewards']],
   [/魔王疾行|天魔之跃|横行霸道/, ['call_god_boss_common_skills']],
   [/坐骑猎手|复生诅咒|魔棘尖刺|魔王天赋/, ['call_god_boss_talents']],
+  [/关卡.*掉落|副本.*掉落|掉落产出|哪.*掉落|产出掉落/, ['stage_expected_drops', 'stage_reward_exp_soul']],
   [/经验.*灵魂.*产出|主线普通关卡.*噩梦|\bexp\b.*\bsoul\b/i, ['stage_reward_exp_soul', 'resource_acquisition']],
+  [/(?:升级)?经验需求|等级经验|每级经验|(?:升到|升至)?\d+级.*(?:要|需|需要).*经验|\bexp\b/i, ['exp']],
+  [/抗值|标准值|暴击标准|命中标准|闪避标准|韧性标准|通用抗值/, ['exp', 'cold_knowledge']],
+  [/闪避率|命中率|暴击率|格挡率|减伤率|防御减伤|伤害计算|增伤.*免伤|修正叠加|强攻抗性|抓取抗性|控制抗性|绿抗|蓝抗|黄抗/, ['cold_knowledge', 'exp']],
   [/推荐战力|战力门槛|破甲.*免伤抗性/, ['power_requirements']],
+  [/昆仑.*(?:竞技|PVP|对战)/, ['kunlun_pvp_analysis']],
   [/昆仑山|昆仑令|爬塔|扫荡/, ['kunlun_analysis']],
+  [/万兽.*(?:对局|异常|复盘)|战力异常/, ['beast_detail', 'beast_anomalies']],
 ];
 
 const ROUTED_READ_SPECS = [
+  [
+    /(?:升级)?经验需求|等级经验|每级经验|抗值|标准值|暴击率|命中率|闪避率/,
+    [{
+      file: 'exp',
+      pointers: [
+        '/data/0', '/data/49', '/data/69', '/data/79', '/data/89', '/data/99',
+        '/data/149', '/data/199', '/data/213', '/data/217', '/data/219', '/data/231', '/data/234',
+      ],
+    }],
+  ],
   [
     DANQI_QUESTION_PATTERN,
     [{
@@ -453,16 +493,28 @@ export async function recordQaLog(env, { question, answer, model, citations, lat
   }
 }
 
+function contextualizeQueryForSearch(question, history) {
+  const q = String(question || '').trim();
+  if (!Array.isArray(history) || history.length === 0) return q;
+  const lastUser = [...history].reverse().find((m) => m.role === 'user')?.content?.trim();
+  if (!lastUser) return q;
+  if (/^(那|这|它|他|其|具体|另外|还有|满级|升重|打造|消耗|伤害|倍率)/.test(q) || q.length <= 10) {
+    return `${lastUser} ${q}`.slice(0, MAX_TOOL_QUERY_LENGTH);
+  }
+  return q;
+}
+
 export async function handleQaRequest({ request, env, waitUntil }) {
   const startedAt = Date.now();
   try {
     const input = await parseRequest(request);
 
     if (String(env?.QA_MODE || '').trim().toLowerCase() === 'mock') {
+      const effectiveQuery = contextualizeQueryForSearch(input.question, input.history);
       const search = await searchKnowledge({
         request,
         env,
-        query: input.question,
+        query: effectiveQuery,
         scope: 'auto',
         maxResults: MAX_RETRIEVED_DOCUMENTS,
       });
@@ -597,6 +649,24 @@ function selectKnowledgeFiles(question) {
   if (question.includes('时装') || question.includes('续费')) files.add('role_fashion_renew');
   if (question.includes('阵法') || question.includes('红水')) files.add('role_matrix_skill');
   if (question.includes('神魔') || question.includes('神灵石') || question.includes('魔灵石')) files.add('call_god_stone_rewards');
+  if (question.includes('经验') || question.includes('抗值') || question.includes('标准值') || question.includes('暴击率') || question.includes('命中率') || question.includes('闪避率')) {
+    files.add('exp');
+  }
+  if (question.includes('星石') || question.includes('星核') || question.includes('极效') || question.includes('词条')) {
+    files.add('role_starstone');
+    files.add('role_starstone_effect');
+  }
+  if (question.includes('神器') || question.includes('神农鼎') || question.includes('伏羲琴') || question.includes('女娲石')) {
+    files.add('role_godweapon_effect');
+    files.add('role_godweapon_lev');
+  }
+  if (question.includes('局内') || question.includes('幻境道具') || question.includes('肉鸽') || question.includes('秘宝')) {
+    files.add('rogue_item_analysis');
+  }
+  if (question.includes('修心')) files.add('role_heart');
+  if (question.includes('外丹')) files.add('role_waidan');
+  if (question.includes('附灵')) files.add('role_magic_soul');
+  if (question.includes('掉落') || question.includes('产出')) files.add('stage_expected_drops');
 
   for (const file of selectRoutedKnowledgeFiles(question)) {
     files.add(file);
@@ -611,7 +681,7 @@ function normalizeScope(value) {
 }
 
 function fileBelongsToScope(file, scope) {
-  if (scope === 'mechanics') return file === 'cold_knowledge';
+  if (scope === 'mechanics') return file === 'cold_knowledge' || file === 'exp';
   if (scope === 'roles') return file.startsWith('role_');
   if (scope === 'danyuan') return file.startsWith('role_danyuan');
   if (scope === 'fashion') return file.startsWith('role_fashion');
@@ -620,8 +690,15 @@ function fileBelongsToScope(file, scope) {
   if (scope === 'rides') return file.startsWith('ride_');
   if (scope === 'bosses') return file.startsWith('boss_') || file === 'kunlun_analysis';
   if (scope === 'progression') return file === 'power_requirements' || file.startsWith('role_');
-  if (scope === 'resources') return file.startsWith('resource_') || file.includes('expand');
+  if (scope === 'resources') return file.startsWith('resource_') || file.includes('expand') || file === 'stage_expected_drops';
   if (scope === 'rankings') return file.startsWith('beast_') || file.startsWith('call_god_');
+  if (scope === 'starstone') return file.startsWith('role_star') || file === 'role_starcore';
+  if (scope === 'godweapons') return file.startsWith('role_godweapon');
+  if (scope === 'rogue') return file.startsWith('rogue_');
+  if (scope === 'cultivate') return file.startsWith('role_meridians') || file.startsWith('role_danqi') || file.startsWith('role_heart') || file.startsWith('role_waidan') || file.startsWith('role_xianpo') || file.startsWith('role_lianti');
+  if (scope === 'spiritual') return file.startsWith('role_magic') || file.startsWith('role_godweapon') || file.startsWith('role_matrix');
+  if (scope === 'stage_rewards') return file.startsWith('stage_');
+  if (scope === 'call_god') return file.startsWith('call_god_');
   return true;
 }
 
@@ -817,12 +894,39 @@ function mergeSearchSources(direct, catalog, query, maxResults) {
   return { files, documents: ranked };
 }
 
+function formatBossDocument(boss) {
+  const resistDesc = Array.isArray(boss.resistEntries) && boss.resistEntries.length > 0
+    ? boss.resistEntries.map((r) => `${r.label || r.id}抗性:${r.value}`).join('，')
+    : '无特殊属性抗性';
+  return {
+    id: `boss:${boss.id}:${boss.name}`,
+    title: `${boss.name}（${boss.stageName || boss.typeLabel}）Boss 属性面板`,
+    source: `boss_type / ${boss.remark || boss.name}`,
+    text: joinUniqueText([
+      `BOSS名称：${boss.name}`,
+      `关卡位置：${boss.stageName || '未知'}（${boss.typeLabel || '关卡'}，关卡ID：${boss.stageId}）`,
+      `备注说明：${boss.remark || boss.name}`,
+      `BOSS等级：Lv.${boss.level ?? boss.lv}`,
+      `基础属性：生命(hp)=${boss.hp}，攻击(atk)=${boss.atk}，防御(def)=${boss.def}，回血(healHp)=${boss.healHp}`,
+      `副六维属性：命中(hitVal)=${boss.hitVal}，闪避(dodge)=${boss.dodge}，暴击(crit)=${boss.crit}，抗暴韧性(tenacity)=${boss.tenacity}，幸运(lucky)=${boss.lucky}，守护(guardian)=${boss.guardian}`,
+      `特殊属性：穿透(break)=${boss.break}，减伤(protect)=${boss.protect}`,
+      `属性抗性：${resistDesc}`,
+    ]),
+  };
+}
+
 async function directSearch({ request, scope, query, maxResults }) {
   const selectedFiles = selectKnowledgeFilesForScope(scope, query || '');
   const files = await expandIndexedKnowledgeFiles(request, scope, query, selectedFiles);
   const documents = await loadKnowledgeDocuments(request, files);
-  const ranked = rankDocuments(query, documents, maxResults);
-  return { files, documents: ranked };
+  const bossMatches = searchBosses(query).slice(0, 3);
+  const bossDocs = bossMatches.map(formatBossDocument);
+  const allDocs = bossDocs.concat(documents);
+  const ranked = rankDocuments(query, allDocs, maxResults);
+  const allFiles = bossDocs.length > 0 && ranked.some((d) => d.id?.startsWith('boss:'))
+    ? [...new Set(['boss_index', ...files])]
+    : files;
+  return { files: allFiles, documents: ranked };
 }
 
 async function readCatalogRecords({ env, args }) {
@@ -948,6 +1052,14 @@ function selectRoutedReadRequests(question) {
       requests.set(spec.file, [...new Set(pointers)]);
     }
   }
+
+  const levelMatches = [...question.matchAll(/(\d{1,3})级/g)].map((m) => Number(m[1])).filter((lv) => lv >= 1 && lv <= 235);
+  for (const lv of levelMatches) {
+    const pointers = requests.get('exp') || [];
+    pointers.push(`/data/${lv - 1}`);
+    requests.set('exp', [...new Set(pointers)]);
+  }
+
   return [...requests].flatMap(([file, pointers]) => {
     const chunks = [];
     for (let index = 0; index < pointers.length; index += 24) {
@@ -995,6 +1107,25 @@ async function prefetchQuestionEvidence({ env, question, search, state }) {
   if (exactRecords.records.length > 0) {
     parts.push(`系统自动展开的精确技能记录：\n${formatCatalogReadToolResult({ result: exactRecords, state })}`);
   }
+
+  const bossMatches = searchBosses(question).slice(0, 3);
+  if (bossMatches.length > 0) {
+    const bossText = bossMatches.map((boss) => {
+      const resistDesc = Array.isArray(boss.resistEntries) && boss.resistEntries.length > 0
+        ? boss.resistEntries.map((r) => `${r.label || r.id}抗性:${r.value}`).join('，')
+        : '无特殊属性抗性';
+      return [
+        `【${boss.name}】（关卡：${boss.stageName || '未知'}，类型：${boss.typeLabel || '副本'}，关卡ID：${boss.stageId}）：`,
+        `等级：Lv.${boss.level ?? boss.lv}`,
+        `生命：${boss.hp}，攻击：${boss.atk}，防御：${boss.def}，回血：${boss.healHp}`,
+        `命中：${boss.hitVal}，闪避：${boss.dodge}，暴击：${boss.crit}，抗暴韧性：${boss.tenacity}，幸运：${boss.lucky}，守护：${boss.guardian}`,
+        `穿透：${boss.break}，减伤：${boss.protect}`,
+        `属性抗性：${resistDesc}`,
+      ].join('\n');
+    }).join('\n\n');
+    parts.push(`系统自动检索到的关联关卡/BOSS属性面板（boss_index/boss_type）：\n${bossText}`);
+  }
+
   return parts;
 }
 
@@ -1152,9 +1283,115 @@ function buildDocuments(file, payload) {
     return buildCallGodStoneRewardsDocuments(file, data);
   }
 
+  if (file === 'role_starstone_effect' && Array.isArray(data)) {
+    return data.map((eff) => ({
+      id: `${file}:${eff.id || eff.name}`,
+      title: `${eff.name}（星石词条效果）`,
+      source: `${file}.json / ${eff.name}`,
+      text: joinUniqueText([
+        `【${eff.name}】（类型：${eff.typeName || '星石'}，所属：${eff.ownership?.name || '通用'}）：`,
+        eff.officialDescription,
+        eff.detail,
+        eff.extremeEffect,
+      ]),
+    }));
+  }
+
+  if (file === 'role_godweapon_effect' && Array.isArray(data)) {
+    return data.map((gw) => ({
+      id: `${file}:${gw.id || gw.name}`,
+      title: `${gw.name}（神器效果）`,
+      source: `${file}.json / ${gw.name}`,
+      text: joinUniqueText([
+        `【${gw.name}】（神器ID：${gw.id}，共 ${gw.rankCount} 阶）：`,
+        JSON.stringify(compactValue(gw), null, 2),
+      ]),
+    }));
+  }
+
+  if (file === 'rogue_item_analysis' && Array.isArray(data?.items)) {
+    return data.items.map((group) => ({
+      id: `${file}:${group.id || group.name}`,
+      title: `${group.name}（局内道具）`,
+      source: `${file}.json / ${group.name}`,
+      text: joinUniqueText([
+        `【${group.name}】（分类：${group.typeName || '局内道具'}，品质：${group.qualityName || '未知'}）：`,
+        group.officialDescription,
+        group.guideSummary,
+        group.damageSummary,
+        group.searchText,
+      ]),
+    }));
+  }
+
+  if (file === 'stage_expected_drops' && Array.isArray(data?.stages)) {
+    return data.stages.map((st) => ({
+      id: `${file}:${st.stageId || st.stageName}`,
+      title: `${st.stageName}（关卡期望掉落）`,
+      source: `${file}.json / ${st.stageName}`,
+      text: joinUniqueText([
+        `【${st.stageName}】（关卡ID：${st.stageId}）：`,
+        `掉落物品：${(st.drops || []).map((d) => `${d.name}（期望:${d.expectedCount}）`).join('，')}`,
+      ]),
+    }));
+  }
+
+  if (file === 'exp') {
+    return buildExpDocuments(file, payload);
+  }
+
   const documents = [];
   collectGenericDocuments(data, file, '$', documents, 0);
   return documents.slice(0, MAX_DOCUMENTS_PER_FILE);
+}
+
+function buildExpDocuments(file, payload) {
+  const list = Array.isArray(payload?.data) ? payload.data : [];
+  if (list.length === 0) return [];
+
+  const overview = {
+    id: `${file}:overview`,
+    title: '角色升级经验与等级抗值标准表',
+    source: `${file}.json / overview`,
+    text: joinUniqueText([
+      '【角色升级经验与等级抗值标准表说明】',
+      '记录角色 1~235 级每级升级所需经验值（exp）、防御抗值标准（phyDefStandard）、通用抗值标准（commonStandard）。',
+      '核心属性定义：',
+      '- level：角色等级（1~235 级）。',
+      '- exp：升到下一级所需消耗的经验值。例如：1级升2级需150，100级需342000，214级需6463000，218级需6630000，220级需6714000，232级需7247000，235级需7387000。',
+      '- phyDefStandard：防御抗值标准，用于计算防御减伤因子 m = def / (def + phyDefStandard)。',
+      '- commonStandard：通用抗值标准，统一作为命中、闪避、暴击、抗暴韧性、幸运、守护的标准值（S），用于副六维属性中值计算与等级压制。',
+      '副六维计算法则：',
+      '- 命中率中值：x = 攻方命中 / 守方标准值 - 守方闪避 / 攻方标准值。最终命中率 H = 1 + x / (|x| + 1)。若 x >= 0 则必定命中（0闪避）；若 x < 0 则会有概率出现闪避。',
+      '- 暴击率中值：C = 攻方暴击 / 守方标准值 - 守方韧性 / 攻方标准值。若 C > 0 则暴击率为 C；若 C < 0 则守方格挡率为 |C|。',
+    ]),
+  };
+
+  const tiers = [
+    { name: '1~50级', start: 1, end: 50 },
+    { name: '51~100级', start: 51, end: 100 },
+    { name: '101~150级', start: 101, end: 150 },
+    { name: '151~200级', start: 151, end: 200 },
+    { name: '201~235级', start: 201, end: 235 },
+  ];
+
+  const tierDocs = tiers.map((tier) => {
+    const subset = list.filter((r) => r.level >= tier.start && r.level <= tier.end);
+    const rows = subset.map((r) =>
+      `Lv.${r.level}：升级经验=${r.exp}，防御标准=${Math.round(r.phyDefStandard)}，通用标准=${Math.round(r.commonStandard)}`
+    );
+    return {
+      id: `${file}:${tier.name}`,
+      title: `等级经验与抗值标准（${tier.name}）`,
+      source: `${file}.json / ${tier.name}`,
+      text: joinUniqueText([
+        `【${tier.name}】角色升级所需经验（exp）、防御抗值标准（phyDefStandard）、通用抗值标准（commonStandard）：`,
+        rows.join('\n'),
+      ]),
+    };
+  });
+
+  return [overview, ...tierDocs];
 }
 
 function joinUniqueText(values) {
@@ -1656,7 +1893,8 @@ function rankDocuments(question, documents, maxResults = MAX_RETRIEVED_DOCUMENTS
   const matched = focusRankedDocuments(question, ranked.filter((item) => item.score > 0));
   const topScore = matched[0]?.score || 0;
   const secondScore = matched[1]?.score || 0;
-  const hasClearLeader = topScore >= 8 && topScore >= secondScore * 1.5;
+  const hasBossDoc = matched.some((item) => item.document.id?.startsWith('boss:'));
+  const hasClearLeader = !hasBossDoc && topScore >= 8 && topScore >= secondScore * 1.5;
   const minimumScore = hasClearLeader
     ? Math.max(3, Math.ceil(topScore * 0.65))
     : topScore >= 4 ? Math.max(2, Math.ceil(topScore * 0.5)) : 1;
@@ -2233,15 +2471,16 @@ async function completeFromRetrieved({ provider, model, question, history, state
 
 async function completeWithCompactFallback({ provider, model, question, history, request, env }) {
   const state = createRetrievalState();
+  const effectiveQuery = contextualizeQueryForSearch(question, history);
   const search = await searchKnowledge({
     request,
     env,
-    query: question,
+    query: effectiveQuery,
     scope: 'auto',
     maxResults: MAX_RETRIEVED_DOCUMENTS,
   });
-  formatSearchToolResult({ query: question, scope: 'auto', search, state });
-  await prefetchQuestionEvidence({ env, question, search, state });
+  formatSearchToolResult({ query: effectiveQuery, scope: 'auto', search, state });
+  await prefetchQuestionEvidence({ env, question: effectiveQuery, search, state });
   const context = buildCleanAnswerContext(state);
   const messages = [
     { role: 'system', content: buildCompactSystemPrompt(context) },

@@ -28,6 +28,12 @@ function scoreBoss(boss, query, tokens) {
   if (remark.includes(query)) {
     return 300;
   }
+  // 句子包含Boss名称（例如用户提问 "打玥伶会出闪避吗"）
+  if (name.length >= 2 && query.includes(name)) {
+    let score = 600 + name.length * 10;
+    if (stageName.length >= 2 && query.includes(stageName)) score += 200;
+    return score;
+  }
   // 关卡名完全匹配
   if (stageName === query) {
     return 200;
@@ -35,6 +41,10 @@ function scoreBoss(boss, query, tokens) {
   // 关卡名包含
   if (stageName.includes(query)) {
     return 100;
+  }
+  // 句子包含关卡名（例如用户提问 "打琉璃宫的boss"）
+  if (stageName.length >= 2 && query.includes(stageName)) {
+    return 150 + stageName.length * 10;
   }
 
   // 多词匹配 (例如: '火焰山 牛魔王')
