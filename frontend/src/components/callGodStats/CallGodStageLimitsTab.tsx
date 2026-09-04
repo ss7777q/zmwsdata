@@ -1,9 +1,9 @@
-import { Database } from 'lucide-react';
+import { Database, Info } from 'lucide-react';
 import { ScrollTableFrame } from './CallGodAttributeTab';
 import type { StageLimitPayload, StageLimitValue } from './callGodStatsShared';
 
 const BATTLEFIELD_COLUMNS = [
-  { key: 'skillLimit', label: '角色技能' },
+  { key: 'actualSkillLv', label: '角色技能' },
   { key: 'rideSkillLimit', label: '坐骑技能' },
   { key: 'danyuanLimit', label: '丹元' },
   { key: 'wingSkillLimit', label: '翅膀技能' },
@@ -29,6 +29,58 @@ function LimitList({ limits }: { limits: StageLimitValue[] }) {
         </span>
       ))}
     </div>
+  );
+}
+
+function SkillMechanismNotice({ note }: { note?: StageLimitPayload['skillMechanismNote'] }) {
+  return (
+    <section className="overflow-hidden rounded-2xl border border-blue-500/30 bg-blue-500/5 p-5 shadow-sm dark:border-blue-500/20 dark:bg-blue-950/20">
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 rounded-lg bg-blue-500/10 p-2 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 shrink-0">
+          <Info size={20} aria-hidden="true" />
+        </div>
+        <div className="space-y-3 flex-1 text-sm">
+          <div>
+            <h3 className="text-base font-semibold text-textMain">
+              {note?.title || '角色技能调整规则'}
+            </h3>
+            <p className="mt-1 text-textSub">
+              {note?.summary || '神魔战场实际上没有固定的角色技能等级上限，而是根据角色当前等级、战场等级以及局外技能等级进行动态平移调整。'}
+            </p>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="rounded-xl border border-border/60 bg-surface/70 p-3.5 space-y-1.5">
+              <div className="text-xs font-semibold text-textSub">技能等级动态调整规则</div>
+              <p className="text-xs text-textSub leading-relaxed">
+                进入神魔战场后，如果角色等级受到战场压制，角色等级每被压低 5 级，技能等级相应扣减 1 级：
+              </p>
+              <div className="mt-1 rounded bg-card px-2.5 py-1.5 font-mono text-xs text-primary border border-border/40">
+                {note?.formula || '局内技能等级 = 局外技能等级 + (战场等级 - 自身等级) ÷ 5'}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-border/60 bg-surface/70 p-3.5 space-y-1.5">
+              <div className="text-xs font-semibold text-textSub">满级角色局内实际表现</div>
+              <p className="text-xs text-textSub leading-relaxed">
+                玩家在局外满级满技能进入战场时，实际生效的技能等级固定为：
+              </p>
+              <div className="mt-1 rounded bg-card px-2.5 py-1.5 font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 border border-border/40">
+                满级实际技能 = (战场等级 ÷ 5) + 1
+              </div>
+              <p className="text-[11px] text-textSub">
+                例如：17 阶（战场 230 级）局内实际为 <strong>47 级</strong>；15 阶（战场 210 级）局内实际为 <strong>43 级</strong>。
+              </p>
+            </div>
+          </div>
+
+          <div className="text-xs text-textSub/90 border-t border-border/40 pt-2.5 flex items-center gap-1.5">
+            <span className="font-semibold text-textMain">对照说明：</span>
+            <span>{note?.rideComparison || '坐骑技能则有固定上限，严格按表内配置的上限截断（例如 17 阶坐骑技能上限固定为 46 级）。'}</span>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -93,6 +145,9 @@ function BattlefieldLimitTable({ payload }: { payload: StageLimitPayload }) {
           </tbody>
         </table>
       </ScrollTableFrame>
+      <div className="border-t border-border/50 bg-surface/30 px-5 py-3 text-xs text-textSub leading-relaxed">
+        <strong>* 提示：</strong>角色技能并无固定上限，表格展示的是局外满级角色进场后的实际生效等级，计算公式为 <code>战场等级 ÷ 5 + 1</code>。若玩家在局外未满级，则按等级差动态缩放，详见上方规则说明。
+      </div>
     </section>
   );
 }
@@ -206,6 +261,7 @@ export function StageLimitsTab({ payload }: { payload: StageLimitPayload | null 
   return (
     <div className="space-y-6">
       <SourceStrip sources={payload.sources} />
+      <SkillMechanismNotice note={payload.skillMechanismNote} />
       <BattlefieldLimitTable payload={payload} />
       <DemonLimitTable payload={payload} />
       <OtherLimitTables payload={payload} />

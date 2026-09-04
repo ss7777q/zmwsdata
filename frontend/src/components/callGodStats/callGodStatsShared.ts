@@ -183,6 +183,14 @@ export interface StageLimitPayload {
     entityOverrides: string;
     demonKings: string;
   };
+  skillMechanismNote?: {
+    title: string;
+    summary: string;
+    rule: string;
+    formula: string;
+    maxPerformance: string;
+    rideComparison: string;
+  };
   battlefieldTiers: Array<{
     id: number;
     battlefield: number;
