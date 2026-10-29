@@ -172,10 +172,15 @@ function extract() {
         const fullSeconds = (frames + maxFrames) / 30;
         const firstRow = required(ctx.levels, eng.skillLevelRowId(damageSkill, 1), 'skillLevel');
         const segments = computeFirstHitBulletSegments(firstRow, eng.getBullet(bulletId, []), ctx.buffs, 1);
+        const maxRow = required(ctx.levels, eng.skillLevelRowId(damageSkill, maxLevel), 'skillLevel');
+        const maxSegments = computeFirstHitBulletSegments(maxRow, eng.getBullet(bulletId, []), ctx.buffs, maxLevel);
         const hits = segments.reduce((sum, segment) => sum + segment.maxHit, 0);
         const basePer = segments.reduce((sum, segment) => sum + segment.per * segment.maxHit, 0);
         const fullPer = basePer + hits * maxFrames * perFrame;
-        add('蓄力与伤害', `${ranges.length} 档蓄力，最长 ${maxFrames / 30} 秒（${maxFrames} 帧）。雷柱对每个目标首次命中时额外造成 ${pct(segments[0].per)} 攻击倍率伤害，另有 ${hits - 1} 段雷柱伤害。每蓄力一帧，每段攻击倍率增加 ${pct(perFrame)}；满蓄后每段增加 ${pct(maxFrames * perFrame)}，${hits} 段总攻击倍率由 ${pct(basePer)} 提高至 ${pct(fullPer)}。蓄力提高攻击倍率，固定伤害保持原值。`);
+        const formatDamage = (value) => Math.round(value).toLocaleString('en-US');
+        const fixedAtLevelOne = segments.reduce((sum, segment) => sum + segment.val * segment.maxHit, 0);
+        const fixedAtMaxLevel = maxSegments.reduce((sum, segment) => sum + segment.val * segment.maxHit, 0);
+        add('蓄力与伤害', `${ranges.length} 档蓄力，最长 ${maxFrames / 30} 秒（${maxFrames} 帧）。每个目标首次命中时额外结算一段 ${pct(segments[0].per)} 攻击倍率 + 固定伤害，雷柱本体另有 ${hits - 1} 段各 ${pct(segments[1].per)} 攻击倍率 + 固定伤害。固伤随技能等级成长：Lv.1 首次附加 ${formatDamage(segments[0].val)}、本体其余每段 ${formatDamage(segments[1].val)}（全中 ${formatDamage(fixedAtLevelOne)}）；Lv.${maxLevel} 首次附加 ${formatDamage(maxSegments[0].val)}、本体其余每段 ${formatDamage(maxSegments[1].val)}（全中 ${formatDamage(fixedAtMaxLevel)}）。每蓄力一帧，每段攻击倍率增加 ${pct(perFrame)}；满蓄后每段增加 ${pct(maxFrames * perFrame)}，${hits} 段总攻击倍率由 ${pct(basePer)} 提高至 ${pct(fullPer)}。蓄力只提高攻击倍率，不改变固伤。`);
         add('释放时间', `起手 ${cfg.time.skill4_1} 帧、吐息 ${cfg.time.skill4_3} 帧，未蓄力共 ${frames} 帧（约 ${Number(seconds.toFixed(3))} 秒），攻转 ${round(basePer / seconds)}。满蓄共 ${frames + maxFrames} 帧（约 ${Number(fullSeconds.toFixed(3))} 秒），攻转约 ${round(fullPer / fullSeconds)}。`);
         add('范围与出手提升', '相比神天应龙，吐息提前 5 帧（约 0.167 秒）出现。每档蓄力的雷柱大小加成为 8%，由原来的 2% 提高至四倍；六档蓄满时，这项大小加成由 12% 提高至 48%。吐息还能推退霸体敌人。');
         add('姿态与体力', '起手切换飞行，蓄力时可以低速移动，蓄满前体力消耗与地面一致。');
