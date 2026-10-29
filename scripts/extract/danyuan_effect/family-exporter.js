@@ -1,5 +1,5 @@
 const u = require('../../lib/utils');
-const { DANYUAN_QUALITY_NAMES } = require('./constants');
+const { DANYUAN_QUALITY_NAMES, DANYUAN_EXCLUDED_QUALITY_IDS } = require('./constants');
 const { requireDanyuanOverride } = require('./overrides');
 const {
   applyFamilyGrowthEffectValues,
@@ -126,6 +126,7 @@ function buildRawDanyuanFamilies(raw, ctx, warnings) {
 
   for (const row of raw.filter((item) => item.type > 1)) {
     const quality = row.type % 10;
+    if (DANYUAN_EXCLUDED_QUALITY_IDS.has(quality)) continue;
     if (!DANYUAN_QUALITY_NAMES[quality]) {
       throw new Error(`未知丹元品质: id=${row.id}, type=${row.type}`);
     }

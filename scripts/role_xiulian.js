@@ -3,6 +3,7 @@
  * 提取叶子: 修心(经脉), 修心(六维), 丹气气力, 丹元升级, 炼体(仙魄), 外丹(心脉+丹魂)
  */
 const u = require('../lib/utils');
+const { DANYUAN_EXCLUDED_QUALITY_IDS } = require('./extract/danyuan_effect/constants');
 
 // ━━━ 修心(经脉) ━━━ meridians.*.json ━━━━━━━━━━━━━━━━
 function extractMeridians() {
@@ -82,9 +83,9 @@ function extractDanyuan() {
   const raw = u.loadTable('danyuan');
   // 按品质汇总材料曲线（忽略丹元种类）
   const qualitySummary = {};
-  const core = raw.filter(r => r.type > 1);
+  const core = raw.filter(r => r.type > 1 && !DANYUAN_EXCLUDED_QUALITY_IDS.has(r.type % 10));
   for (const r of core) {
-    const quality = r.type % 10; // 3/4/5/6
+    const quality = r.type % 10; // 3/4/5/6; excellent quality is not exported
     if (!qualitySummary[quality]) {
       qualitySummary[quality] = {
         quality,

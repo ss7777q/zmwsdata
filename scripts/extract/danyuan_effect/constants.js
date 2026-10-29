@@ -6,12 +6,13 @@ const ENTITY_CTG_DIR = path.join(u.ROOT, 'file', 'battle-config', 'entityCtg');
 const BULLETS_PATH = path.join(u.ROOT, 'file', 'battle-config', 'bullets.json');
 
 const DANYUAN_QUALITY_NAMES = {
-  2: '优秀',
   3: '精良',
   4: '史诗',
   5: '传说',
   6: '先天'
 };
+
+const DANYUAN_EXCLUDED_QUALITY_IDS = new Set([2]);
 
 const DANYUAN_INNER_TYPE_NAMES = {
   yin: '阴',
@@ -68,6 +69,7 @@ module.exports = {
   ENTITY_CTG_DIR,
   BULLETS_PATH,
   DANYUAN_QUALITY_NAMES,
+  DANYUAN_EXCLUDED_QUALITY_IDS,
   DANYUAN_INNER_TYPE_NAMES,
   DANYUAN_GROWTH_DISPLAY_RULES,
   DANYUAN_SUMMON_SKILL_LEVEL_FAMILIES,
