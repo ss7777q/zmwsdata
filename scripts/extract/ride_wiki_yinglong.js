@@ -40,7 +40,7 @@ const YINGLONG_MECHANICS = {
     },
     {
       label: "水钻头追击联动",
-      value: "在【澜汐凝珠】水球跟随期间发动普攻，5 颗水球转化为水钻头追击目标，追加 5 段共 450% 伤害，并消耗 14 点蓄雨施加 35 层【雨湿】（每颗 7 层；骑术形态消耗 18 点施加 45 层/每颗 9 层）。"
+      value: "在【澜汐凝珠】水球跟随期间发动普攻或无双，5 颗水球转化为水钻头追击目标，追加 5 段共 450% 伤害，并消耗 14 点蓄雨施加 35 层【雨湿】（每颗 7 层；骑术形态消耗 18 点施加 45 层/每颗 9 层）。"
     }
   ],
 
@@ -83,16 +83,16 @@ const YINGLONG_MECHANICS = {
       value: "水球生成 1.5 秒后激活二段按键（持续 300 秒，不消耗能量）。再次按下技能键，5 颗水球锁定生命百分比最低的友方目标（包含自身）发射；友方不足 5 人时可重复选定单目标连续恢复。\n受内置被动（7084008 同技能连续命中衰减：[-40%, -90%, -90%, -90%, -90%]）影响：\n① 首颗水球命中同一目标触发 -40% 衰减，实际生效 60% 满额治疗：【施法者 3.57% 最大生命值 + 0.6×对应等级固值】；\n② 后续水球连续命中同一目标触发 -90% 衰减，单颗实际生效 10% 满额治疗：【施法者 0.595% 最大生命值 + 0.1×对应等级固值】（恰好为首颗治疗量的 1/6）；\n③ 单目标 5 颗全中累计恢复总量严格等于 100% 满额基准（60% + 10%×4 = 100%，即【施法者 5.95% 最大生命值 + 1.0×对应等级固值】）；\n④ 若 5 颗水球分别命中 5 个不同友方目标，则全员均按首颗 60% 结算，全队最高累计恢复 300% 满额治疗（施法者 17.85% 最大生命值 + 3.0×对应等级固值）。"
     },
     {
-      label: "普攻追击切换",
-      value: "若不主动触发治疗，水球保持待命，发动普通攻击时转化为水钻头追击目标（详见【技能3·追击】）。"
+      label: "追击切换",
+      value: "若不主动触发治疗，水球保持待命，发动普通攻击或无双时转化为水钻头追击目标（详见【技能3·追击】）。"
     }
   ],
 
   // 技能3·追击: 澜汐凝珠·水钻头
   20635010303: [
     {
-      label: "普攻联动触发",
-      value: "水球跟随状态下发动普通攻击（地面普攻或空中跳攻）时，5 颗水球转化为水钻头（飞行速度 60）攻击目标。"
+      label: "追击联动触发",
+      value: "水球跟随状态下发动普通攻击或无双时，5 颗水球转化为水钻头（飞行速度 60）攻击目标。"
     },
     {
       label: "5段打击伤害",
@@ -115,8 +115,8 @@ const YINGLONG_MECHANICS = {
       value: "蓄力期间每帧增加 1.25% 攻击力倍率，蓄满 90 帧累计增加 112.5% 攻击力倍率。增伤直接累加在攻击力倍率项（i.atkPer + 1.125），技能固伤部分不受增伤影响。"
     },
     {
-      label: "8段打击与每段增伤结算",
-      value: "发射雷柱，对目标造成 8 段打击（未蓄力基础总倍率 630.0%）。蓄力增伤值写入技能状态并在 8 段判定中持续生效，每段增加 112.5% 攻击力倍率：① 第 1 段由 497.7% 增至 610.2%；② 第 2~7 段（6段）每段由 18.9% 增至 131.4%（6段计 788.4%）；③ 第 8 段由 18.9% 增至 131.4%。8 段打满总倍率为 1,530.0%。"
+      label: "雷柱伤害与增伤结算",
+      value: "雷柱对每个目标首次命中时额外造成一段 497.7% 伤害，并按技能等级附加固定伤害；另有 7 段各 18.9% 的雷柱伤害。全部命中共 630%；满蓄时每段额外增加 112.5%，合计 1530%。首次命中附加伤害与雷柱判定分别结算。"
     },
     {
       label: "坐骑强韧",
@@ -124,7 +124,7 @@ const YINGLONG_MECHANICS = {
     },
     {
       label: "引爆【水络电涌】",
-      value: "命中雨湿目标，消耗层数并按 6.7% 基础攻击力/层追加伤害。未解锁骑术上限 68 层（455.6%）；骑术配置上限 187 层，但应龙目标雨湿最多 185 层，实际单次理论上限受限为 1239.5%。条件伤害不按 8 段重复倍乘。"
+      value: "命中雨湿目标，消耗层数并按 6.7% 基础攻击力/层追加伤害。未解锁骑术上限 68 层（455.6%）；骑术配置上限 187 层，但应龙目标雨湿最多 185 层，实际单次理论上限受限为 1239.5%。条件伤害不按伤害段数重复倍乘。"
     }
   ],
 
@@ -453,13 +453,8 @@ function computeRideLevel(displaySkillId, concreteIds, level, ride, slotKind, ct
     const s4Skill = ctx.skillById.get(20635010403);
     const row = ctx.skillLevelById.get(eng.skillLevelRowId(s4Skill, level));
     if (row && Array.isArray(row.bulletDamageAddPer) && row.bulletDamageAddPer[0]) {
-      const perArr = row.bulletDamageAddPer[0];
-      const valArr = row.bulletDamageAddVal[0];
-      mergedSegments = [
-        { per: perArr[0], val: valArr[0], maxHit: 1, from: "起手判定" },
-        { per: perArr[1], val: valArr[1], maxHit: 6, from: "持续连击" },
-        { per: perArr[2], val: valArr[2], maxHit: 1, from: "终段浮空" },
-      ];
+      const bullet = eng.getBullet(row.bullet[0], warnings);
+      mergedSegments = eng.computeFirstHitBulletSegments(row, bullet, ctx.buffById, level);
       mergedKind = "bullet";
     }
   }
@@ -537,7 +532,7 @@ function buildSkillCard(displaySkillId, ride, slotLabel, slotKind, ctx) {
   for (let lv = 1; lv <= maxLevel; lv++) {
     const l = computeRideLevel(displaySkillId, concreteIds, lv, ride, slotKind, ctx, warnings);
     if (!l) continue;
-    l.growthBuffs = growthBuffRefs.map((ref) => {
+    l.growthBuffs = growthBuffRefs.filter((ref) => !(displaySkillId === 20635010401 && ref.bindSource === 'firstHitAddBuffs' && ref.type === 155)).map((ref) => {
       const g = eng.resolveBuffGrowth(ref.baseBuffId, lv, ctx.buffById, warnings);
       const rawBuffG = resolveRawBuff(g.buff, ctx.buffById);
       return { name: ref.name, bindLabel: ref.bindLabel, time: ref.time, value: buffValueSummary(rawBuffG) };
@@ -558,7 +553,7 @@ function buildSkillCard(displaySkillId, ride, slotLabel, slotKind, ctx) {
     : (isS3Chase
       ? (isHuanglong
         ? "水球跟随状态下，发动任意普通攻击（地面普攻或空中跳攻）将消耗 26 点蓄雨值，将 5 颗跟随水球转化为水钻头攻击目标，造成 5 段共 450% 水属性伤害，每颗独立施加 13 层【雨湿】状态（全中累计 65 层）。"
-        : "水球跟随状态下，发动任意普通攻击（地面普攻或空中跳攻）将消耗 14 点蓄雨值，将 5 颗跟随水球转化为水钻头攻击目标，造成 5 段共 450% 水属性伤害，每颗独立施加 7 层【雨湿】状态（全中累计 35 层，2:1转化）。")
+        : "水球跟随状态下，发动普通攻击或无双将消耗 14 点蓄雨值，将 5 颗跟随水球转化为水钻头攻击目标，造成 5 段共 450% 水属性伤害，每颗独立施加 7 层【雨湿】状态（全中累计 35 层，2:1转化）。")
       : (skill.desIntro || null));
 
   const healBuff = isS3Summon ? [{

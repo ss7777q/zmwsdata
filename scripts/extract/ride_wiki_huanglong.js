@@ -1,6 +1,7 @@
 /** 黄龙专项解析：只读黄龙配置，分支技能不叠加，治疗不作为伤害样本。 */
 const u = require('../lib/utils');
 const eng = require('./lib/skill-engine');
+const { computeFirstHitBulletSegments } = require('./lib/ride-skill-engine');
 
 const index = (rows) => new Map(rows.map((row) => [row.id, row]));
 const round = (n) => Math.round(n * 1e6) / 1e6;
@@ -15,15 +16,15 @@ function required(map, id, table) {
 }
 
 function damageSegments(row, bullet, count = 1) {
-  // 客户端按触发时间递增 hitIdx，伤害数组不是按 JSON 中 com 的排列顺序取值。
-  const hits = (bullet.com || []).filter((com) => com.type === 1 && !com.isNotDamage)
+  // 非伤害判定也会递增 hitIdx，必须保留它在伤害数组中的位置。
+  const hits = (bullet.com || []).filter((com) => com.type === 1)
     .sort((a, b) => a.t - b.t);
-  return hits.map((com, i) => ({
+  return hits.flatMap((com, i) => com.isNotDamage ? [] : [{
     per: row.bulletDamageAddPer?.[0]?.[i] ?? row.damageAddPer,
     val: row.bulletDamageAddVal?.[0]?.[i] ?? row.damageAddVal,
     maxHit: (com.maxHit || 1) * count,
     from: `bullet:${bullet.id}@${com.t}`,
-  }));
+  }]);
 }
 
 function extract() {
@@ -53,8 +54,8 @@ function extract() {
     20635030001: '向前释放水刃，造成一段水属性伤害。地面和飞行时均可使用；身后有水球时，普攻会带动水球追击敌人。',
     20635030101: '展开双翼，在周身形成电网攻击并麻木敌人。电网尚未命中时，可再次按键，将其压缩为雷球向前发射。',
     20635030201: '化作闪电向前冲刺，期间大幅提升闪避。长按可继续消耗独立能量，延长位移。',
-    20635030301: '召唤六颗跟随水球。再次按键可治疗附近生命比例较低的友方，也可以通过普攻将水球转为水钻头追击敌人。',
-    20635030303: '身后有水球时，普攻带动六颗水球转为水钻头，向前方敌人发起追击。',
+    20635030301: '召唤六颗跟随水球。再次按键可治疗附近生命比例较低的友方，也可以通过普攻或无双将水球转为水钻头追击敌人。',
+    20635030303: '身后有水球时，普攻或无双带动六颗水球转为水钻头，向前方敌人发起追击。',
     20635030401: '进入飞行姿态并积蓄雷能，松开按键释放雷柱。蓄力越久，雷柱伤害和范围越大，吐息可推退霸体敌人。',
     20635030501: '神瑞帝龙跃起盘旋，以龙形江流聚拢敌人，持续攻击后引发水爆。',
     20635030601: '二段跳后再次按跳跃键进入飞行，可在空中自由移动，落地后恢复地面姿态。',
@@ -130,7 +131,10 @@ function extract() {
         add('电网与雷球', '电网共 5 段，每段 74.8%，总攻击倍率 374%。电网尚未命中时，可再次按键射出雷球，改为从远处攻击；雷球同样最多命中 5 次，总攻击倍率 374%。');
         add('相比神天应龙', `电网的实际命中范围由 ${referenceSize}×${referenceSize} 扩大至 ${currentSize}×${currentSize}（游戏距离单位），宽、高各增加 ${gainPct(currentSize / referenceSize - 1)}，新增向前发射雷球的用法。未解锁骑术时，单次引爆雨湿上限由 65 层提高至 130 层；解锁骑术后两者均为 183 层。`);
         const numb = buff(114005301);
-        add('麻木', `首次命中施加麻木，持续 ${numb.time / 30} 秒，每隔 ${numb.interval / 30} 秒使可受控的敌人僵直 ${numb.value} 秒。与神天应龙的麻木效果相同。`);
+        const numbEffect = numb.value && typeof numb.value === 'object' && numb.value.type === 1
+          ? `使敌人${buff(numb.value.tempBuffId).name} ${round(numb.value.val / 30)} 秒，实际控制时间受抗性影响`
+          : `使可受控的敌人僵直 ${numb.value} 秒`;
+        add('麻木', `首次命中施加麻木，持续 ${numb.time / 30} 秒，每隔 ${numb.interval / 30} 秒${numbEffect}。`);
         add('水络电涌', electricText(skillId));
       } else if (skillId === 20635030201) {
         const power = passive(ride.rank === 2 ? 7084065 : 7084061);
@@ -149,14 +153,14 @@ function extract() {
         const follow = eng.getBullet(7558, []);
         const targetRange = cfg.vskill3_2.com.find((com) => com.type === 169).range;
         const referenceRange = referenceCfg.vskill3_2.com.find((com) => com.type === 169).range;
-        add('水球与治疗', `召唤 ${count} 颗水球，跟随 ${follow.maxTimeFrame / 30} 秒。${connect.disableTime} 秒后可再次按键，优先治疗范围内生命比例较低的友方，包含自身；多个水球可以选中同一目标。`);
+        add('水球与治疗', `召唤 ${count} 颗水球，跟随 ${follow.maxTimeFrame / 30} 秒。${connect.disableTime} 秒后可再次按键，优先治疗范围内生命比例较低的友方，包含自身；多个水球可以选中同一目标。普攻或无双可使水球发起追击。`);
         add('每球治疗量', `每颗水球的满额治疗为施法者 ${pct(healRatio)} 最大生命值，加上随技能等级提升的固定治疗量。对同一目标，首球恢复满额的 ${pct(decay[0])}，即 3.57% 最大生命值＋0.6 倍固定治疗量；后续每球恢复满额的 ${pct(decay[1])}，即 0.595% 最大生命值＋0.1 倍固定治疗量。`);
         add('集中与分散治疗', `六球集中治疗一个目标，共恢复 ${pct(healRatio * healScale)} 最大生命值＋${round(healScale)} 倍固定治疗量，比神天应龙提高 10%。分别治疗六个不同目标，合计恢复 ${pct(healRatio * count * decay[0])} 最大生命值＋${round(count * decay[0])} 倍固定治疗量，比神天应龙的五球总治疗量提高 20%。每球治疗量分别取整。`);
-        add('治疗范围提升', `可选择友方的范围由神天应龙的 ${referenceRange[2]}×${referenceRange[3]} 扩大至 ${targetRange[2]}×${targetRange[3]}（游戏距离单位），水球数量由 5 颗增加至 ${count} 颗。水球跟随期间可选择发动治疗，或用普攻带动追击。`);
+        add('治疗范围提升', `可选择友方的范围由神天应龙的 ${referenceRange[2]}×${referenceRange[3]} 扩大至 ${targetRange[2]}×${targetRange[3]}（游戏距离单位），水球数量由 5 颗增加至 ${count} 颗。水球跟随期间可选择发动治疗，或用普攻、无双带动追击。`);
       } else if (isChase) {
         bulletId = 7566;
         add('追击伤害提升', `水钻头由神天应龙的 5 颗增加至 ${count} 颗，每颗造成 1 段 90% 水属性伤害，总攻击倍率由 450% 提高至 540%，总固定伤害也提高 20%。`);
-        add('普攻联动', '身后有水球时，普攻自动带动水钻头追击。追击随「瑞汐凝珠」的技能等级提升，共用该技能的 25 秒冷却。');
+        add('追击联动', '身后有水球时，普攻或无双自动带动水钻头追击。追击随「瑞汐凝珠」的技能等级提升，共用该技能的 25 秒冷却。');
         add('消耗蓄雨', waterText(skillId, count));
         add('挂湿能力提升', '六球全中附加雨湿由神天应龙的 35 层提高至 78 层；解锁骑术后由 45 层提高至 108 层，达到 2.4 倍。');
       } else if (isCharge) {
@@ -167,11 +171,11 @@ function extract() {
         const perFrame = passive(7084063).per;
         const fullSeconds = (frames + maxFrames) / 30;
         const firstRow = required(ctx.levels, eng.skillLevelRowId(damageSkill, 1), 'skillLevel');
-        const segments = damageSegments(firstRow, eng.getBullet(bulletId, []));
+        const segments = computeFirstHitBulletSegments(firstRow, eng.getBullet(bulletId, []), ctx.buffs, 1);
         const hits = segments.reduce((sum, segment) => sum + segment.maxHit, 0);
         const basePer = segments.reduce((sum, segment) => sum + segment.per * segment.maxHit, 0);
         const fullPer = basePer + hits * maxFrames * perFrame;
-        add('蓄力与伤害', `${ranges.length} 档蓄力，最长 ${maxFrames / 30} 秒（${maxFrames} 帧）。每蓄力一帧，每段攻击倍率增加 ${pct(perFrame)}；满蓄后每段增加 ${pct(maxFrames * perFrame)}，${hits} 段总攻击倍率由 ${pct(basePer)} 提高至 ${pct(fullPer)}。蓄力提高攻击倍率，固定伤害保持原值。`);
+        add('蓄力与伤害', `${ranges.length} 档蓄力，最长 ${maxFrames / 30} 秒（${maxFrames} 帧）。雷柱对每个目标首次命中时额外造成 ${pct(segments[0].per)} 攻击倍率伤害，另有 ${hits - 1} 段雷柱伤害。每蓄力一帧，每段攻击倍率增加 ${pct(perFrame)}；满蓄后每段增加 ${pct(maxFrames * perFrame)}，${hits} 段总攻击倍率由 ${pct(basePer)} 提高至 ${pct(fullPer)}。蓄力提高攻击倍率，固定伤害保持原值。`);
         add('释放时间', `起手 ${cfg.time.skill4_1} 帧、吐息 ${cfg.time.skill4_3} 帧，未蓄力共 ${frames} 帧（约 ${Number(seconds.toFixed(3))} 秒），攻转 ${round(basePer / seconds)}。满蓄共 ${frames + maxFrames} 帧（约 ${Number(fullSeconds.toFixed(3))} 秒），攻转约 ${round(fullPer / fullSeconds)}。`);
         add('范围与出手提升', '相比神天应龙，吐息提前 5 帧（约 0.167 秒）出现。每档蓄力的雷柱大小加成为 8%，由原来的 2% 提高至四倍；六档蓄满时，这项大小加成由 12% 提高至 48%。吐息还能推退霸体敌人。');
         add('姿态与体力', '起手切换飞行，蓄力时可以低速移动，蓄满前体力消耗与地面一致。');
@@ -202,7 +206,8 @@ function extract() {
         if (slotKind === 'attack') segments = [{ per: row.damageAddPer, val: row.damageAddVal, maxHit: 1, from: '共享命中组水刃' }];
         else if (skillId === 20635030201) {
           segments = dashBullets.flatMap((id) => damageSegments(row, eng.getBullet(id, [])));
-        } else if (bulletId) segments = damageSegments(row, eng.getBullet(bulletId, []), isChase ? count : 1);
+        } else if (isCharge) segments = computeFirstHitBulletSegments(row, eng.getBullet(bulletId, []), ctx.buffs, level);
+        else if (bulletId) segments = damageSegments(row, eng.getBullet(bulletId, []), isChase ? count : 1);
         const totalPer = segments.length ? round(segments.reduce((sum, s) => sum + s.per * s.maxHit, 0)) : null;
         // 0/1 为占位固伤，多个占位值相加也不能变成有效固伤样本。
         const totalVal = isHeal ? round(buff(1071701 + level - 1).value[0][1] * healScale)
@@ -221,6 +226,7 @@ function extract() {
       let headerSegments = [];
       if (slotKind === 'attack') headerSegments = [{ per: referenceRow.damageAddPer, maxHit: 1 }];
       else if (skillId === 20635030201) headerSegments = dashBullets.flatMap((id) => damageSegments(referenceRow, eng.getBullet(id, [])));
+      else if (isCharge) headerSegments = computeFirstHitBulletSegments(referenceRow, eng.getBullet(bulletId, []), ctx.buffs, maxLevel);
       else if (bulletId) headerSegments = damageSegments(referenceRow, eng.getBullet(bulletId, []), isChase ? count : 1);
       const result = {
         skillId, name: slotKind === 'attack' ? '普攻' : isChase ? `${skill.desName}·水钻头` : skill.desName,

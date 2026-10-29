@@ -191,8 +191,10 @@ function displayLevelValue(payload: DanyuanQualityLevel | null | undefined, colu
     return column.mode === 'fixed' ? fixedPartOf(value.value) : value.value;
 }
 
-function makeFixedColumnLabel(sourceLabel: string) {
+function makeFixedColumnLabel(sourceLabel: string, familyId: number) {
     const metric = stripMetricPrefix(sourceLabel);
+    if (familyId === 33 && /隐·闪避强化/.test(sourceLabel)) return '隐身闪避固定值';
+    if (familyId === 33 && /闪避强化/.test(sourceLabel)) return '雾区闪避固定值';
     if (/常驻每层攻击/.test(sourceLabel)) return '常驻每层攻击固定值';
     if (/无双爆发攻击/.test(sourceLabel)) return '无双爆发攻击固定值';
     if (/常驻每层生命上限/.test(sourceLabel)) return '常驻每层生命固定值';
@@ -236,7 +238,7 @@ function buildLevelColumnGroups(family: DanyuanFamily): LevelColumnGroup[] {
         return {
             key: column.key,
             sourceLabel: column.label,
-            label: fixedMode ? makeFixedColumnLabel(column.label) : stripMetricPrefix(column.label),
+            label: fixedMode ? makeFixedColumnLabel(column.label, family.familyId) : stripMetricPrefix(column.label),
             mode: fixedMode ? 'fixed' : 'value'
         } satisfies LevelDisplayColumn;
     });

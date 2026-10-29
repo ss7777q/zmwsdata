@@ -65,4 +65,30 @@ function computeActionDamage(skill, row, actionCfg, warnings) {
   };
 }
 
-module.exports = { ...eng, resolveReleaseTime, reachableActionComs, computeActionDamage };
+function computeFirstHitBulletSegments(row, bullet, buffById, level) {
+  if (!bullet) throw new Error('缺少首次命中伤害弹幕配置');
+  const hitComponents = (bullet.com || []).filter((com) => com.type === 1).sort((a, b) => a.t - b.t);
+  const perValues = row.bulletDamageAddPer?.[0];
+  const valValues = row.bulletDamageAddVal?.[0];
+  if (!Array.isArray(perValues) || !Array.isArray(valValues)) {
+    throw new Error(`弹幕 ${bullet.id} 缺少分段伤害数组`);
+  }
+  const segments = [];
+  for (const baseId of bullet.firstHitAddBuffs || []) {
+    const buff = buffById.get(baseId + level - 1);
+    if (buff?.type !== 155 || typeof buff.value?.atkPer !== 'number' || typeof buff.value?.atkVal !== 'number') {
+      throw new Error(`弹幕 ${bullet.id} 缺少等级 ${level} 的首次命中伤害 ${baseId}`);
+    }
+    segments.push({ per: buff.value.atkPer, val: buff.value.atkVal, maxHit: 1, from: `首次命中附加:${buff.id}` });
+  }
+  hitComponents.forEach((com, index) => {
+    if (com.isNotDamage) return;
+    if (typeof perValues[index] !== 'number' || typeof valValues[index] !== 'number') {
+      throw new Error(`弹幕 ${bullet.id} 的伤害数组缺少判定 ${index + 1}`);
+    }
+    segments.push({ per: perValues[index], val: valValues[index], maxHit: com.maxHit || 1, from: `bullet:${bullet.id}@${com.t}` });
+  });
+  return segments;
+}
+
+module.exports = { ...eng, resolveReleaseTime, reachableActionComs, computeActionDamage, computeFirstHitBulletSegments };

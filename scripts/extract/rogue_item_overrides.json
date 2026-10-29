@@ -7546,6 +7546,14 @@
       ]
     }
   },
+  "160207501": {
+    "source": "dataApi/rogueItem.*.json",
+    "sourceType": "manual_config",
+    "summary": "使用后释放保护罩，减免雷属性伤害并免疫麻木。",
+    "mechanics": [
+      "官方描述未给出减伤幅度或保护罩持续时间。"
+    ]
+  },
   "160603601:震天火雷": {
     "priority": 22,
     "source": "dataApi/rogueItem.*.json + scripts/extract/rogue_item_overrides.json",

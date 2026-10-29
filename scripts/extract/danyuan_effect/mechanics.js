@@ -808,8 +808,8 @@ function summarizeActionCfg(cfg, actionName) {
       y: com.y ?? null,
       width: com.w ?? com.width ?? null,
       height: com.h ?? com.height ?? null,
-      timeFrames: typeof com.time === 'number' ? com.time : null,
-      timeSeconds: typeof com.time === 'number' ? framesToSeconds(com.time) : null,
+      timeFrames: typeof com.time === 'number' ? (com.type === 18 ? com.time * BATTLE_FRAMES_PER_SECOND : com.time) : null,
+      timeSeconds: typeof com.time === 'number' ? (com.type === 18 ? com.time : framesToSeconds(com.time)) : null,
       spd: typeof com.spd === 'number' ? com.spd : null,
       attractSize: Array.isArray(com.attractSize) ? com.attractSize : null,
       buffs: Array.isArray(com.buff) ? com.buff : []
@@ -980,6 +980,7 @@ function describeDanyuanBeskill(be, ctx, warnings, depth = 0) {
       add('范围内有敌人', info.monsterName ? `召唤【${info.monsterName}】释放追击/场地效果` : '召唤物缺失', info);
       break;
     }
+    case 'vskill':
     case 'callMonsterReleaseSkill': {
       const info = summonInfo(be, ctx, warnings);
       add('召唤释放', info.monsterName ? `召唤【${info.monsterName}】释放虚拟技能${info.vskillIds.length ? ` ${info.vskillIds.join('、')}` : ''}` : '召唤物缺失', info);
